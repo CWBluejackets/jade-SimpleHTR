@@ -79,7 +79,9 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
     # sort by filename for efficiency (to load each jpg once only)
     dataframe = dataframe.sort_values(by='filename', axis=0)
 
-    # TODO create index
+    words_file_data = []
+    words_file_path = os.path.join(gt_subdirectory, 'words.txt')
+
     current_filename = None
     current_image = None
     for index, row in dataframe.iterrows():
@@ -89,12 +91,24 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
             current_filename = filename
         cropped_image = crop_image(current_image, row)
         info_filename = os.path.join(output_subdirectory, 'info', f'{stem0}_{index:09}.csv')
-        subdirectory, png_path = make_png_dir_file(index)
-        # TODO update index
+        subdirectory, png_file, png_path = make_png_dir_file(index)
+        words_file_data.append(generate_words_row(png_file, row))
         os.makedirs(subdirectory, exist_ok=True)
         save_shtr_files(cropped_image, row, info_filename, png_path)
-    # TODO write index
+    # write the words.txt file
+
+    with open(words_file_path, 'w') as f0:
+        for row in words_file_data:
+            f0.write(' '.join(row) + '\n')
     return
+
+
+def generate_words_row(png_filename, row: Series):
+    # refer to SimpleHTR.md for the meaning of these
+    data = [png_filename, 'ok', 154,
+            row['x'], row['y'], row['width'], row['height'],
+            'CD', row['text']]
+    return data
 
 
 def make_png_dir_file(index: int):
@@ -107,7 +121,7 @@ def make_png_dir_file(index: int):
     directory = f'img/a{a}/a{a}-{b}u'
     filename = f'a{a}-{b}-{c}-{d}.png'
     fullpath = os.path.join(directory, filename)
-    return directory, fullpath
+    return directory, filename, fullpath
 
 
 def crop_image(image: Image, row: Series) -> Image:
