@@ -43,7 +43,6 @@ def make_workflow_index(dataframe: DataFrame, directory: str):
 def process_df(dataframe: DataFrame, output_directory0, jpg_index0: dict, stem0: str):
     """
     Process a dataframe from our CSV format to generate Tesseract training data
-    :param training_type0: 
     :param output_directory0:
     :param dataframe:
     :param jpg_index0: the JPG file index
@@ -76,6 +75,18 @@ def process_df(dataframe: DataFrame, output_directory0, jpg_index0: dict, stem0:
         output_base = os.path.join(output_subdirectory, f'{stem0}_{index:010}')
         save_tesseract_files(output_base, cropped_image, row)
     return
+
+
+def load_image(basename: str, jpg_index0) -> Image:
+    """
+    Locate a jpg file from its basename and load it
+    :param basename: 'foo.jpg'
+    :param jpg_index0: the index
+    :return: PIL image
+    """
+    fullpath = jpg_index0[basename]
+    image = Image.open(fullpath, 'r')
+    return image
 
 
 def crop_image(image: Image, row: Series) -> Image:
@@ -147,18 +158,6 @@ def save_box(filename: str, width: int, height: int, text: str):
         f0.write(line1)
     logging.info(f'Saved {filename}')
     return
-
-
-def load_image(basename: str, jpg_index0) -> Image:
-    """
-    Locate a jpg file from its basename and load it
-    :param basename: 'foo.jpg'
-    :param jpg_index0: the index
-    :return: PIL image
-    """
-    fullpath = jpg_index0[basename]
-    image = Image.open(fullpath, 'r')
-    return image
 
 
 oparser = argparse.ArgumentParser(description="Generate training data",

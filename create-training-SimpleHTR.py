@@ -43,7 +43,6 @@ def make_workflow_index(dataframe: DataFrame, directory: str):
 def process_df(dataframe: DataFrame, output_directory0, jpg_index0: dict, stem0: str):
     """
     Process a dataframe from our CSV format to generate Tesseract training data
-    :param training_type0: 
     :param output_directory0:
     :param dataframe:
     :param jpg_index0: the JPG file index
@@ -76,6 +75,19 @@ def process_df(dataframe: DataFrame, output_directory0, jpg_index0: dict, stem0:
         output_base = os.path.join(output_subdirectory, f'{stem0}_{index:010}')
         save_shtr_files(output_base, cropped_image, row)
     return
+
+
+def make_png_dir_file(index: int):
+    # img/a01/a01-000u/a01-000u-00-00.png
+    s = f'{index:09d}'
+    a = s[0:2]
+    b = s[2:5]
+    c = s[5:7]
+    d = s[5:9]
+    directory = f'img/a{a}/a{a}-{b}u'
+    filename = f'a{a}-{b}-{c}-{d}.png'
+    return directory, filename
+
 
 
 def crop_image(image: Image, row: Series) -> Image:
