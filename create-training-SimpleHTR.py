@@ -76,27 +76,25 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
     gt_subdirectory = os.path.join(output_subdirectory, 'gt')
     os.makedirs(gt_subdirectory, exist_ok=True)
 
-    # sort by filename for efficiency (to load each jpg once only)
-    dataframe = dataframe.sort_values(by='filename', axis=0)
-
     words_file_data = []
     words_file_path = os.path.join(gt_subdirectory, 'words.txt')
 
-    current_filename = None
-    current_image = None
-    for index, row in dataframe.iterrows():
-        filename = row['filename']
-        if filename != current_filename:
-            current_image = load_image(filename, jpg_index0)
-            current_filename = filename
-        cropped_image = crop_image(current_image, row)
-        info_filename = os.path.join(output_subdirectory, 'info', f'{stem0}_{index:09}.csv')
-        subdirectory, png_file, png_path = make_png_dir_file(index)
-        words_file_data.append(generate_words_row(png_file, row))
-        os.makedirs(subdirectory, exist_ok=True)
-        save_shtr_files(cropped_image, row, info_filename, png_path)
-    # write the words.txt file
+    # group by filename so we load each file only once
+    grouped_df = dataframe.groupby(dataframe['filename'])
 
+    for filename in dataframe['filename'].unique():
+        current_image = load_image(filename, jpg_index0)
+        small_df = grouped_df.get_group(filename)
+        
+        for index, row in  small_df.iterrows():
+            cropped_image = crop_image(current_image, row)
+            info_filename = os.path.join(output_subdirectory, 'info', f'{stem0}_{index:09}.csv')
+            subdirectory, png_file, png_path = make_png_dir_file(index)
+            words_file_data.append(generate_words_row(png_file, row))
+            os.makedirs(subdirectory, exist_ok=True)
+            save_shtr_files(cropped_image, row, info_filename, png_path)
+
+    # write the words.txt file
     with open(words_file_path, 'w') as f0:
         for row in words_file_data:
             f0.write(' '.join(row) + '\n')
