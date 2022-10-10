@@ -3,6 +3,4 @@
   "intermediate_file": "/opt/data/bluejackets/annotations.csv",
   "jpg_directory": "/opt/data/bluejackets/images",
   "training_directory": "/opt/data/bluejackets/training_data",
-  "log_directory": "/opt/data/bluejackets/logs",
-  "training": "SimpleHTR"
-}
+  "log_directory": "/opt/data/bluejackets/logs"}

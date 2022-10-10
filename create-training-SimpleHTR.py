@@ -40,7 +40,7 @@ def make_workflow_index(dataframe: DataFrame, directory: str):
     return index
 
 
-def process_df(dataframe: DataFrame, output_directory0, jpg_index0: dict, stem0: str, training_type0: str):
+def process_df(dataframe: DataFrame, output_directory0, jpg_index0: dict, stem0: str):
     """
     Process a dataframe from our CSV format to generate Tesseract training data
     :param training_type0: 
@@ -74,10 +74,7 @@ def process_df(dataframe: DataFrame, output_directory0, jpg_index0: dict, stem0:
         output_subdirectory = workflow_index[row['workflow_id']]
         cropped_image = crop_image(current_image, row)
         output_base = os.path.join(output_subdirectory, f'{stem0}_{index:010}')
-        if training_type0 == 't':
-            save_tesseract_files(output_base, cropped_image, row)
-        else:
-            save_shtr_files(output_base, cropped_image, row)
+        save_shtr_files(output_base, cropped_image, row)
     return
 
 
@@ -124,59 +121,6 @@ def save_shtr_files(output_base: str, cropped_image: Image, row: Series):
     return
 
 
-def save_tesseract_files(output_base: str, cropped_image: Image, row: Series):
-    """
-    Save all the files
-    :param output_base: directory and start of filename
-    :param cropped_image:
-    :param row:
-    :return:
-    """
-    info_filename = f'{output_base}.csv'
-    row.to_csv(info_filename)
-    logging.info(f'Saved {info_filename}')
-
-    tif_filename = f'{output_base}.tif'
-    # TODO check the dpi (copied from the old meme generator)
-    cropped_image.save(tif_filename, dpi=(70, 70))
-    logging.info(f'Saved {tif_filename}')
-
-    text = row['text']
-    text_filename = f'{output_base}.raw.txt'
-    with open(text_filename, 'w') as f0:
-        f0.write(text)
-    logging.info(f'Saved {text_filename}')
-
-    box_filename = f'{output_base}.box'
-    save_box(box_filename, row['width'], row['height'], text)
-    return
-
-
-def save_box(filename: str, width: int, height: int, text: str):
-    """
-    Save the tesseract box file.
-    :param filename:
-    :param width:
-    :param height:
-    :param text:
-    :return:
-    """
-    # tesseract box format: left bottom right top page
-    # Use page=0 for single-page images.
-    # Note that (0,0) is the BOTTOM left!
-    with open(filename, 'w') as f0:
-        left = 0
-        right = width
-        top = height
-        bottom = 0
-        line0 = 'WordStr %d %d %d %d 0 #%s\n' % (left, bottom, right, top, text)
-        f0.write(line0)
-        line1 = '\t %d %d %d %d 0\n' % (left, bottom, right, top)
-        f0.write(line1)
-    logging.info(f'Saved {filename}')
-    return
-
-
 def load_image(basename: str, jpg_index0) -> Image:
     """
     Locate a jpg file from its basename and load it
@@ -207,11 +151,6 @@ print('Logfile', logfile)
 logging.basicConfig(filename=logfile, level=logging.INFO,
                     format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
-# s -> SimpleHTR (also default); t -> tesseract
-training_type = config['training'].lower()[0]
-logging.info(f'Output: training data for {training_type}')
-# TODO implement that
-
 jpg_index = get_jpg_filenames(config['jpg_directory'])
 input_filename = config['intermediate_file']
 output_directory = config['training_directory']
@@ -219,4 +158,4 @@ output_directory = config['training_directory']
 logging.info(f'Loading {input_filename}')
 df = pd.read_csv(input_filename)
 stem = os.path.splitext(os.path.basename(input_filename))[0]
-process_df(df, output_directory, jpg_index, stem, training_type)
+process_df(df, output_directory, jpg_index, stem)

@@ -3,6 +3,5 @@
   "intermediate_file": "bar.csv",
   "jpg_directory": "path/to/jpgs",
   "training_directory": "tesseract/data",
-  "logfile": "path/to/foo.log",
-  "training": "SimpleHTR"
+  "logfile": "path/to/foo.log"
 }
