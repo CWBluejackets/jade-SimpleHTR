@@ -42,7 +42,7 @@ def make_workflow_index(dataframe: DataFrame, directory: str):
 
 def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict, stem0: str):
     """
-    Process a dataframe from our CSV format to generate Tesseract training data
+    Process a dataframe from our CSV format to generate training data
     :param output_directory0:
     :param dataframe:
     :param jpg_index0: the JPG file index
@@ -62,9 +62,11 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict, st
     # split into separate dataframes by workflow_id
     grouped = dataframe.groupby(dataframe['workflow_id'])
     workflow_index = make_workflow_index(dataframe, output_directory0)
+
     for wf_id in dataframe['workflow_id'].unique():
         wf_df = grouped.get_group(wf_id)
         workflow_directory = workflow_index[wf_id]
+        logging.info(f'Starting workflow {wf_id} with {wf_df.shape[0]} rows')
         process_workflow_df(wf_df, workflow_directory, jpg_index0, stem0)
     return
 
@@ -85,38 +87,53 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
     for filename in dataframe['filename'].unique():
         current_image = load_image(filename, jpg_index0)
         small_df = grouped_df.get_group(filename)
-        
+
         for index, row in  small_df.iterrows():
             cropped_image = crop_image(current_image, row)
             info_filename = os.path.join(output_subdirectory, 'info', f'{stem0}_{index:09}.csv')
-            subdirectory, png_file, png_path = make_png_dir_file(index)
+            subdirectory, png_file, png_path = make_png_dir_file(index, output_subdirectory)
             words_file_data.append(generate_words_row(png_file, row))
             os.makedirs(subdirectory, exist_ok=True)
             save_shtr_files(cropped_image, row, info_filename, png_path)
 
     # write the words.txt file
     with open(words_file_path, 'w') as f0:
-        for row in words_file_data:
-            f0.write(' '.join(row) + '\n')
+        for line in words_file_data:
+            f0.write(line)
+    logging.info(f'Saved words file {words_file_path}')
     return
 
 
 def generate_words_row(png_filename, row: Series):
+    """
+    Refer to SimpleHTR.md for the format
+    :param png_filename:
+    :param row:
+    :return:
+    """
     # refer to SimpleHTR.md for the meaning of these
     data = [png_filename, 'ok', 154,
-            row['x'], row['y'], row['width'], row['height'],
+            round(row['x']), round(row['y']),
+            round(row['width']), round(row['height']),
             'CD', row['text']]
-    return data
+    line = ' '.join([str(item) for item in data]) + '\n'
+    return line
 
 
-def make_png_dir_file(index: int):
+def make_png_dir_file(index: int, wf_directory: str):
+    """
+    Refer to SimpleHTR.md for the format
+    :param wf_directory: directory for the workflow output
+    :param index: row number from the main dataframe, used for uniqueness
+    :return: path and filename
+    """
     # img/a01/a01-000u/a01-000u-00-00.png
     s = f'{index:09d}'
     a = s[0:2]
     b = s[2:5]
     c = s[5:7]
-    d = s[5:9]
-    directory = f'img/a{a}/a{a}-{b}u'
+    d = s[7:9]
+    directory = os.path.join(wf_directory, 'img', f'a{a}', f'a{a}-{b}u')
     filename = f'a{a}-{b}-{c}-{d}.png'
     fullpath = os.path.join(directory, filename)
     return directory, filename, fullpath
@@ -140,22 +157,21 @@ def crop_image(image: Image, row: Series) -> Image:
     return cropped
 
 
-def save_shtr_files(cropped_image: Image, row: Series, info_filename: str, png_filename: str):
+def save_shtr_files(cropped_image: Image, row: Series, info_file_path: str, png_path: str):
     """
     Save all the files
-    :param png_filename:
-    :param info_filename:
+    :param png_path:
+    :param info_file_path:
     :param cropped_image:
     :param row:
     :return:
     """
-    row['png_filename'] = png_filename
-    row.to_csv(info_filename)
-    logging.info(f'Saved {info_filename}')
+    row['png_filename'] = png_path
+    row.to_csv(info_file_path)
+    logging.info(f'Saved info {info_file_path}')
 
-    # TODO check the dpi (copied from the old meme generator)
-    cropped_image.save(png_filename, dpi=(70, 70))
-    logging.info(f'Saved {png_filename}')
+    cropped_image.save(png_path, bits=8)
+    logging.info(f'Saved image {png_path}')
     return
 
 
