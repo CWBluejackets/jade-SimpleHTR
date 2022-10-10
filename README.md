@@ -12,3 +12,7 @@ conda install -c conda-forge editdistance lmdb matplotlib numpy path tensorflow
 pip install opencv-python
 conda install -c conda-forge python-lmdb
 ```
+
+## TODO
+* set the package versions to get rid of the deprecation warnings
+* 

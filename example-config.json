@@ -1,0 +1,8 @@
+{
+  "input_directory": "path/to/csvs",
+  "intermediate_file": "bar.csv",
+  "jpg_directory": "path/to/jpgs",
+  "training_directory": "tesseract/data",
+  "logfile": "path/to/foo.log",
+  "training": "SimpleHTR"
+}
