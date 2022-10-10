@@ -13,12 +13,28 @@ https://github.com/ContinuumIO/anaconda-issues/issues/8740
 lmbd = the c libraries for the database application itself.
 The python package "lmdb" is actually in the conda package "python-lmdb".
 
-## training data
+## Training data
+
+### Original dataset
 
 http://www.fki.inf.unibe.ch/databases/iam-handwriting-database
 
-## format
+### File structure
 
+```
+.
+├── gt
+│   └── words.txt
+└── img
+    ├── a01
+    │   ├── a01-000u
+    │   │   ├── a01-000u-00-00.png
+    │   │   ├── a01-000u-00-01.png
+    │   │   ├── a01-000u-00-02.png
+...
+```
+
+### Words file format
 ```
 #     a01-000u-00-00  -> word id for line 00 in form a01-000u
 #     ok              -> result of word segmentation
