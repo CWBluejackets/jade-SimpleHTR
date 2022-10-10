@@ -32,7 +32,7 @@ def make_workflow_index(dataframe: DataFrame, directory: str):
     :param directory: index from workflow number to full path
     :return:
     """
-    workflows = set(dataframe['workflow_id'])
+    workflows = dataframe['workflow_id'].unique()
     index = {workflow: os.path.join(directory, str(workflow)) for workflow in workflows}
     for wf_directory in index.values():
         logging.info(f'Workflow directory {wf_directory}')
@@ -40,7 +40,7 @@ def make_workflow_index(dataframe: DataFrame, directory: str):
     return index
 
 
-def process_df(dataframe: DataFrame, output_directory0, jpg_index0: dict, stem0: str):
+def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict, stem0: str):
     """
     Process a dataframe from our CSV format to generate Tesseract training data
     :param output_directory0:
@@ -56,13 +56,30 @@ def process_df(dataframe: DataFrame, output_directory0, jpg_index0: dict, stem0:
     logging.warning(f'Filtered rows {dataframe.shape[0]}')
 
     # delete rows with jpg filenames that are not available
-    dataframe = dataframe[df['filename'].isin(jpg_index0.keys())]
+    dataframe = dataframe[dataframe['filename'].isin(jpg_index0.keys())]
     logging.warning(f'Filtered rows {dataframe.shape[0]}')
+
+    # split into separate dataframes by workflow_id
+    grouped = dataframe.groupby(dataframe['workflow_id'])
+    workflow_index = make_workflow_index(dataframe, output_directory0)
+    for wf_id in dataframe['workflow_id'].unique():
+        wf_df = grouped.get_group(wf_id)
+        workflow_directory = workflow_index[wf_id]
+        process_workflow_df(wf_df, workflow_directory, jpg_index0, stem0)
+    return
+
+
+def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_index0: dict, stem0: str):
+    os.makedirs(output_subdirectory, exist_ok=True)
+    info_subdirectory = os.path.join(output_subdirectory, 'info')
+    os.makedirs(info_subdirectory, exist_ok=True)
+    gt_subdirectory = os.path.join(output_subdirectory, 'gt')
+    os.makedirs(gt_subdirectory, exist_ok=True)
 
     # sort by filename for efficiency (to load each jpg once only)
     dataframe = dataframe.sort_values(by='filename', axis=0)
-    workflow_index = make_workflow_index(dataframe, output_directory0)
 
+    # TODO create index
     current_filename = None
     current_image = None
     for index, row in dataframe.iterrows():
@@ -70,10 +87,13 @@ def process_df(dataframe: DataFrame, output_directory0, jpg_index0: dict, stem0:
         if filename != current_filename:
             current_image = load_image(filename, jpg_index0)
             current_filename = filename
-        output_subdirectory = workflow_index[row['workflow_id']]
         cropped_image = crop_image(current_image, row)
-        output_base = os.path.join(output_subdirectory, f'{stem0}_{index:010}')
-        save_shtr_files(output_base, cropped_image, row)
+        info_filename = os.path.join(output_subdirectory, 'info', f'{stem0}_{index:09}.csv')
+        subdirectory, png_path = make_png_dir_file(index)
+        # TODO update index
+        os.makedirs(subdirectory, exist_ok=True)
+        save_shtr_files(cropped_image, row, info_filename, png_path)
+    # TODO write index
     return
 
 
@@ -86,8 +106,8 @@ def make_png_dir_file(index: int):
     d = s[5:9]
     directory = f'img/a{a}/a{a}-{b}u'
     filename = f'a{a}-{b}-{c}-{d}.png'
-    return directory, filename
-
+    fullpath = os.path.join(directory, filename)
+    return directory, fullpath
 
 
 def crop_image(image: Image, row: Series) -> Image:
@@ -108,28 +128,22 @@ def crop_image(image: Image, row: Series) -> Image:
     return cropped
 
 
-def save_shtr_files(output_base: str, cropped_image: Image, row: Series):
+def save_shtr_files(cropped_image: Image, row: Series, info_filename: str, png_filename: str):
     """
     Save all the files
-    :param output_base: directory and start of filename
+    :param png_filename:
+    :param info_filename:
     :param cropped_image:
     :param row:
     :return:
     """
-    info_filename = f'{output_base}.csv'
+    row['png_filename'] = png_filename
     row.to_csv(info_filename)
     logging.info(f'Saved {info_filename}')
 
-    png_filename = f'{output_base}.png'
     # TODO check the dpi (copied from the old meme generator)
     cropped_image.save(png_filename, dpi=(70, 70))
     logging.info(f'Saved {png_filename}')
-
-    text = row['text']
-    text_filename = f'{output_base}.raw.txt'
-    with open(text_filename, 'w') as f0:
-        f0.write(text)
-    logging.info(f'Saved {text_filename}')
     return
 
 
@@ -168,6 +182,6 @@ input_filename = config['intermediate_file']
 output_directory = config['training_directory']
 
 logging.info(f'Loading {input_filename}')
-df = pd.read_csv(input_filename)
+big_df = pd.read_csv(input_filename)
 stem = os.path.splitext(os.path.basename(input_filename))[0]
-process_df(df, output_directory, jpg_index, stem)
+process_big_df(big_df, output_directory, jpg_index, stem)
