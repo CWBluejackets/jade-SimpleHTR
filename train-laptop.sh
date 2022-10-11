@@ -2,20 +2,23 @@
 # default shell on jade2 is also bash
 # ``echo $0` or `ps -p $$` in terminal to check
 
-training_directory="/opt/data/bluejackets/training_data"
+# age subdirectory
+training_directory="/opt/data/bluejackets/training_data/22014"
 htr_directory="${HOME}/sandboxes/SimpleHTR"
 
 # clear out before running?
 # model_directory="${htr_directory}/model"
 
-mkdir -p "${training_directory}/lmdb"
-
-# jade2 version will need to load modules
+# jade2 version will need to load modules but
 
 cd "${htr_directory}/src" || exit 99
 
+# "fast image loading" from the documentation
+conda run -n simplehtr python create_lmdb.py --data_dir "${training_directory}"
+
 # https://stackoverflow.com/questions/70512216/conda-activate-in-script
 # conda in a script
+# conda run -n simplehtr python -c 'import sys; print(sys.path)'
 
 conda run -n simplehtr python main.py --mode train --fast \
       --data_dir "${training_directory}"  \
