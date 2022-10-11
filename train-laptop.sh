@@ -9,7 +9,7 @@ htr_directory="${HOME}/sandboxes/SimpleHTR"
 # clear out before running?
 # model_directory="${htr_directory}/model"
 
-# jade2 version will need to load modules but
+# jade2 version will need to load modules
 
 cd "${htr_directory}/src" || exit 99
 
