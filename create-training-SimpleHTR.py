@@ -127,7 +127,8 @@ def generate_words_row(png_filename, row: Series):
     # refer to SimpleHTR.md for the meaning of these
     data = [png_filename, 'ok', 154,
             row['x_r'], row['y_r'], row['width_r'], row['height_r'],
-            'CD', row['text']]
+            'CD', row['text'].strip()]
+    # strip() added because apparently some have newlines ?!
     line = ' '.join([str(item) for item in data]) + '\n'
     return line
 
