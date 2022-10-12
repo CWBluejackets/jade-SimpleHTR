@@ -13,6 +13,10 @@ pip install opencv-python
 conda install -c conda-forge python-lmdb
 ```
 
-## TODO
-* set the package versions to get rid of the deprecation warnings
-* 
+## Python environment
+
+```bash
+conda create -n simplehtr1 python==3.7
+pip install -r requirements.txt
+```
+ 
