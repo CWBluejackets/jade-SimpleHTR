@@ -41,7 +41,8 @@ def make_workflow_index(dataframe: DataFrame, directory: str):
     return index
 
 
-def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict, stem0: str):
+def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
+                   stem0: str, suppress_spaces0: bool):
     """
     Process a dataframe from our CSV format to generate training data
     :param output_directory0:
@@ -54,11 +55,16 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict, st
 
     # delete the rows without rectangles
     dataframe.dropna(axis=0, how='any', inplace=True, subset=['x', 'y', 'width', 'height', 'text'])
-    logging.warning(f'Filtered rows {dataframe.shape[0]}')
+    logging.warning(f'Dropped NaN rectangles; filtered rows {dataframe.shape[0]}')
 
     # delete rows with jpg filenames that are not available
     dataframe = dataframe[dataframe['filename'].isin(jpg_index0.keys())]
-    logging.warning(f'Filtered rows {dataframe.shape[0]}')
+    logging.warning(f'Dropped unavailable jpgs; filtered rows {dataframe.shape[0]}')
+
+    # optional: delete rows with spaces in the text (in case it blows up SimpleHTR)
+    if suppress_spaces0:
+        dataframe = dataframe[dataframe["text"].str.contains(" ") == False]
+        logging.warning(f'Dropped text with spaces; filtered rows {dataframe.shape[0]}')
 
     # round x and y down; width and height up
     dataframe['x_r'] = dataframe['x'].apply(math.floor)
@@ -219,7 +225,9 @@ jpg_index = get_jpg_filenames(config['jpg_directory'])
 input_filename = config['intermediate_file']
 output_directory = config['training_directory']
 
+suppress_spaces = config.get('suppress_spaces', False)
+
 logging.info(f'Loading {input_filename}')
 big_df = pd.read_csv(input_filename)
 stem = os.path.splitext(os.path.basename(input_filename))[0]
-process_big_df(big_df, output_directory, jpg_index, stem)
+process_big_df(big_df, output_directory, jpg_index, stem, suppress_spaces)
