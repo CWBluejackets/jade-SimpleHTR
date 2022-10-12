@@ -22,4 +22,4 @@ conda run -n simplehtr python create_lmdb.py --data_dir "${training_directory}"
 
 conda run -n simplehtr python main.py --mode train --fast \
       --data_dir "${training_directory}"  \
-      --batch_size 500 --early_stopping 15
+      --batch_size 50 --early_stopping 15
