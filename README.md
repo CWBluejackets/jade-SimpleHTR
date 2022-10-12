@@ -18,5 +18,8 @@ conda install -c conda-forge python-lmdb
 ```bash
 conda create -n simplehtr1 python==3.7
 pip install -r requirements.txt
+pip install pandas pillow
 ```
+
+(The scripts use pandas and pillow.)
  

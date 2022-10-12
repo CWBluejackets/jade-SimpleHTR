@@ -22,6 +22,14 @@ module load python/anaconda3
 module load cuda/10.1
 echo "past module load"
 
-source activate simplehtr
+source activate simplehtr1
 
-# .....
+cd "${htr_directory}/src" || exit 99
+
+# "fast image loading" from the documentation
+rm -fr "${training_directory}/lmdb"
+python create_lmdb.py --data_dir "${training_directory}"
+
+python main.py --mode train --fast \
+      --data_dir "${training_directory}"  \
+      --batch_size 50 --early_stopping 15

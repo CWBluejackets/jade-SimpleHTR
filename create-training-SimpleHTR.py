@@ -61,10 +61,10 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict, st
     logging.warning(f'Filtered rows {dataframe.shape[0]}')
 
     # round x and y down; width and height up
-    dataframe['x'] = dataframe['x'].apply(math.floor)
-    dataframe['y'] = dataframe['y'].apply(math.floor)
-    dataframe['width'] = dataframe['width'].apply(math.ceil)
-    dataframe['height'] = dataframe['height'].apply(math.ceil)
+    dataframe['x_r'] = dataframe['x'].apply(math.floor)
+    dataframe['y_r'] = dataframe['y'].apply(math.floor)
+    dataframe['width_r'] = dataframe['width'].apply(math.ceil)
+    dataframe['height_r'] = dataframe['height'].apply(math.ceil)
 
     # split into separate dataframes by workflow_id
     grouped = dataframe.groupby(dataframe['workflow_id'])
@@ -120,7 +120,7 @@ def generate_words_row(png_filename, row: Series):
     """
     # refer to SimpleHTR.md for the meaning of these
     data = [png_filename, 'ok', 154,
-            row['x'], row['y'], row['width'], row['height'],
+            row['x_r'], row['y_r'], row['width_r'], row['height_r'],
             'CD', row['text']]
     line = ' '.join([str(item) for item in data]) + '\n'
     return line
@@ -204,6 +204,10 @@ options = oparser.parse_args()
 
 with open(options.config_file) as f:
     config = json.load(f)
+
+# turn off the chained assignment warnings
+# https://stackoverflow.com/questions/20625582/how-to-deal-with-settingwithcopywarning-in-pandas
+pd.options.mode.chained_assignment = None
 
 timestamp = datetime.datetime.now().isoformat(timespec='seconds')
 logfile = os.path.join(config['log_directory'], f'{timestamp}_create.log')
