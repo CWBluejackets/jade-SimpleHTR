@@ -4,6 +4,7 @@ import datetime
 import glob
 import json
 import logging
+import math
 import os
 
 import pandas as pd
@@ -59,6 +60,12 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict, st
     dataframe = dataframe[dataframe['filename'].isin(jpg_index0.keys())]
     logging.warning(f'Filtered rows {dataframe.shape[0]}')
 
+    # round x and y down; width and height up
+    dataframe['x'] = dataframe['x'].apply(math.floor)
+    dataframe['y'] = dataframe['y'].apply(math.floor)
+    dataframe['width'] = dataframe['width'].apply(math.ceil)
+    dataframe['height'] = dataframe['height'].apply(math.ceil)
+
     # split into separate dataframes by workflow_id
     grouped = dataframe.groupby(dataframe['workflow_id'])
     workflow_index = make_workflow_index(dataframe, output_directory0)
@@ -113,8 +120,7 @@ def generate_words_row(png_filename, row: Series):
     """
     # refer to SimpleHTR.md for the meaning of these
     data = [png_filename, 'ok', 154,
-            round(row['x']), round(row['y']),
-            round(row['width']), round(row['height']),
+            row['x'], row['y'], row['width'], row['height'],
             'CD', row['text']]
     line = ' '.join([str(item) for item in data]) + '\n'
     return line
