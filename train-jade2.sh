@@ -20,12 +20,14 @@
 # load the module for the program we want to run
 module load python/anaconda3
 module load cuda/10.1
-echo "past module load"
+echo "modules loaded"
 
 htr_directory="${HOME}/bluejackets/SimpleHTR"
 training_directory="${HOME}/bluejackets/training_data/22014"
 
 source activate simplehtr1
+
+echo "environment activated"
 
 cd "${htr_directory}/src" || exit 99
 
@@ -35,4 +37,4 @@ cd "${htr_directory}/src" || exit 99
 
 python main.py --mode train \
       --data_dir "${training_directory}"  \
-      --batch_size 50 --early_stopping 15
+      --batch_size 500 --early_stopping 15
