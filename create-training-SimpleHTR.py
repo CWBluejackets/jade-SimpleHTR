@@ -42,9 +42,11 @@ def make_workflow_index(dataframe: DataFrame, directory: str):
 
 
 def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
-                   stem0: str, suppress_spaces0: bool, digits_only0: bool):
+                   stem0: str, suppress_spaces0: bool, digits_only0: bool,
+                   max_size0):
     """
     Process a dataframe from our CSV format to generate training data
+    :param max_size0: 
     :param digits_only0:
     :param suppress_spaces0:
     :param output_directory0:
@@ -76,6 +78,12 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
     if suppress_spaces0:
         dataframe = dataframe[dataframe['text'].str.contains(" ") == False]
         logging.warning(f'Dropped text with spaces; filtered rows {dataframe.shape[0]}')
+
+    # optional: constrain to maximum dataset size:
+    if max_size0:
+        if max_size0 < dataframe.shape[0]:
+            dataframe = dataframe.sample(max_size0)
+        logging.warning(f'Max size of {max_size0} applied; filtered rows {dataframe.shape[0]}')
 
     # round x and y down; width and height up
     dataframe['x_r'] = dataframe['x'].apply(math.floor)
@@ -239,8 +247,9 @@ output_directory = config['training_directory']
 
 suppress_spaces = config.get('suppress_spaces', False)
 digits_only = config.get('digits_only', False)
+max_size = config.get('max_size')
 
 logging.info(f'Loading {input_filename}')
 big_df = pd.read_csv(input_filename)
 stem = os.path.splitext(os.path.basename(input_filename))[0]
-process_big_df(big_df, output_directory, jpg_index, stem, suppress_spaces, digits_only)
+process_big_df(big_df, output_directory, jpg_index, stem, suppress_spaces, digits_only, max_size)
