@@ -4,5 +4,6 @@
   "jpg_directory": "/opt/data/bluejackets/images",
   "training_directory": "/opt/data/bluejackets/training_data",
   "log_directory": "/opt/data/bluejackets/logs",
-  "suppress_spaces": true
+  "suppress_spaces": true,
+  "digits_only": true
 }

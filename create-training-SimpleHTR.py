@@ -42,9 +42,11 @@ def make_workflow_index(dataframe: DataFrame, directory: str):
 
 
 def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
-                   stem0: str, suppress_spaces0: bool):
+                   stem0: str, suppress_spaces0: bool, digits_only0: bool):
     """
     Process a dataframe from our CSV format to generate training data
+    :param digits_only0:
+    :param suppress_spaces0:
     :param output_directory0:
     :param dataframe:
     :param jpg_index0: the JPG file index
@@ -60,6 +62,15 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
     # delete rows with jpg filenames that are not available
     dataframe = dataframe[dataframe['filename'].isin(jpg_index0.keys())]
     logging.warning(f'Dropped unavailable jpgs; filtered rows {dataframe.shape[0]}')
+
+    # clean the ends of the strings (e.g., newlines)
+    dataframe['text'] = dataframe['text'].apply(lambda x: x.strip)
+    logging.warning(f'Stripped whitespace from ends of text')
+
+    # optional: delete rows with anything other than digits (in case it blows up SimpleHTR)
+    if digits_only0:
+        dataframe = dataframe[dataframe["text"].str.match(r'^\d+')]
+        logging.warning(f'Dropped text with non-digits; filtered rows {dataframe.shape[0]}')
 
     # optional: delete rows with spaces in the text (in case it blows up SimpleHTR)
     if suppress_spaces0:
@@ -127,8 +138,7 @@ def generate_words_row(png_filename, row: Series):
     # refer to SimpleHTR.md for the meaning of these
     data = [png_filename, 'ok', 154,
             row['x_r'], row['y_r'], row['width_r'], row['height_r'],
-            'CD', row['text'].strip()]
-    # strip() added because apparently some have newlines ?!
+            'CD', row['text']]
     line = ' '.join([str(item) for item in data]) + '\n'
     return line
 
@@ -227,8 +237,9 @@ input_filename = config['intermediate_file']
 output_directory = config['training_directory']
 
 suppress_spaces = config.get('suppress_spaces', False)
+digits_only = config.get('digits_only', False)
 
 logging.info(f'Loading {input_filename}')
 big_df = pd.read_csv(input_filename)
 stem = os.path.splitext(os.path.basename(input_filename))[0]
-process_big_df(big_df, output_directory, jpg_index, stem, suppress_spaces)
+process_big_df(big_df, output_directory, jpg_index, stem, suppress_spaces, digits_only)
