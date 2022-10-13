@@ -21,6 +21,10 @@ conda run -n simplehtr1 python create_lmdb.py --data_dir "${training_directory}"
 # conda in a script
 # conda run -n simplehtr python -c 'import sys; print(sys.path)'
 
-conda run -n simplehtr1 python main.py --mode train --fast \
+#conda run -n simplehtr1 python main.py --mode train --fast \
+#      --data_dir "${training_directory}"  \
+#      --batch_size 50 --early_stopping 15
+
+conda run -n simplehtr1 python main.py --mode train \
       --data_dir "${training_directory}"  \
-      --batch_size 50 --early_stopping 15
+      --batch_size 500 --early_stopping 15
