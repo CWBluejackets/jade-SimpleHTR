@@ -55,7 +55,7 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
     """
     logging.warning(f'Unfiltered rows {dataframe.shape[0]}')
 
-    # delete the rows without rectangles
+    # delete the rows without rectangles or text
     dataframe.dropna(axis=0, how='any', inplace=True, subset=['x', 'y', 'width', 'height', 'text'])
     logging.warning(f'Dropped NaN rectangles; filtered rows {dataframe.shape[0]}')
 
@@ -64,17 +64,17 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
     logging.warning(f'Dropped unavailable jpgs; filtered rows {dataframe.shape[0]}')
 
     # clean the ends of the strings (e.g., newlines)
-    dataframe['text'] = dataframe['text'].apply(lambda x: x.strip)
+    dataframe['text'] = dataframe['text'].apply(lambda x: x.strip())
     logging.warning(f'Stripped whitespace from ends of text')
 
     # optional: delete rows with anything other than digits (in case it blows up SimpleHTR)
     if digits_only0:
-        dataframe = dataframe[dataframe["text"].str.match(r'^\d+')]
+        dataframe = dataframe[dataframe['text'].str.fullmatch(r'\d+', na=False)]
         logging.warning(f'Dropped text with non-digits; filtered rows {dataframe.shape[0]}')
 
     # optional: delete rows with spaces in the text (in case it blows up SimpleHTR)
     if suppress_spaces0:
-        dataframe = dataframe[dataframe["text"].str.contains(" ") == False]
+        dataframe = dataframe[dataframe['text'].str.contains(" ") == False]
         logging.warning(f'Dropped text with spaces; filtered rows {dataframe.shape[0]}')
 
     # round x and y down; width and height up
@@ -125,6 +125,7 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
         for line in words_file_data:
             f0.write(line)
     logging.info(f'Saved words file {words_file_path}')
+    logging.info(f'Number of entries: {len(words_file_data)}')
     return
 
 
