@@ -28,6 +28,9 @@ training_directory="${HOME}/bluejackets/training_data/22014"
 source activate simplehtr1
 
 echo "environment activated"
+echo "${PATH}"
+which python
+which python3
 
 cd "${htr_directory}/src" || exit 99
 
@@ -35,6 +38,6 @@ cd "${htr_directory}/src" || exit 99
 #rm -fr "${training_directory}/lmdb"
 #python create_lmdb.py --data_dir "${training_directory}"
 
-python main.py --mode train \
+python3 main.py --mode train \
       --data_dir "${training_directory}"  \
       --batch_size 500 --early_stopping 15
