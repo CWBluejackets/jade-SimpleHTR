@@ -28,10 +28,15 @@ training_directory="${HOME}/bluejackets/training_data/22014"
 source activate simplehtr1
 
 echo "environment activated"
+
+echo ; echo "PATH:"
 echo "${PATH}"
+
+echo ; echo "PYTHON"
 which python
 which python3
 
+echo ; echo
 cd "${htr_directory}/src" || exit 99
 
 # "fast image loading" from the documentation
