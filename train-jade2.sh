@@ -46,3 +46,10 @@ cd "${htr_directory}/src" || exit 99
 python3 main.py --mode train \
       --data_dir "${training_directory}"  \
       --batch_size 500 --early_stopping 15
+
+training_directory="${HOME}/bluejackets/training_data/22038"
+
+python3 main.py --mode train \
+      --data_dir "${training_directory}"  \
+      --batch_size 500 --early_stopping 15
+
