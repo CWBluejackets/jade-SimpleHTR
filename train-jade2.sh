@@ -17,13 +17,12 @@
 # INSTRUCTIONS
 # http://docs.jade.ac.uk/en/latest/jade/scheduler/index.html
 
-# load the module for the program we want to run
+# load the modules for the program we want to run
 module load python/anaconda3
 module load cuda/10.1
 echo "modules loaded"
 
 htr_directory="${HOME}/bluejackets/SimpleHTR"
-training_directory="${HOME}/bluejackets/training_data/22014"
 
 source activate simplehtr1
 
@@ -43,11 +42,11 @@ cd "${htr_directory}/src" || exit 99
 #rm -fr "${training_directory}/lmdb"
 #python create_lmdb.py --data_dir "${training_directory}"
 
-python3 main.py --mode train \
-      --data_dir "${training_directory}"  \
-      --batch_size 500 --early_stopping 15
+# get the workflow from the command line argument
+# 22014 age
+# 22038 term of enlistment
 
-training_directory="${HOME}/bluejackets/training_data/22038"
+training_directory="${HOME}/bluejackets/training_data/$1"
 
 python3 main.py --mode train \
       --data_dir "${training_directory}"  \
