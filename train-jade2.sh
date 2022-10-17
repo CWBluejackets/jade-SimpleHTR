@@ -48,6 +48,9 @@ cd "${htr_directory}/src" || exit 99
 
 training_directory="${HOME}/bluejackets/training_data/$1"
 
+# empty the model directory for changes of data
+rm -fr "${htr_directory}/model/"*
+
 python3 main.py --mode train \
       --data_dir "${training_directory}"  \
       --batch_size 500 --early_stopping 15
