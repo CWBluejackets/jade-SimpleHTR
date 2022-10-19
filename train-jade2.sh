@@ -42,17 +42,23 @@ cd "${htr_directory}/src" || exit 99
 #rm -fr "${training_directory}/lmdb"
 #python create_lmdb.py --data_dir "${training_directory}"
 
-# get the workflow from the command line argument
+# get the workflow training subdirectory from the command line argument
 # 22014 age
 # 22038 term of enlistment
 # and sampling if applicable '22014_0.50'
 
 training_directory="${HOME}/bluejackets/training_data/$1"
+model_directory="${HOME}/bluejackets/models/$1"
+
+# create if new; empty out if re-used
+mkdir -p "${model_directory}"
+rm -fr "${model_directory}"*
 
 # empty the model directory for changes of data
-rm -fr "${htr_directory}/model/"*
+#rm -fr "${htr_directory}/model/"*
 
 python3 main.py --mode train \
       --data_dir "${training_directory}"  \
+      --model_dir "$2" \
       --batch_size 500 --early_stopping 15
 
