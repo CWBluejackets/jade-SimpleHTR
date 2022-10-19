@@ -54,8 +54,8 @@ echo "Training: ${training_directory}"
 echo "Model: ${model_directory}"
 
 # create if new; empty out if re-used
-mkdir -p "${model_directory}"
-rm -fr "${model_directory}"*
+mkdir -vp "${model_directory}"
+rm -fvr "${model_directory}"*
 
 # empty the model directory for changes of data
 #rm -fr "${htr_directory}/model/"*
