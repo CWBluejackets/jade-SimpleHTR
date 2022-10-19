@@ -45,6 +45,7 @@ cd "${htr_directory}/src" || exit 99
 # get the workflow from the command line argument
 # 22014 age
 # 22038 term of enlistment
+# and sampling if applicable '22014_0.50'
 
 training_directory="${HOME}/bluejackets/training_data/$1"
 
