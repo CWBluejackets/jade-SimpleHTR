@@ -103,7 +103,7 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
 
     for wf_id in dataframe['workflow_id'].unique():
         for sample in samples0:
-            wf_df = grouped.get_group(wf_id).sample(frac=sample)
+            wf_df = grouped.get_group(wf_id).sample(frac=sample).reset_index()
             workflow_directory = workflow_index[(wf_id, sample)]
             logging.info(f'Starting workflow {wf_id} with {wf_df.shape[0]} rows (sampled at {sample})')
             process_workflow_df(wf_df, workflow_directory, jpg_index0, stem0)
@@ -127,7 +127,7 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
         current_image = load_image(filename, jpg_index0)
         small_df = grouped_df.get_group(filename)
 
-        for index, row in  small_df.iterrows():
+        for index, row in small_df.iterrows():
             cropped_image = crop_image(current_image, row)
             info_filename = os.path.join(output_subdirectory, 'info', f'{stem0}_{index:09}.csv')
             subdirectory, png_file, png_path = make_png_dir_file(index, output_subdirectory)
@@ -137,6 +137,7 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
 
     # write the words.txt file
     with open(words_file_path, 'w') as f0:
+        words_file_data.sort()
         for line in words_file_data:
             f0.write(line)
     logging.info(f'Saved words file {words_file_path}')
@@ -238,8 +239,7 @@ oparser.add_argument('-c', dest='config_file',
                      help='config file')
 
 oparser.add_argument('-s', dest='sampling',
-                     default=False,
-                     type=bool,
+                     default=False, action='store_true',
                      help='generate smaller samples of training data')
 
 options = oparser.parse_args()
