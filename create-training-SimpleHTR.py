@@ -26,27 +26,33 @@ def get_jpg_filenames(directory: str) -> dict:
     return index
 
 
-def make_workflow_index(dataframe: DataFrame, directory: str):
+def make_workflow_index(dataframe: DataFrame, samples0: list, main_output_directory: str):
     """
     Index and create output subdirectories for the workflows
+    :param samples0: list of sampling rates (floats)
     :param dataframe: dataframe with a 'workflow' column
-    :param directory: index from workflow number to full path
-    :return:
+    :param main_output_directory:
+    :return: index from workflow ID and sampling to full path
     """
     workflows = dataframe['workflow_id'].unique()
-    index = {workflow: os.path.join(directory, str(workflow)) for workflow in workflows}
-    for wf_directory in index.values():
-        logging.info(f'Workflow directory {wf_directory}')
-        os.makedirs(wf_directory, exist_ok=True)
+    index = dict()
+    for workflow in workflows:
+        for sample in samples0:
+            # subdirectory, e.g., "23456_0.75" for workflow and sampling rate
+            wf_directory = os.path.join(main_output_directory, f'{workflow}_{sample:.2f}')
+            index[(workflow, sample)] = wf_directory
+            logging.info(f'Workflow directory {wf_directory}')
+            os.makedirs(wf_directory, exist_ok=True)
     return index
 
 
 def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
                    stem0: str, suppress_spaces0: bool, digits_only0: bool,
-                   max_size0):
+                   max_size0: int, samples0: list):
     """
     Process a dataframe from our CSV format to generate training data
-    :param max_size0: 
+    :param samples0:
+    :param max_size0:
     :param digits_only0:
     :param suppress_spaces0:
     :param output_directory0:
@@ -93,13 +99,14 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
 
     # split into separate dataframes by workflow_id
     grouped = dataframe.groupby(dataframe['workflow_id'])
-    workflow_index = make_workflow_index(dataframe, output_directory0)
+    workflow_index = make_workflow_index(dataframe, samples0, output_directory0)
 
     for wf_id in dataframe['workflow_id'].unique():
-        wf_df = grouped.get_group(wf_id)
-        workflow_directory = workflow_index[wf_id]
-        logging.info(f'Starting workflow {wf_id} with {wf_df.shape[0]} rows')
-        process_workflow_df(wf_df, workflow_directory, jpg_index0, stem0)
+        for sample in samples0:
+            wf_df = grouped.get_group(wf_id).sample(frac=sample)
+            workflow_directory = workflow_index[(wf_id, sample)]
+            logging.info(f'Starting workflow {wf_id} with {wf_df.shape[0]} rows (sampled at {sample})')
+            process_workflow_df(wf_df, workflow_directory, jpg_index0, stem0)
     return
 
 
@@ -160,7 +167,9 @@ def make_png_dir_file(index: int, wf_directory: str):
     :return: path and filename
     """
     # img/a01/a01-000u/a01-000u-00-00.png
-    s = f'{index:09d}'
+    # a01-000u-00-00  -> word id for line 00 in form a01-000u
+    # force word ID to 00 and increment only the line and page counters
+    s = f'{index:07d}00'
     a = s[0:2]
     b = s[2:5]
     c = s[5:7]
@@ -223,8 +232,15 @@ oparser = argparse.ArgumentParser(description="Generate training data",
                                   formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 oparser.add_argument('-c', dest='config_file',
-                     required=True, metavar='FILE.json',
+                     type=str,
+                     required=True,
+                     metavar='FILE.json',
                      help='config file')
+
+oparser.add_argument('-s', dest='sampling',
+                     default=False,
+                     type=bool,
+                     help='generate smaller samples of training data')
 
 options = oparser.parse_args()
 
@@ -245,6 +261,11 @@ jpg_index = get_jpg_filenames(config['jpg_directory'])
 input_filename = config['intermediate_file']
 output_directory = config['training_directory']
 
+if options.sampling:
+    samples = [0.25, 0.5, 0.75, 1.0]
+else:
+    samples = [1.0]
+
 suppress_spaces = config.get('suppress_spaces', False)
 digits_only = config.get('digits_only', False)
 max_size = config.get('max_size')
@@ -252,4 +273,4 @@ max_size = config.get('max_size')
 logging.info(f'Loading {input_filename}')
 big_df = pd.read_csv(input_filename)
 stem = os.path.splitext(os.path.basename(input_filename))[0]
-process_big_df(big_df, output_directory, jpg_index, stem, suppress_spaces, digits_only, max_size)
+process_big_df(big_df, output_directory, jpg_index, stem, suppress_spaces, digits_only, max_size, samples)
