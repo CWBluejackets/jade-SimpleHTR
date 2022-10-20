@@ -56,6 +56,7 @@ echo "Model: ${model_directory}"
 # create if new; empty out if re-used
 rm -fvr "${model_directory}"
 mkdir -vp "${model_directory}"
+echo
 
 python3 main.py --mode train \
       --data_dir "${training_directory}"  \

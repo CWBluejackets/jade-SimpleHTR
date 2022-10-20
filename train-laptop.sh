@@ -45,7 +45,7 @@ echo "Model: ${model_directory}"
 # create if new; empty out if re-used
 rm -fvr "${model_directory}"
 mkdir -vp "${model_directory}"
-
+echo
 
 conda run -n simplehtr1 python main.py --mode train \
       --data_dir "${training_directory}"  \

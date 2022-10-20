@@ -16,3 +16,6 @@ pip install pandas pillow
 
 (The scripts use pandas and pillow.)
  
+## batch submission on jade2
+
+This does *not* work if the environment is active in the shell when you run `sbatch`!
