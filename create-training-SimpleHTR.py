@@ -85,12 +85,6 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
         dataframe = dataframe[dataframe['text'].str.contains(" ") == False]
         logging.warning(f'Dropped text with spaces; filtered rows {dataframe.shape[0]}')
 
-    # optional: constrain to maximum dataset size:
-    if max_size0:
-        if max_size0 < dataframe.shape[0]:
-            dataframe = dataframe.sample(max_size0)
-        logging.warning(f'Max size of {max_size0} applied; filtered rows {dataframe.shape[0]}')
-
     # round x and y down; width and height up
     dataframe['x_r'] = dataframe['x'].apply(math.floor)
     dataframe['y_r'] = dataframe['y'].apply(math.floor)
@@ -102,8 +96,15 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
     workflow_index = make_workflow_index(dataframe, samples0, output_directory0)
 
     for wf_id in dataframe['workflow_id'].unique():
+        sub_dataframe = grouped.get_group(wf_id)
+        # optional: constrain maximum dataset size:
+        if max_size0:
+            if max_size0 < sub_dataframe.shape[0]:
+                sub_dataframe = sub_dataframe.sample(max_size0)
+            logging.warning(f'Max size {max_size0} applied; filtered rows {sub_dataframe.shape[0]}')
+
         for sample in samples0:
-            wf_df = grouped.get_group(wf_id).sample(frac=sample).reset_index()
+            wf_df = sub_dataframe.sample(frac=sample).reset_index()
             workflow_directory = workflow_index[(wf_id, sample)]
             logging.info(f'Starting workflow {wf_id} with {wf_df.shape[0]} rows (sampled at {sample})')
             process_workflow_df(wf_df, workflow_directory, jpg_index0, stem0)
