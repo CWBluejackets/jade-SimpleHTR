@@ -43,10 +43,11 @@ echo "Training: ${training_directory}"
 echo "Model: ${model_directory}"
 
 # create if new; empty out if re-used
+rm -fvr "${model_directory}"
 mkdir -vp "${model_directory}"
-rm -fvr "${model_directory}"*
+
 
 conda run -n simplehtr1 python main.py --mode train \
       --data_dir "${training_directory}"  \
-      --model_dir "{$model_directory}" \
+      --model_dir "${model_directory}" \
       --batch_size 100 --early_stopping 15
