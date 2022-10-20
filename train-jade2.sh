@@ -49,17 +49,21 @@ cd "${htr_directory}/src" || exit 99
 
 training_directory="${HOME}/bluejackets/training_data/$1"
 model_directory="${HOME}/bluejackets/models/$1"
+debug_directory="${HOME}/bluejackets/debug"
 
 echo "Training: ${training_directory}"
 echo "Model: ${model_directory}"
 
 # create if new; empty out if re-used
-rm -fvr "${model_directory}"
+rm -fr "${model_directory}"
 mkdir -vp "${model_directory}"
+rm -fr "${debug_directory}"
+mkdir -vp "${debug_directory}"
 echo
 
 python3 main.py --mode train \
       --data_dir "${training_directory}"  \
+      --debug-dir "${debug_directory}" \
       --model_dir "${model_directory}" \
       --batch_size 500 --early_stopping 15
 
