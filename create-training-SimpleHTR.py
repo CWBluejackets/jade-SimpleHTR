@@ -239,10 +239,6 @@ oparser.add_argument('-c', dest='config_file',
                      metavar='FILE.json',
                      help='config file')
 
-oparser.add_argument('-s', dest='sampling',
-                     default=False, action='store_true',
-                     help='generate smaller samples of training data')
-
 options = oparser.parse_args()
 
 with open(options.config_file) as f:
@@ -262,7 +258,7 @@ jpg_index = get_jpg_filenames(config['jpg_directory'])
 input_filename = config['intermediate_file']
 output_directory = config['training_directory']
 
-if options.sampling:
+if config.get('sampling', False):
     samples = [0.25, 0.5, 0.75, 1.0]
 else:
     samples = [1.0]
