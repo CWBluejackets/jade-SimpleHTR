@@ -63,7 +63,7 @@ echo
 
 python3 main.py --mode train \
       --data_dir "${training_directory}"  \
-      --debug-dir "${debug_directory}" \
+      --debug_dir "${debug_directory}" \
       --model_dir "${model_directory}" \
       --batch_size 500 --early_stopping 15
 
