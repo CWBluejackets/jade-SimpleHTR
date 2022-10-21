@@ -176,9 +176,13 @@ def make_png_dir_file(index: int, wf_directory: str):
     b = s[2:5]
     c = s[5:7]
     d = s[7:9]
+    # path/to/img/a01/a01-000u
     directory = os.path.join(wf_directory, 'img', f'a{a}', f'a{a}-{b}u')
+    # a01-000u-00-00 goes in the words.txt file; the training process adds '.png' to it
     identifier = f'a{a}-{b}-{c}-{d}'
+    # a01-000u-00-00.png
     filename = f'{identifier}.png'
+    # path/to/img/a01/a01-000u/a01-000u-00-00.png
     fullpath = os.path.join(directory, filename)
     return directory, filename, fullpath, identifier
 
