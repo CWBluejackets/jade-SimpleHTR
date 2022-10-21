@@ -131,8 +131,8 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
         for index, row in small_df.iterrows():
             cropped_image = crop_image(current_image, row)
             info_filename = os.path.join(output_subdirectory, 'info', f'{stem0}_{index:09}.csv')
-            subdirectory, png_file, png_path = make_png_dir_file(index, output_subdirectory)
-            words_file_data.append(generate_words_row(png_file, row))
+            subdirectory, png_file, png_path, identifier = make_png_dir_file(index, output_subdirectory)
+            words_file_data.append(generate_words_row(identifier, row))
             os.makedirs(subdirectory, exist_ok=True)
             save_shtr_files(cropped_image, row, info_filename, png_path)
 
@@ -177,9 +177,10 @@ def make_png_dir_file(index: int, wf_directory: str):
     c = s[5:7]
     d = s[7:9]
     directory = os.path.join(wf_directory, 'img', f'a{a}', f'a{a}-{b}u')
-    filename = f'a{a}-{b}-{c}-{d}.png'
+    identifier = f'a{a}-{b}-{c}-{d}'
+    filename = f'{identifier}.png'
     fullpath = os.path.join(directory, filename)
-    return directory, filename, fullpath
+    return directory, filename, fullpath, identifier
 
 
 def crop_image(image: Image, row: Series) -> Image:
