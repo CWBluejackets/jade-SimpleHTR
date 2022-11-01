@@ -6,23 +6,36 @@ import json
 import logging
 import math
 import os
+from typing import Tuple
 
 import pandas as pd
 from PIL import Image
 from pandas import Series, DataFrame
 
 
-def get_jpg_filenames(directory: str) -> dict:
+def get_jpg_filenames(directory: str, big_directory: str) -> dict:
     """
-    Find and index all the *.jpg files in the specified directory.
+    Find and index all the *.jpg files in the specified directories.
+    :param big_directory:
     :param directory:
-    :return: index from basename to full path
+    :return: index from basename to tuple[2] of full paths
     """
-    pattern = os.path.join(directory, '**', '*.jpg')
-    logging.info(f'Using {pattern}')
-    jpg_glob = glob.iglob(pattern, recursive=True)
-    index = {os.path.basename(x): x for x in jpg_glob}
-    logging.info(f'Found {len(index)} jpg files')
+    small_pattern = os.path.join(directory, '**', '*.jpg')
+    logging.info(f'Using {small_pattern}')
+    jpg_glob = glob.iglob(small_pattern, recursive=True)
+    small_index = {os.path.basename(x): x for x in jpg_glob}
+    logging.info(f'Found {len(small_index)} jpg files')
+
+    if big_directory:
+        big_pattern = os.path.join(big_directory, '**', '*.jpg')
+        logging.info(f'Using {big_pattern}')
+        big_glob = glob.iglob(big_pattern, recursive=True)
+        big_index = {os.path.basename(x): x for x in big_glob}
+        logging.info(f'Found {len(big_index)} jpg files')
+    else:
+        big_index = dict()
+
+    index = {key: (small_path, big_index.get(key)) for key, small_path in small_index.items()}
     return index
 
 
@@ -125,11 +138,12 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
     grouped_df = dataframe.groupby(dataframe['filename'])
 
     for filename in dataframe['filename'].unique():
-        current_image = load_image(filename, jpg_index0)
+        # TODO WIP HERE
+        small_image, big_image = load_images(filename, jpg_index0)
         small_df = grouped_df.get_group(filename)
 
         for index, row in small_df.iterrows():
-            cropped_image = crop_image(current_image, row)
+            cropped_image = crop_image(small_image, big_image, row)
             info_filename = os.path.join(output_subdirectory, 'info', f'{stem0}_{index:09}.csv')
             subdirectory, png_file, png_path, identifier = make_png_dir_file(index, output_subdirectory)
             words_file_data.append(generate_words_row(identifier, row))
@@ -187,21 +201,29 @@ def make_png_dir_file(index: int, wf_directory: str):
     return directory, filename, fullpath, identifier
 
 
-def crop_image(image: Image, row: Series) -> Image:
+def crop_image(image: Image, big_image: Image, row: Series) -> Image:
     """
     Crop the image according to the coordinates in the annotation.
+    :param big_image:
     :param image:
     :param row:
     :return: cropped image
     """
-    # PIL: (0, 0) is top left
-    # same as Zooniverse and x, y = top left corner of box
-    # PIL box: tuple (left, upper, right, lower)
-    left = row['x']
-    top = row['y']
-    right = left + row['width']
-    bottom = top + row['height']
-    cropped = image.crop(box=(left, top, right, bottom))
+    if big_image:
+        left = math.floor(row['x'] * big_image.width / image.width)
+        top = math.floor(row['y'] * big_image.height / image.height)
+        right = math.ceil((row['x'] + row['width']) * big_image.width / image.width)
+        bottom = math.ceil((row['y'] + row['height']) * big_image.height / image.height)
+        cropped = big_image.crop(box=(left, top, right, bottom))
+    else:
+        # PIL: (0, 0) is top left
+        # same as Zooniverse and x, y = top left corner of box
+        # PIL box: tuple (left, top, right, bottom)
+        left = math.floor(row['x'])
+        top = math.floor(row['y'])
+        right = math.ceil(left + row['width'])
+        bottom = math.ceil(top + row['height'])
+        cropped = image.crop(box=(left, top, right, bottom))
     return cropped
 
 
@@ -223,16 +245,25 @@ def save_shtr_files(cropped_image: Image, row: Series, info_file_path: str, png_
     return
 
 
-def load_image(basename: str, jpg_index0) -> Image:
+def load_images(basename: str, jpg_index0) -> Tuple[Image, Image]:
     """
     Locate a jpg file from its basename and load it
     :param basename: 'foo.jpg'
     :param jpg_index0: the index
     :return: PIL image
     """
-    fullpath = jpg_index0[basename]
-    image = Image.open(fullpath, 'r')
-    return image
+    small_path, big_path = jpg_index0[basename]
+    small_image = Image.open(small_path, 'r')
+    if big_path:
+        big_image = Image.open(big_path, 'r')
+        # check that the aspect ratios are close
+        projected_width = small_image.width * big_image.height / small_image.height
+        if abs(projected_width - big_image.width) > 4:
+            logging.info(f'Rejecting f{big_path} for aspect ratio')
+            big_image = None
+    else:
+        big_image = None
+    return small_image, big_image
 
 
 oparser = argparse.ArgumentParser(description="Generate training data",
@@ -259,7 +290,8 @@ print('Logfile', logfile)
 logging.basicConfig(filename=logfile, level=logging.INFO,
                     format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
-jpg_index = get_jpg_filenames(config['jpg_directory'])
+jpg_index = get_jpg_filenames(config['jpg_directory'],
+                              config.get('big_jpg_directory'))
 input_filename = config['intermediate_file']
 output_directory = config['training_directory']
 
