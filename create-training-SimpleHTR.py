@@ -259,13 +259,13 @@ def load_images(basename: str, jpg_index0) -> Tuple[Image.Image, Image.Image]:
         # check that the aspect ratios are close
         projected_width = small_image.width * big_image.height / small_image.height
         if abs(projected_width - big_image.width) > 4:
-            logging.info(f'Rejecting big f{big_path} for aspect ratio')
+            logging.info(f'Rejecting big {big_path} for aspect ratio')
             big_image = None
         else:
-            logging.info(f'Using big jpg f{big_path}')
+            logging.info(f'Using big jpg {big_path}')
     else:
         big_image = None
-        logging.info(f'Big jpg f{small_path} missing')
+        logging.info(f'Big jpg {small_path} missing')
     return small_image, big_image
 
 
