@@ -245,7 +245,7 @@ def save_shtr_files(cropped_image: Image, row: Series, info_file_path: str, png_
     return
 
 
-def load_images(basename: str, jpg_index0) -> Tuple[Image, Image]:
+def load_images(basename: str, jpg_index0) -> Tuple[Image.Image, Image.Image]:
     """
     Locate a jpg file from its basename and load it
     :param basename: 'foo.jpg'
@@ -259,10 +259,13 @@ def load_images(basename: str, jpg_index0) -> Tuple[Image, Image]:
         # check that the aspect ratios are close
         projected_width = small_image.width * big_image.height / small_image.height
         if abs(projected_width - big_image.width) > 4:
-            logging.info(f'Rejecting f{big_path} for aspect ratio')
+            logging.info(f'Rejecting big f{big_path} for aspect ratio')
             big_image = None
+        else:
+            logging.info(f'Using big jpg f{big_path}')
     else:
         big_image = None
+        logging.info(f'Big jpg f{small_path} missing')
     return small_image, big_image
 
 
