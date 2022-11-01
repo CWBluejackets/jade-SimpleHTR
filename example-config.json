@@ -2,6 +2,7 @@
   "input_directory": "path/to/csvs",
   "intermediate_file": "bar.csv",
   "jpg_directory": "path/to/jpgs",
+  "big_jpg_directory": null,
   "training_directory": "tesseract/data",
   "logfile": "path/to/foo.log",
   "suppress_spaces": false,

@@ -19,3 +19,15 @@ pip install pandas pillow
 ## batch submission on jade2
 
 This does *not* work if the environment is active in the shell when you run `sbatch`!
+
+## Config file
+
+* `input_directory` containing CSV files from Zoonivers
+* `intermediate_file` our CSV format for generating training data
+* `jpg_directory` contains the JPGs that the annotators use, required
+* `big_jpg_directory` contains the full-size JPGs, optional
+* `training_directory` training datasets will be created here in the IAM format
+* `log_directory` a timestamped log file will go here
+* `suppress_spaces` delete whitespace, boolean
+* `digits_only` ignore annotations containing anything other than digits, boolean
+* `sampling` generate four sizes of training datasets (25%, 50%, 75%, 100% of what is available)
