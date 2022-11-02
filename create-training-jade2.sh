@@ -28,7 +28,7 @@ source activate simplehtr1
 echo "environment activated"
 echo
 
-cd "${working_directory}/src" || exit 99
+cd "${working_directory}" || exit 99
 training_directory="/jmain02/home/J2AD003/txk64/axf12-txk64/bluejackets/training_data"
 
 # create if new; empty out if re-used
