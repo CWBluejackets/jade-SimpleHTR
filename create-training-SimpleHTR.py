@@ -287,11 +287,18 @@ with open(options.config_file) as f:
 # https://stackoverflow.com/questions/20625582/how-to-deal-with-settingwithcopywarning-in-pandas
 pd.options.mode.chained_assignment = None
 
-timestamp = datetime.datetime.now().isoformat(timespec='seconds')
-logfile = os.path.join(config['log_directory'], f'{timestamp}_create.log')
-print('Logfile', logfile)
-logging.basicConfig(filename=logfile, level=logging.INFO,
-                    format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+log_directory = config.get('log_directory')
+
+if log_directory:
+    timestamp = datetime.datetime.now().isoformat(timespec='seconds')
+    logfile = os.path.join(config['log_directory'], f'{timestamp}_create.log')
+    print(f'Logfile f{logfile}')
+    logging.basicConfig(filename=logfile, level=logging.INFO,
+                        format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+else:
+    print(f'Log stdout')
+    logging.basicConfig(level=logging.INFO,
+                        format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
 jpg_index = get_jpg_filenames(config['jpg_directory'],
                               config.get('big_jpg_directory'))
