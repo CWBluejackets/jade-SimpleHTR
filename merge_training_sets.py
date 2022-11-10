@@ -64,12 +64,15 @@ output_words = []
 
 for counter, input_name in enumerate(options.input_names):
     input_directory = os.path.join(training_directory, input_name)
-    with open(os.path.join(input_directory, 'gt', 'words.txt'), 'r') as f:
+    input_words_file = os.path.join(input_directory, 'gt', 'words.txt')
+    with open(input_words_file, 'r') as f:
         input_words = [line.strip() for line in f.readlines()]
+        print(f'Read {len(input_words)} lines from {input_words_file}')
     for line in input_words:
         output_words.append(update_filename(line, counter))
     img_directory = os.path.join(input_directory, 'img')
-    img_glob = glob.iglob(os.path.join(img_directory, '*', '*', '*.png'))
+    img_glob = glob.glob(os.path.join(img_directory, '*', '*', '*.png'))
+    print(f'Copying {len(img_glob)} files from {img_directory} to {output_img_dir}')
     for img_path in img_glob:
         img_relpath = os.path.relpath(img_path, img_directory)
         part_a, part_b, img_filename = img_relpath.split('/')
@@ -80,6 +83,8 @@ for counter, input_name in enumerate(options.input_names):
         new_img_path = os.path.join(output_img_subdir, update_filename(img_filename, counter))
         shutil.copyfile(img_path, new_img_path)
 
-with open(os.path.join(output_directory, 'gt', 'words.txt'), 'w') as f:
+output_words_file = os.path.join(output_directory, 'gt', 'words.txt')
+with open(output_words_file, 'w') as f:
+    print(f'Writing {len(output_words)} lines to {output_words_file}')
     for line in output_words:
         f.write(f'{line}\n')
