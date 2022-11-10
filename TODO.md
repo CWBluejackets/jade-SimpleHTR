@@ -5,9 +5,9 @@
 * double up the term (22038) training data and train over it
 * combine the term and age (22014) training data into one set and train
 
-## further idea
+## further ideas
 
-* change the SHTR training to be easier to generate and manipulate
+* change the SHTR training dataset to be easier to generate and manipulate
   * simplify words.txt format
   * flatten the PNG file structure
 * preprocessing ideas
@@ -18,4 +18,3 @@
     * this could be done inside the SHTR code for easy consistency between tRaining and application
 * look at the hyperparameters, particularly for tuning the gradient descent
 * apply the age model to the term data and check for accuracy
-* 
