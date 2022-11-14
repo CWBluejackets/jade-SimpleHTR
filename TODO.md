@@ -18,3 +18,4 @@
     * this could be done inside the SHTR code for easy consistency between tRaining and application
 * look at the hyperparameters, particularly for tuning the gradient descent
 * apply the age model to the term data and check for accuracy
+ 
