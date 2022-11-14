@@ -146,7 +146,7 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
             cropped_image = crop_image(small_image, big_image, row)
             info_filename = os.path.join(output_subdirectory, 'info', f'{stem0}_{index:09}.csv')
             subdirectory, png_file, png_path, identifier = make_png_dir_file(index, output_subdirectory)
-            words_file_data.append(generate_words_row(identifier, row))
+            words_file_data.append(generate_words_row(png_file, row))
             os.makedirs(subdirectory, exist_ok=True)
             save_shtr_files(cropped_image, row, info_filename, png_path)
 
@@ -168,10 +168,8 @@ def generate_words_row(png_filename, row: Series):
     :return:
     """
     # refer to SimpleHTR.md for the meaning of these
-    data = [png_filename, 'ok', 154,
-            row['x_r'], row['y_r'], row['width_r'], row['height_r'],
-            'CD', row['text']]
-    line = ' '.join([str(item) for item in data]) + '\n'
+    text = row['text']
+    line = f'{png_filename} {text}\n'
     return line
 
 
@@ -191,8 +189,7 @@ def make_png_dir_file(index: int, wf_directory: str):
     c = s[5:7]
     d = s[7:9]
     # path/to/img/a01/a01-000u
-    directory = os.path.join(wf_directory, 'img', f'a{a}', f'a{a}-{b}u')
-    # a01-000u-00-00 goes in the words.txt file; the training process adds '.png' to it
+    directory = os.path.join(wf_directory, 'img')
     identifier = f'a{a}-{b}u-{c}-{d}'
     # a01-000u-00-00.png
     filename = f'{identifier}.png'
