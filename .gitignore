@@ -129,4 +129,12 @@ dmypy.json
 .pyre/
 
 
+data/words*
+data/words.txt
+data/corpus.txt
+src/__pycache__/
+notes/
+*.so
+*.pyc
 .idea/
+dump/
