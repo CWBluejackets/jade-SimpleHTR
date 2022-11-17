@@ -1,15 +1,19 @@
 # TODO
 
-## running now
+## evaluation
 
-* double up the term (22038) training data and train over it
-* combine the term and age (22014) training data into one set and train
+* train on age + term merged
+  * apply to age
+  * apply to term
+  * compare to previous results
 
 ## further ideas
 
 * change the SHTR training dataset to be easier to generate and manipulate
   * simplify words.txt format
   * flatten the PNG file structure
+* add regex variations
+  * change to `\d+\.?\s*"`
 * preprocessing ideas
   * add perturbed versions to the training data 
     * without replacing the plain versions
