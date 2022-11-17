@@ -6,28 +6,29 @@ import json
 import logging
 import math
 import os
-from typing import Tuple
+import uuid
+from typing import Tuple, Dict
 
 import pandas as pd
 from PIL import Image
 from pandas import Series, DataFrame
 
 
-def get_jpg_filenames(directory: str, big_directory: str) -> dict:
+def get_jpg_filenames(small_jpg_directory: str, big_jpg_directory: str) -> Dict[str, Tuple[str, str]]:
     """
     Find and index all the *.jpg files in the specified directories.
-    :param big_directory:
-    :param directory:
+    :param big_jpg_directory:
+    :param small_jpg_directory:
     :return: index from basename to tuple[2] of full paths
     """
-    small_pattern = os.path.join(directory, '**', '*.jpg')
+    small_pattern = os.path.join(small_jpg_directory, '**', '*.jpg')
     logging.info(f'Using {small_pattern}')
     jpg_glob = glob.iglob(small_pattern, recursive=True)
     small_index = {os.path.basename(x): x for x in jpg_glob}
     logging.info(f'Found {len(small_index)} jpg files')
 
-    if big_directory:
-        big_pattern = os.path.join(big_directory, '**', '*.jpg')
+    if big_jpg_directory:
+        big_pattern = os.path.join(big_jpg_directory, '**', '*.jpg')
         logging.info(f'Using {big_pattern}')
         big_glob = glob.iglob(big_pattern, recursive=True)
         big_index = {os.path.basename(x): x for x in big_glob}
@@ -39,7 +40,7 @@ def get_jpg_filenames(directory: str, big_directory: str) -> dict:
     return index
 
 
-def make_workflow_index(dataframe: DataFrame, samples0: list, main_output_directory: str):
+def make_workflow_index(dataframe: DataFrame, samples0: list, main_output_directory: str) -> dict:
     """
     Index and create output subdirectories for the workflows
     :param samples0: list of sampling rates (floats)
@@ -78,7 +79,7 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
 
     # delete the rows without rectangles or text
     dataframe.dropna(axis=0, how='any', inplace=True, subset=['x', 'y', 'width', 'height', 'text'])
-    logging.warning(f'Dropped NaN rectangles; filtered rows {dataframe.shape[0]}')
+    logging.warning(f'Dropped NaN rectangles/text; filtered rows {dataframe.shape[0]}')
 
     # delete rows with jpg filenames that are not available
     dataframe = dataframe[dataframe['filename'].isin(jpg_index0.keys())]
@@ -88,6 +89,7 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
     dataframe['text'] = dataframe['text'].apply(lambda x: x.strip())
     logging.warning(f'Stripped whitespace from ends of text')
 
+    # TODO replace the following with custom regex for each workflow
     # optional: delete rows with anything other than digits (in case it blows up SimpleHTR)
     if digits_only0:
         dataframe = dataframe[dataframe['text'].str.fullmatch(r'\d+', na=False)]
@@ -113,7 +115,7 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
         # optional: constrain maximum dataset size:
         if max_size0:
             if max_size0 < sub_dataframe.shape[0]:
-                sub_dataframe = sub_dataframe.sample(max_size0)
+                sub_dataframe = sub_dataframe.sample(n=max_size0)
             logging.warning(f'Max size {max_size0} applied; filtered rows {sub_dataframe.shape[0]}')
 
         for sample in samples0:
@@ -128,13 +130,14 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
     os.makedirs(output_subdirectory, exist_ok=True)
     info_subdirectory = os.path.join(output_subdirectory, 'info')
     os.makedirs(info_subdirectory, exist_ok=True)
-    gt_subdirectory = os.path.join(output_subdirectory, 'gt')
-    os.makedirs(gt_subdirectory, exist_ok=True)
+    img_subdirectory  = os.path.join(output_subdirectory, 'img')
+    os.makedirs(img_subdirectory, exist_ok=True)
 
     words_file_data = []
-    words_file_path = os.path.join(gt_subdirectory, 'words.txt')
+    words_file_path = os.path.join(output_subdirectory, 'words.txt')
+    filename_prefix = uuid.uuid4().hex
 
-    # group by filename so we load each file only once
+    # group by filename so we load each JPG file only once
     grouped_df = dataframe.groupby(dataframe['filename'])
 
     for filename in dataframe['filename'].unique():
@@ -145,6 +148,7 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
         for index, row in small_df.iterrows():
             cropped_image = crop_image(small_image, big_image, row)
             info_filename = os.path.join(output_subdirectory, 'info', f'{stem0}_{index:09}.csv')
+            # TODO replace with new method that uses the prefix and does not create a subdirectory
             subdirectory, png_file, png_path, identifier = make_png_dir_file(index, output_subdirectory)
             words_file_data.append(generate_words_row(png_file, row))
             os.makedirs(subdirectory, exist_ok=True)
@@ -162,7 +166,7 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
 
 def generate_words_row(png_filename, row: Series):
     """
-    Refer to SimpleHTR.md for the format
+    simplified words.txt format
     :param png_filename:
     :param row:
     :return:
