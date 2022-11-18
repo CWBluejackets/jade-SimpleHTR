@@ -100,7 +100,6 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
         dataframe = dataframe[dataframe['text'].str.contains(" ") == False]
         logging.warning(f'Dropped text with spaces; filtered rows {dataframe.shape[0]}')
 
-    # round x and y down; width and height up
     dataframe['x_r'] = dataframe['x'].apply(math.floor)
     dataframe['y_r'] = dataframe['y'].apply(math.floor)
     dataframe['width_r'] = dataframe['width'].apply(math.ceil)
@@ -147,12 +146,11 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
 
         for index, row in small_df.iterrows():
             cropped_image = crop_image(small_image, big_image, row)
-            info_filename = os.path.join(output_subdirectory, 'info', f'{stem0}_{index:09}.csv')
-            # TODO replace with new method that uses the prefix and does not create a subdirectory
-            subdirectory, png_file, png_path, identifier = make_png_dir_file(index, output_subdirectory)
-            words_file_data.append(generate_words_row(png_file, row))
-            os.makedirs(subdirectory, exist_ok=True)
-            save_shtr_files(cropped_image, row, info_filename, png_path)
+            info_path = os.path.join(output_subdirectory, 'info', f'{stem0}_{index:09}.csv')
+            png_filename = f'{filename_prefix}_{index:07d}.png'
+            png_path = os.path.join(img_subdirectory, png_filename)
+            words_file_data.append(generate_words_row(png_filename, row))
+            save_shtr_files(cropped_image, row, info_path, png_path)
 
     # write the words.txt file
     with open(words_file_path, 'w') as f0:
@@ -177,54 +175,30 @@ def generate_words_row(png_filename, row: Series):
     return line
 
 
-def make_png_dir_file(index: int, wf_directory: str):
-    """
-    Refer to SimpleHTR.md for the format
-    :param wf_directory: directory for the workflow output
-    :param index: row number from the main dataframe, used for uniqueness
-    :return: path and filename
-    """
-    # img/a01/a01-000u/a01-000u-00-00.png
-    # a01-000u-00-00  -> word id for line 00 in form a01-000u
-    # force word ID to 00 and increment only the line and page counters
-    s = f'{index:07d}00'
-    a = s[0:2]
-    b = s[2:5]
-    c = s[5:7]
-    d = s[7:9]
-    # path/to/img/a01/a01-000u
-    directory = os.path.join(wf_directory, 'img')
-    identifier = f'a{a}-{b}u-{c}-{d}'
-    # a01-000u-00-00.png
-    filename = f'{identifier}.png'
-    # path/to/img/a01/a01-000u/a01-000u-00-00.png
-    fullpath = os.path.join(directory, filename)
-    return directory, filename, fullpath, identifier
-
-
-def crop_image(image: Image, big_image: Image, row: Series) -> Image:
+def crop_image(small_image: Image, big_image: Image, row: Series) -> Image:
     """
     Crop the image according to the coordinates in the annotation.
     :param big_image:
-    :param image:
+    :param small_image:
     :param row:
     :return: cropped image
     """
+    # Both PIL and Zooniverse: (0, 0) is top left; all coordinates in pixels.
+    # Zooniverse box: x, y = top left corner of box; and use width and height.
+    # PIL box: tuple (left, top, right, bottom) absolute locations within image.
+    # To be careful, round x and y down; width and height up.
     if big_image:
-        left = math.floor(row['x'] * big_image.width / image.width)
-        top = math.floor(row['y'] * big_image.height / image.height)
-        right = math.ceil((row['x'] + row['width']) * big_image.width / image.width)
-        bottom = math.ceil((row['y'] + row['height']) * big_image.height / image.height)
+        left = math.floor(row['x'] * big_image.width / small_image.width)
+        top = math.floor(row['y'] * big_image.height / small_image.height)
+        right = math.ceil((row['x'] + row['width']) * big_image.width / small_image.width)
+        bottom = math.ceil((row['y'] + row['height']) * big_image.height / small_image.height)
         cropped = big_image.crop(box=(left, top, right, bottom))
     else:
-        # PIL: (0, 0) is top left
-        # same as Zooniverse and x, y = top left corner of box
-        # PIL box: tuple (left, top, right, bottom)
         left = math.floor(row['x'])
         top = math.floor(row['y'])
         right = math.ceil(left + row['width'])
         bottom = math.ceil(top + row['height'])
-        cropped = image.crop(box=(left, top, right, bottom))
+        cropped = small_image.crop(box=(left, top, right, bottom))
     return cropped
 
 
@@ -237,9 +211,10 @@ def save_shtr_files(cropped_image: Image, row: Series, info_file_path: str, png_
     :param row:
     :return:
     """
-    row['png_filename'] = png_path
+    row['png_path'] = png_path
     row.to_csv(info_file_path)
     logging.info(f'Saved info {info_file_path}')
+    ''
 
     cropped_image.save(png_path, bits=8)
     logging.info(f'Saved image {png_path}')
@@ -258,15 +233,18 @@ def load_images(basename: str, jpg_index0) -> Tuple[Image.Image, Image.Image]:
     if big_path:
         big_image = Image.open(big_path, 'r')
         # check that the aspect ratios are close
-        projected_width = small_image.width * big_image.height / small_image.height
-        if abs(projected_width - big_image.width) > 4:
-            logging.info(f'Rejecting big {big_path} for aspect ratio')
+        expected_width = big_image.width * small_image.height / big_image.height
+        if abs(expected_width - small_image.width) > 1:
+            big_aspect = big_image.width / big_image.height
+            small_aspect = small_image.width / small_image.height
+            logging.info(f'Big jpg rejected for aspect ratio: {big_path} {big_aspect:.3f} {small_aspect:.3f}')
             big_image = None
         else:
-            logging.info(f'Using big jpg {big_path}')
+            logging.info(f'Big jpg valid: {big_path}')
     else:
+        # big image was missing from the directory
         big_image = None
-        logging.info(f'Big jpg {small_path} missing')
+        logging.info(f'Big jpg missing: {small_path}')
     return small_image, big_image
 
 
