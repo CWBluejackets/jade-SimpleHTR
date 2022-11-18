@@ -137,7 +137,7 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
 
         for index, row in small_df.iterrows():
             cropped_image = crop_image(small_image, big_image, row)
-            info_path = os.path.join(output_subdirectory, 'info', f'{stem0}_{index:09}.csv')
+            info_path = os.path.join(output_subdirectory, 'info', f'{filename_prefix}_{index:07d}.csv')
             png_filename = f'{filename_prefix}_{index:07d}.png'
             png_path = os.path.join(img_subdirectory, png_filename)
             words_file_data.append(generate_words_row(png_filename, row))
@@ -290,7 +290,7 @@ for filter_file in options.filter_files:
         filters.update({int(k): v for k, v in addenda.items()})
 
 for k, v in filters.items():
-    logging.info('Filter: {k} {v}')
+    logging.info(f'Filter: {k} {v}')
 
 if config.get('sampling', False):
     samples = [0.25, 0.5, 0.75, 1.0]

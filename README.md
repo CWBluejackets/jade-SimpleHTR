@@ -50,15 +50,20 @@ Note: the regex will be applied using `fullmatch`.
 
 ### File structure
 
+info/annotations_000000085.csv
+img/0e0f9b6f3bf64dd680c8c033cb73a9c0_0000085.png
+info/annotations_000000124.csv
+img/0e0f9b6f3bf64dd680c8c033cb73a9c0_0000124.png
+
 ```
 .
 ├── words.txt
 ├── info/
-    ├── jsalfdkjlsd.info
-    ├── ljsfdkjs.info
+    ├── 0e0f9b6f3bf64dd680c8c033cb73a9c0_0000085.csv
+    ├── 0e0f9b6f3bf64dd680c8c033cb73a9c0_0000124.csv
     ...
 └── img
-    ├── jsalfdkjlsd.png
-    ├── ljsfdkjs.png
+    ├── 0e0f9b6f3bf64dd680c8c033cb73a9c0_0000085.png
+    ├── 0e0f9b6f3bf64dd680c8c033cb73a9c0_0000124.png
     ...
 ```
