@@ -47,7 +47,8 @@ class DataLoaderIAM:
                 if not line or line.startswith('#'):
                     continue
 
-                line_split = line.split(' ', maxsplit=2)
+                # maxsplit is max number of cuts, not number of pieces
+                line_split = line.split(' ', maxsplit=1)
                 assert len(line_split) == 2
 
                 # columns:
