@@ -15,7 +15,13 @@ pip install -r requirements.txt
 
 (The scripts use pandas and pillow; the rest is from SimpleHTR's 
 requirements file.)
- 
+
+### Conda note
+
+* conda `lmbd` package: the c libraries for the database application itself.
+* conda `python-lmdb` package: provides python module lmdb
+* might not be relevant using pip?
+
 ## batch submission on jade2
 
 This does *not* work if the environment is active in the shell when you run `sbatch`!
