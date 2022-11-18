@@ -6,6 +6,7 @@ import json
 import logging
 import math
 import os
+import re
 import uuid
 from typing import Tuple, Dict
 
@@ -61,14 +62,12 @@ def make_workflow_index(dataframe: DataFrame, samples0: list, main_output_direct
 
 
 def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
-                   stem0: str, suppress_spaces0: bool, digits_only0: bool,
-                   max_size0: int, samples0: list):
+                   stem0: str, max_size0: int, samples0: list, filters0: dict):
     """
     Process a dataframe from our CSV format to generate training data
+    :param filters0: map of workflow -> regex
     :param samples0:
     :param max_size0:
-    :param digits_only0:
-    :param suppress_spaces0:
     :param output_directory0:
     :param dataframe:
     :param jpg_index0: the JPG file index
@@ -85,25 +84,11 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
     dataframe = dataframe[dataframe['filename'].isin(jpg_index0.keys())]
     logging.warning(f'Dropped unavailable jpgs; filtered rows {dataframe.shape[0]}')
 
-    # clean the ends of the strings (e.g., newlines)
+    # clean the ends of the strings (especially newlines)
     dataframe['text'] = dataframe['text'].apply(lambda x: x.strip())
     logging.warning(f'Stripped whitespace from ends of text')
 
     # TODO replace the following with custom regex for each workflow
-    # optional: delete rows with anything other than digits (in case it blows up SimpleHTR)
-    if digits_only0:
-        dataframe = dataframe[dataframe['text'].str.fullmatch(r'\d+', na=False)]
-        logging.warning(f'Dropped text with non-digits; filtered rows {dataframe.shape[0]}')
-
-    # optional: delete rows with spaces in the text (in case it blows up SimpleHTR)
-    if suppress_spaces0:
-        dataframe = dataframe[dataframe['text'].str.contains(" ") == False]
-        logging.warning(f'Dropped text with spaces; filtered rows {dataframe.shape[0]}')
-
-    dataframe['x_r'] = dataframe['x'].apply(math.floor)
-    dataframe['y_r'] = dataframe['y'].apply(math.floor)
-    dataframe['width_r'] = dataframe['width'].apply(math.ceil)
-    dataframe['height_r'] = dataframe['height'].apply(math.ceil)
 
     # split into separate dataframes by workflow_id
     grouped = dataframe.groupby(dataframe['workflow_id'])
@@ -111,6 +96,12 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
 
     for wf_id in dataframe['workflow_id'].unique():
         sub_dataframe = grouped.get_group(wf_id)
+        logging.info(f'Workflow_id {wf_id} has {sub_dataframe.shape[0]} rows')
+        # optional: apply regex filter to text
+        wf_pattern = filters0.get(wf_id)
+        if wf_pattern:
+            sub_dataframe = sub_dataframe[sub_dataframe['text'].str.fullmatch(wf_pattern)]
+            logging.info(f'Filter {wf_pattern} passes {sub_dataframe.shape[0]} rows')
         # optional: constrain maximum dataset size:
         if max_size0:
             if max_size0 < sub_dataframe.shape[0]:
@@ -254,8 +245,14 @@ oparser = argparse.ArgumentParser(description="Generate training data",
 oparser.add_argument('-c', dest='config_file',
                      type=str,
                      required=True,
-                     metavar='FILE.json',
+                     metavar='config.json',
                      help='config file')
+
+oparser.add_argument('-f', dest='filter_files',
+                     default=[],
+                     action='append',
+                     metavar='FILTER.json',
+                     help='filter file (can be repeated)')
 
 options = oparser.parse_args()
 
@@ -284,10 +281,22 @@ jpg_index = get_jpg_filenames(config['jpg_directory'],
 input_filename = config['intermediate_file']
 output_directory = config['training_directory']
 
+filters = {}
+
+for filter_file in options.filter_files:
+    with open(filter_file, 'r') as f:
+        addenda = json.load(f)
+        # force keys to be int for compatibility later
+        filters.update({int(k): v for k, v in addenda.items()})
+
+for k, v in filters.items():
+    logging.info('Filter: {k} {v}')
+
 if config.get('sampling', False):
     samples = [0.25, 0.5, 0.75, 1.0]
 else:
     samples = [1.0]
+
 
 suppress_spaces = config.get('suppress_spaces', False)
 digits_only = config.get('digits_only', False)
@@ -296,4 +305,4 @@ max_size = config.get('max_size')
 logging.info(f'Loading {input_filename}')
 big_df = pd.read_csv(input_filename)
 stem = os.path.splitext(os.path.basename(input_filename))[0]
-process_big_df(big_df, output_directory, jpg_index, stem, suppress_spaces, digits_only, max_size, samples)
+process_big_df(big_df, output_directory, jpg_index, stem, max_size, samples, filters)

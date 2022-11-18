@@ -34,5 +34,8 @@ This does *not* work if the environment is active in the shell when you run `sba
 
 ## Filter file (WIP)
 
-Key-value pairs: workflow (str or int) to regex (str). If a workflow in the
-data does not have a filter specified, everything is passed through.
+Key-value pairs: workflow (`int`; `str` will be converted to `int`) to regex (str).
+If a workflow in the data does not have a filter specified, 
+everything is passed through.
+
+Note: the regex will be applied using `fullmatch`.
