@@ -29,7 +29,7 @@ echo "environment activated"
 echo
 
 cd "${working_directory}" || exit 99
-training_directory="/jmain02/home/J2AD003/txk64/axf12-txk64/bluejackets/training_data"
+training_directory="${HOME}/bluejackets/training_data"
 
 # create if new; empty out if re-used
 rm -fr "${training_directory}"
@@ -37,5 +37,6 @@ mkdir -vp "${training_directory}"
 echo
 
 python3 create-training-SimpleHTR.py \
-        -c config-jade2.json
+        -c config-jade2.json \
+        -f filters.json
 
