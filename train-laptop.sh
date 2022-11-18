@@ -7,8 +7,7 @@ main_training_directory="/opt/data/bluejackets/training_data"
 main_model_directory="/opt/data/bluejackets/models"
 debug_directory="/opt/data/bluejackets/debug/"
 
-# htr_directory="${HOME}/sandboxes/SimpleHTR"
-htr_directory=$(dirname "$0")
+htr_directory="${HOME}/sandboxes/bluejackets-jade-SimpleHTR"
 
 # get the workflow training subdirectory from the command line argument
 # 22014 age
