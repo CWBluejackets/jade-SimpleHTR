@@ -38,35 +38,32 @@ class DataLoaderIAM:
         self.batch_size = batch_size
         self.samples = []
 
-        f = open(data_dir / 'words.txt')
         chars = set()
-        for line in f:
-            # ignore empty and comment lines
-            line = line.strip()
-            if not line or line.startswith('#'):
-                continue
 
-            line_split = line.split(' ', maxsplit=2)
-            assert len(line_split) == 2
+        with open(data_dir / 'words.txt') as f:
+            for line in f:
+                # ignore empty and comment lines
+                line = line.strip()
+                if not line or line.startswith('#'):
+                    continue
 
-            # columns:
-            # 0 filename
-            # 1 word(s)
+                line_split = line.split(' ', maxsplit=2)
+                assert len(line_split) == 2
 
-            local_filename = line_split[0]
-            gt_text = line_split[1]
+                # columns:
+                # 0 filename
+                # 1 word(s)
 
-            file_name = data_dir / 'img' / local_filename
+                local_filename = line_split[0]
+                file_name = data_dir / 'img' / local_filename
+                gt_text = line_split[1]
+                chars = chars.union(set(list(gt_text)))
 
-            # GT text are columns starting at 9
-            gt_text = ' '.join(line_split[8:])
-            chars = chars.union(set(list(gt_text)))
-
-            # put sample into list if file is correct
-            if os.path.exists(file_name):
-                self.samples.append(Sample(gt_text, file_name))
-            else:
-                print(f'File missing: {file_name}')
+                # put sample into list if file is correct
+                if os.path.exists(file_name):
+                    self.samples.append(Sample(gt_text, file_name))
+                else:
+                    print(f'File missing: {file_name}')
 
         # split into training and validation set: 95% - 5%
         split_idx = int(data_split * len(self.samples))
