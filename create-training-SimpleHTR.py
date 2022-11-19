@@ -15,6 +15,14 @@ from PIL import Image
 from pandas import Series, DataFrame
 
 
+NEWLINES = re.compile('\n+')
+
+
+def clean_string(s0: str):
+    s1 = s0.strip()
+    return NEWLINES.sub(' ', s1)
+
+
 def get_jpg_filenames(small_jpg_directory: str, big_jpg_directory: str) -> Dict[str, Tuple[str, str]]:
     """
     Find and index all the *.jpg files in the specified directories.
@@ -84,9 +92,9 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
     dataframe = dataframe[dataframe['filename'].isin(jpg_index0.keys())]
     logging.warning(f'Dropped unavailable jpgs; filtered rows {dataframe.shape[0]}')
 
-    # clean the ends of the strings (especially newlines)
-    dataframe['text'] = dataframe['text'].apply(lambda x: x.strip())
-    logging.warning(f'Stripped whitespace from ends of text')
+    # clean the ends of the strings and suppress newlines
+    dataframe['text'] = dataframe['text'].apply(clean_string)
+    logging.warning(f'Cleaned text strings')
 
     # TODO replace the following with custom regex for each workflow
 
