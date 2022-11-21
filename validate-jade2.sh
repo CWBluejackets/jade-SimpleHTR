@@ -22,8 +22,7 @@ module load python/anaconda3
 module load cuda/10.1
 echo "modules loaded"
 
-# htr_directory="${HOME}/bluejackets/SimpleHTR"
-htr_directory=$(dirname "$0")
+htr_directory="${HOME}/bluejackets/SimpleHTR"
 
 source activate simplehtr1
 echo "environment activated"
