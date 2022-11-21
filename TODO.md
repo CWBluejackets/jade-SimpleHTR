@@ -9,11 +9,6 @@
 
 ## further ideas
 
-* change the SHTR training dataset to be easier to generate and manipulate
-  * simplify words.txt format
-  * flatten the PNG file structure
-* add regex variations
-  * change to `\d+\.?\s*"`
 * preprocessing ideas
   * add perturbed versions to the training data 
     * without replacing the plain versions

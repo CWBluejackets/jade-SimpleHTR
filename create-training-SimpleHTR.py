@@ -152,7 +152,7 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
             word_counter[row['text']] += 1
             save_shtr_files(cropped_image, row, info_path, png_path)
 
-    # write the words.txt file
+    # write the words.txt file and the annotation count
     with open(words_file_path, 'w') as f0:
         words_file_data.sort()
         for line in words_file_data:
