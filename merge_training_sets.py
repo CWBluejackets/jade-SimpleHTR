@@ -3,7 +3,6 @@ import argparse
 import glob
 import json
 import os
-import re
 import shutil
 from functools import reduce
 
