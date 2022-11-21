@@ -8,6 +8,7 @@ import math
 import os
 import re
 import uuid
+from collections import Counter
 from typing import Tuple, Dict
 
 import pandas as pd
@@ -96,8 +97,6 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
     dataframe['text'] = dataframe['text'].apply(clean_string)
     logging.warning(f'Cleaned text strings')
 
-    # TODO replace the following with custom regex for each workflow
-
     # split into separate dataframes by workflow_id
     grouped = dataframe.groupby(dataframe['workflow_id'])
     workflow_index = make_workflow_index(dataframe, samples0, output_directory0)
@@ -132,14 +131,15 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
     os.makedirs(img_subdirectory, exist_ok=True)
 
     words_file_data = []
+    word_counter = Counter()
     words_file_path = os.path.join(output_subdirectory, 'words.txt')
+    count_file_path = os.path.join(output_subdirectory, 'word_count.tsv')
     filename_prefix = uuid.uuid4().hex
 
     # group by filename so we load each JPG file only once
     grouped_df = dataframe.groupby(dataframe['filename'])
 
     for filename in dataframe['filename'].unique():
-        # TODO WIP HERE
         small_image, big_image = load_images(filename, jpg_index0)
         small_df = grouped_df.get_group(filename)
 
@@ -149,6 +149,7 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
             png_filename = f'{filename_prefix}_{index:07d}.png'
             png_path = os.path.join(img_subdirectory, png_filename)
             words_file_data.append(generate_words_row(png_filename, row))
+            word_counter[row['text']] += 1
             save_shtr_files(cropped_image, row, info_path, png_path)
 
     # write the words.txt file
@@ -156,8 +157,12 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
         words_file_data.sort()
         for line in words_file_data:
             f0.write(line)
-    logging.info(f'Saved words file {words_file_path}')
+    logging.info(f'Saved words file: {words_file_path}')
     logging.info(f'Number of entries: {len(words_file_data)}')
+    count_df = pd.DataFrame.from_dict(word_counter, orient='index', columns=['count'])
+    count_df.sort_values(inplace=True, by='count', ascending=False)
+    count_df.to_csv(count_file_path, sep='\t')
+    logging.info(f'Saved count file: {count_file_path}')
     return
 
 
