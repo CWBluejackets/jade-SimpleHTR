@@ -6,28 +6,39 @@ import json
 import logging
 import math
 import os
-from typing import Tuple
+import re
+import uuid
+from collections import Counter
+from typing import Tuple, Dict
 
 import pandas as pd
 from PIL import Image
 from pandas import Series, DataFrame
 
 
-def get_jpg_filenames(directory: str, big_directory: str) -> dict:
+NEWLINES = re.compile('\n+')
+
+
+def clean_string(s0: str):
+    s1 = s0.strip()
+    return NEWLINES.sub(' ', s1)
+
+
+def get_jpg_filenames(small_jpg_directory: str, big_jpg_directory: str) -> Dict[str, Tuple[str, str]]:
     """
     Find and index all the *.jpg files in the specified directories.
-    :param big_directory:
-    :param directory:
+    :param big_jpg_directory:
+    :param small_jpg_directory:
     :return: index from basename to tuple[2] of full paths
     """
-    small_pattern = os.path.join(directory, '**', '*.jpg')
+    small_pattern = os.path.join(small_jpg_directory, '**', '*.jpg')
     logging.info(f'Using {small_pattern}')
     jpg_glob = glob.iglob(small_pattern, recursive=True)
     small_index = {os.path.basename(x): x for x in jpg_glob}
     logging.info(f'Found {len(small_index)} jpg files')
 
-    if big_directory:
-        big_pattern = os.path.join(big_directory, '**', '*.jpg')
+    if big_jpg_directory:
+        big_pattern = os.path.join(big_jpg_directory, '**', '*.jpg')
         logging.info(f'Using {big_pattern}')
         big_glob = glob.iglob(big_pattern, recursive=True)
         big_index = {os.path.basename(x): x for x in big_glob}
@@ -39,7 +50,7 @@ def get_jpg_filenames(directory: str, big_directory: str) -> dict:
     return index
 
 
-def make_workflow_index(dataframe: DataFrame, samples0: list, main_output_directory: str):
+def make_workflow_index(dataframe: DataFrame, samples0: list, main_output_directory: str) -> dict:
     """
     Index and create output subdirectories for the workflows
     :param samples0: list of sampling rates (floats)
@@ -60,14 +71,12 @@ def make_workflow_index(dataframe: DataFrame, samples0: list, main_output_direct
 
 
 def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
-                   stem0: str, suppress_spaces0: bool, digits_only0: bool,
-                   max_size0: int, samples0: list):
+                   stem0: str, max_size0: int, samples0: list, filters0: dict):
     """
     Process a dataframe from our CSV format to generate training data
+    :param filters0: map of workflow -> regex
     :param samples0:
     :param max_size0:
-    :param digits_only0:
-    :param suppress_spaces0:
     :param output_directory0:
     :param dataframe:
     :param jpg_index0: the JPG file index
@@ -78,31 +87,15 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
 
     # delete the rows without rectangles or text
     dataframe.dropna(axis=0, how='any', inplace=True, subset=['x', 'y', 'width', 'height', 'text'])
-    logging.warning(f'Dropped NaN rectangles; filtered rows {dataframe.shape[0]}')
+    logging.warning(f'Dropped NaN rectangles/text; filtered rows {dataframe.shape[0]}')
 
     # delete rows with jpg filenames that are not available
     dataframe = dataframe[dataframe['filename'].isin(jpg_index0.keys())]
     logging.warning(f'Dropped unavailable jpgs; filtered rows {dataframe.shape[0]}')
 
-    # clean the ends of the strings (e.g., newlines)
-    dataframe['text'] = dataframe['text'].apply(lambda x: x.strip())
-    logging.warning(f'Stripped whitespace from ends of text')
-
-    # optional: delete rows with anything other than digits (in case it blows up SimpleHTR)
-    if digits_only0:
-        dataframe = dataframe[dataframe['text'].str.fullmatch(r'\d+', na=False)]
-        logging.warning(f'Dropped text with non-digits; filtered rows {dataframe.shape[0]}')
-
-    # optional: delete rows with spaces in the text (in case it blows up SimpleHTR)
-    if suppress_spaces0:
-        dataframe = dataframe[dataframe['text'].str.contains(" ") == False]
-        logging.warning(f'Dropped text with spaces; filtered rows {dataframe.shape[0]}')
-
-    # round x and y down; width and height up
-    dataframe['x_r'] = dataframe['x'].apply(math.floor)
-    dataframe['y_r'] = dataframe['y'].apply(math.floor)
-    dataframe['width_r'] = dataframe['width'].apply(math.ceil)
-    dataframe['height_r'] = dataframe['height'].apply(math.ceil)
+    # clean the ends of the strings and suppress newlines
+    dataframe['text'] = dataframe['text'].apply(clean_string)
+    logging.warning(f'Cleaned text strings')
 
     # split into separate dataframes by workflow_id
     grouped = dataframe.groupby(dataframe['workflow_id'])
@@ -110,10 +103,16 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
 
     for wf_id in dataframe['workflow_id'].unique():
         sub_dataframe = grouped.get_group(wf_id)
+        logging.info(f'Workflow_id {wf_id} has {sub_dataframe.shape[0]} rows')
+        # optional: apply regex filter to text
+        wf_pattern = filters0.get(wf_id)
+        if wf_pattern:
+            sub_dataframe = sub_dataframe[sub_dataframe['text'].str.fullmatch(wf_pattern)]
+            logging.info(f'Filter {wf_pattern} passes {sub_dataframe.shape[0]} rows')
         # optional: constrain maximum dataset size:
         if max_size0:
             if max_size0 < sub_dataframe.shape[0]:
-                sub_dataframe = sub_dataframe.sample(max_size0)
+                sub_dataframe = sub_dataframe.sample(n=max_size0)
             logging.warning(f'Max size {max_size0} applied; filtered rows {sub_dataframe.shape[0]}')
 
         for sample in samples0:
@@ -128,102 +127,82 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
     os.makedirs(output_subdirectory, exist_ok=True)
     info_subdirectory = os.path.join(output_subdirectory, 'info')
     os.makedirs(info_subdirectory, exist_ok=True)
-    gt_subdirectory = os.path.join(output_subdirectory, 'gt')
-    os.makedirs(gt_subdirectory, exist_ok=True)
+    img_subdirectory  = os.path.join(output_subdirectory, 'img')
+    os.makedirs(img_subdirectory, exist_ok=True)
 
     words_file_data = []
-    words_file_path = os.path.join(gt_subdirectory, 'words.txt')
+    word_counter = Counter()
+    words_file_path = os.path.join(output_subdirectory, 'words.txt')
+    count_file_path = os.path.join(output_subdirectory, 'word_count.tsv')
+    filename_prefix = uuid.uuid4().hex
 
-    # group by filename so we load each file only once
+    # group by filename so we load each JPG file only once
     grouped_df = dataframe.groupby(dataframe['filename'])
 
     for filename in dataframe['filename'].unique():
-        # TODO WIP HERE
         small_image, big_image = load_images(filename, jpg_index0)
         small_df = grouped_df.get_group(filename)
 
         for index, row in small_df.iterrows():
             cropped_image = crop_image(small_image, big_image, row)
-            info_filename = os.path.join(output_subdirectory, 'info', f'{stem0}_{index:09}.csv')
-            subdirectory, png_file, png_path, identifier = make_png_dir_file(index, output_subdirectory)
-            words_file_data.append(generate_words_row(identifier, row))
-            os.makedirs(subdirectory, exist_ok=True)
-            save_shtr_files(cropped_image, row, info_filename, png_path)
+            info_path = os.path.join(output_subdirectory, 'info', f'{filename_prefix}_{index:07d}.csv')
+            png_filename = f'{filename_prefix}_{index:07d}.png'
+            png_path = os.path.join(img_subdirectory, png_filename)
+            words_file_data.append(generate_words_row(png_filename, row))
+            word_counter[row['text']] += 1
+            save_shtr_files(cropped_image, row, info_path, png_path)
 
     # write the words.txt file
     with open(words_file_path, 'w') as f0:
         words_file_data.sort()
         for line in words_file_data:
             f0.write(line)
-    logging.info(f'Saved words file {words_file_path}')
+    logging.info(f'Saved words file: {words_file_path}')
     logging.info(f'Number of entries: {len(words_file_data)}')
+    count_df = pd.DataFrame.from_dict(word_counter, orient='index', columns=['count'])
+    count_df.sort_values(inplace=True, by='count', ascending=False)
+    count_df.to_csv(count_file_path, sep='\t')
+    logging.info(f'Saved count file: {count_file_path}')
     return
 
 
 def generate_words_row(png_filename, row: Series):
     """
-    Refer to SimpleHTR.md for the format
+    simplified words.txt format
     :param png_filename:
     :param row:
     :return:
     """
     # refer to SimpleHTR.md for the meaning of these
-    data = [png_filename, 'ok', 154,
-            row['x_r'], row['y_r'], row['width_r'], row['height_r'],
-            'CD', row['text']]
-    line = ' '.join([str(item) for item in data]) + '\n'
+    text = row['text']
+    line = f'{png_filename} {text}\n'
     return line
 
 
-def make_png_dir_file(index: int, wf_directory: str):
-    """
-    Refer to SimpleHTR.md for the format
-    :param wf_directory: directory for the workflow output
-    :param index: row number from the main dataframe, used for uniqueness
-    :return: path and filename
-    """
-    # img/a01/a01-000u/a01-000u-00-00.png
-    # a01-000u-00-00  -> word id for line 00 in form a01-000u
-    # force word ID to 00 and increment only the line and page counters
-    s = f'{index:07d}00'
-    a = s[0:2]
-    b = s[2:5]
-    c = s[5:7]
-    d = s[7:9]
-    # path/to/img/a01/a01-000u
-    directory = os.path.join(wf_directory, 'img', f'a{a}', f'a{a}-{b}u')
-    # a01-000u-00-00 goes in the words.txt file; the training process adds '.png' to it
-    identifier = f'a{a}-{b}u-{c}-{d}'
-    # a01-000u-00-00.png
-    filename = f'{identifier}.png'
-    # path/to/img/a01/a01-000u/a01-000u-00-00.png
-    fullpath = os.path.join(directory, filename)
-    return directory, filename, fullpath, identifier
-
-
-def crop_image(image: Image, big_image: Image, row: Series) -> Image:
+def crop_image(small_image: Image, big_image: Image, row: Series) -> Image:
     """
     Crop the image according to the coordinates in the annotation.
     :param big_image:
-    :param image:
+    :param small_image:
     :param row:
     :return: cropped image
     """
+    # Both PIL and Zooniverse: (0, 0) is top left; all coordinates in pixels.
+    # Zooniverse box: x, y = top left corner of box; and use width and height.
+    # PIL box: tuple (left, top, right, bottom) absolute locations within image.
+    # To be careful, round x and y down; width and height up.
     if big_image:
-        left = math.floor(row['x'] * big_image.width / image.width)
-        top = math.floor(row['y'] * big_image.height / image.height)
-        right = math.ceil((row['x'] + row['width']) * big_image.width / image.width)
-        bottom = math.ceil((row['y'] + row['height']) * big_image.height / image.height)
+        left = math.floor(row['x'] * big_image.width / small_image.width)
+        top = math.floor(row['y'] * big_image.height / small_image.height)
+        right = math.ceil((row['x'] + row['width']) * big_image.width / small_image.width)
+        bottom = math.ceil((row['y'] + row['height']) * big_image.height / small_image.height)
         cropped = big_image.crop(box=(left, top, right, bottom))
     else:
-        # PIL: (0, 0) is top left
-        # same as Zooniverse and x, y = top left corner of box
-        # PIL box: tuple (left, top, right, bottom)
         left = math.floor(row['x'])
         top = math.floor(row['y'])
         right = math.ceil(left + row['width'])
         bottom = math.ceil(top + row['height'])
-        cropped = image.crop(box=(left, top, right, bottom))
+        cropped = small_image.crop(box=(left, top, right, bottom))
     return cropped
 
 
@@ -236,9 +215,10 @@ def save_shtr_files(cropped_image: Image, row: Series, info_file_path: str, png_
     :param row:
     :return:
     """
-    row['png_filename'] = png_path
+    row['png_path'] = png_path
     row.to_csv(info_file_path)
     logging.info(f'Saved info {info_file_path}')
+    ''
 
     cropped_image.save(png_path, bits=8)
     logging.info(f'Saved image {png_path}')
@@ -257,15 +237,18 @@ def load_images(basename: str, jpg_index0) -> Tuple[Image.Image, Image.Image]:
     if big_path:
         big_image = Image.open(big_path, 'r')
         # check that the aspect ratios are close
-        projected_width = small_image.width * big_image.height / small_image.height
-        if abs(projected_width - big_image.width) > 4:
-            logging.info(f'Rejecting big {big_path} for aspect ratio')
+        expected_width = big_image.width * small_image.height / big_image.height
+        if abs(expected_width - small_image.width) > 1:
+            big_aspect = big_image.width / big_image.height
+            small_aspect = small_image.width / small_image.height
+            logging.info(f'Big jpg rejected for aspect ratio: {big_path} {big_aspect:.3f} {small_aspect:.3f}')
             big_image = None
         else:
-            logging.info(f'Using big jpg {big_path}')
+            logging.info(f'Big jpg valid: {big_path}')
     else:
+        # big image was missing from the directory
         big_image = None
-        logging.info(f'Big jpg {small_path} missing')
+        logging.info(f'Big jpg missing: {small_path}')
     return small_image, big_image
 
 
@@ -275,8 +258,14 @@ oparser = argparse.ArgumentParser(description="Generate training data",
 oparser.add_argument('-c', dest='config_file',
                      type=str,
                      required=True,
-                     metavar='FILE.json',
+                     metavar='config.json',
                      help='config file')
+
+oparser.add_argument('-f', dest='filter_files',
+                     default=[],
+                     action='append',
+                     metavar='FILTER.json',
+                     help='filter file (can be repeated)')
 
 options = oparser.parse_args()
 
@@ -305,10 +294,22 @@ jpg_index = get_jpg_filenames(config['jpg_directory'],
 input_filename = config['intermediate_file']
 output_directory = config['training_directory']
 
+filters = {}
+
+for filter_file in options.filter_files:
+    with open(filter_file, 'r') as f:
+        addenda = json.load(f)
+        # force keys to be int for compatibility later
+        filters.update({int(k): v for k, v in addenda.items()})
+
+for k, v in filters.items():
+    logging.info(f'Filter: {k} {v}')
+
 if config.get('sampling', False):
     samples = [0.25, 0.5, 0.75, 1.0]
 else:
     samples = [1.0]
+
 
 suppress_spaces = config.get('suppress_spaces', False)
 digits_only = config.get('digits_only', False)
@@ -317,4 +318,4 @@ max_size = config.get('max_size')
 logging.info(f'Loading {input_filename}')
 big_df = pd.read_csv(input_filename)
 stem = os.path.splitext(os.path.basename(input_filename))[0]
-process_big_df(big_df, output_directory, jpg_index, stem, suppress_spaces, digits_only, max_size, samples)
+process_big_df(big_df, output_directory, jpg_index, stem, max_size, samples, filters)

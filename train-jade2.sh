@@ -22,10 +22,9 @@ module load python/anaconda3
 module load cuda/10.1
 echo "modules loaded"
 
-htr_directory="${HOME}/bluejackets/SimpleHTR"
+htr_directory="${HOME}/bluejackets/jade-SimpleHTR"
 
 source activate simplehtr1
-
 echo "environment activated"
 
 echo ; echo "PATH:"
@@ -37,10 +36,6 @@ which python3
 
 echo ; echo
 cd "${htr_directory}/src" || exit 99
-
-# "fast image loading" from the documentation
-#rm -fr "${training_directory}/lmdb"
-#python create_lmdb.py --data_dir "${training_directory}"
 
 # get the workflow training subdirectory from the command line argument
 # 22014 age

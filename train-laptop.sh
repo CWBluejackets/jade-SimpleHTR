@@ -4,26 +4,17 @@
 
 # age subdirectory
 main_training_directory="/opt/data/bluejackets/training_data"
-htr_directory="${HOME}/sandboxes/SimpleHTR"
 main_model_directory="/opt/data/bluejackets/models"
 debug_directory="/opt/data/bluejackets/debug/"
+
+htr_directory="${HOME}/sandboxes/bluejackets-jade-SimpleHTR"
 
 # get the workflow training subdirectory from the command line argument
 # 22014 age
 # 22038 term of enlistment
 # now with sampling '22014_0.50'
 
-
-# clear out before running?
-# model_directory="${htr_directory}/model"
-
-# jade2 version will need to load modules
-
 cd "${htr_directory}/src" || exit 99
-
-# "fast image loading" from the documentation
-# rm -fvr "${training_directory}/lmdb"
-# conda run -n simplehtr1 python create_lmdb.py --data_dir "${training_directory}"
 
 # https://stackoverflow.com/questions/70512216/conda-activate-in-script
 # conda in a script
@@ -35,7 +26,6 @@ cd "${htr_directory}/src" || exit 99
 
 # clear out the existing model
 rm -fv "${htr_directory}/model/*"
-
 
 training_directory="${main_training_directory}/$1"
 model_directory="${main_model_directory}/$1"
