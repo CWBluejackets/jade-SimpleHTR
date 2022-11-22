@@ -4,9 +4,22 @@ import glob
 import json
 import os
 import shutil
+from collections import Counter
 from functools import reduce
+from typing import List
 
 import pandas as pd
+
+
+def load_count_tsv(filename: str):
+    table = {}
+    with open(filename, 'r') as f:
+        for n, line0 in enumerate(f.readlines()):
+            if n > 0:
+                fields = line0.strip().split('\t')
+                table[fields[0]] = int(fields[1])
+    return table
+
 
 oparser = argparse.ArgumentParser(description="Merge training data sets",
                                   formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -41,7 +54,7 @@ os.makedirs(output_img_dir, exist_ok=True)
 
 output_words = []
 maintain_counts = True
-count_dfs = []
+word_counter = Counter()
 
 for counter, input_name in enumerate(options.input_names):
     input_directory = os.path.join(training_directory, input_name)
@@ -54,7 +67,7 @@ for counter, input_name in enumerate(options.input_names):
 
     if maintain_counts:
         if os.path.exists(input_count_file):
-            count_dfs.append(pd.read_csv(input_count_file, sep='\t', index_col=0))
+            word_counter.update(load_count_tsv(input_count_file))
         else:
             maintain_counts = False
             print(f'Not found: {input_count_file}')
@@ -77,8 +90,7 @@ with open(output_words_file, 'w') as f:
         f.write(f'{line}')
 
 if maintain_counts:
-    count_sum_df = reduce(lambda a, b: a.add(b, axis='index', fill_value=0), count_dfs)
-    count_sum_df['count'] = count_sum_df['count'].apply(int)
-    count_sum_df.sort_values(inplace=True, by='count', ascending=False)
+    count_df = pd.DataFrame.from_dict(word_counter, orient='index', columns=['count'])
+    count_df.sort_values(inplace=True, by='count', ascending=False)
+    count_df.to_csv(output_counter_file, sep='\t')
     print(f'Writing {output_counter_file}')
-    count_sum_df.to_csv(output_counter_file, sep='\t')
