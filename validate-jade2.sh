@@ -41,11 +41,6 @@ data_directory="${HOME}/bluejackets/training_data/$2"
 echo "Model: ${model_directory}"
 echo "Test data: ${data_directory}"
 
-# create if new; empty out if re-used
-rm -fr "${model_directory}"
-mkdir -vp "${model_directory}"
-echo
-
 python3 main.py --mode validate \
       --data_dir "${data_directory}"  \
       --model_dir "${model_directory}"
