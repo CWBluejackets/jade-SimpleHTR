@@ -54,7 +54,7 @@ for counter, input_name in enumerate(options.input_names):
 
     if maintain_counts:
         if os.path.exists(input_count_file):
-            count_dfs.append(pd.read_csv(input_count_file, sep='\t'))
+            count_dfs.append(pd.read_csv(input_count_file, sep='\t', index_col=0))
         else:
             maintain_counts = False
             print(f'Not found: {input_count_file}')
