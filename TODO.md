@@ -2,10 +2,8 @@
 
 ## evaluation
 
-* train on age + term merged
-  * apply to age
-  * apply to term
-  * compare to previous results
+* fix occupation filter to include apostrophes and ditto marks
+* add merge age+term command to `create-training-jade2.sh`
 
 ## further ideas
 
