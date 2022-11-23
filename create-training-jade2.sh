@@ -32,7 +32,9 @@ cd "${working_directory}" || exit 99
 training_directory="${HOME}/bluejackets/training_data"
 
 # create if new; empty out if re-used
-rm -fr "${training_directory}"
+TIMESTAMP=$(date +%Y%m%d-%H%M)
+mv -v "${training_directory}" "${training_directory}_${TIMESTAMP}"
+
 mkdir -vp "${training_directory}"
 echo
 
