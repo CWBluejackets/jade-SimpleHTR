@@ -58,15 +58,17 @@ class DataLoaderIAM:
 
                 # maxsplit is max number of cuts, not number of pieces
                 line_split = line.split(' ', maxsplit=1)
-                assert len(line_split) == 2
-
                 # columns:
                 # 0 filename
                 # 1 word(s)
 
                 local_filename = line_split[0]
                 file_name = data_dir / 'img' / local_filename
-                gt_text = line_split[1]
+                # sometimes the training data includes a correct empty string
+                if len(line_split) == 2:
+                    gt_text = line_split[1]
+                else:
+                    gt_text = ''
                 chars = chars.union(set(list(gt_text)))
 
                 # put sample into list if file is correct
