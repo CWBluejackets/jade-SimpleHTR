@@ -142,7 +142,6 @@ class DataLoaderIAM:
                 if img is None:
                     print(f'{img_path} is None')
                 else:  # None
-                    print(f'{img_path} is good')
                     output_filename = os.path.join(locations.get_debug_dir(),
                                                    os.path.basename(img_path) + '_test.png')
                     cv2.imwrite(output_filename, img)
