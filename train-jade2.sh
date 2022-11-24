@@ -46,17 +46,9 @@ training_directory="${HOME}/bluejackets/training_data/$1"
 model_directory="${HOME}/bluejackets/models/$1"
 debug_directory="${HOME}/bluejackets/debug"
 
-
 echo "Training: ${training_directory}"
 echo "Model: ${model_directory}"
-
-if [ "$2" = 'h' ]
-then
-    echo "high contrast"
-    OPTIONS="--high_contrast  --debug_dir ${debug_directory}"
-else
-    echo "normal contrast"
-fi
+echo
 
 # create if new; empty out if re-used
 rm -fr "${model_directory}"
@@ -65,8 +57,20 @@ rm -fr "${debug_directory}"
 mkdir -vp "${debug_directory}"
 echo
 
-python3 main.py --mode train  "${OPTIONS}"\
-      --data_dir "${training_directory}"  \
-      --model_dir "${model_directory}" \
-      --batch_size 500 --early_stopping 15
+if [ "$2" = 'h' ]
+then
+    echo "high contrast"
+    python3 main.py --mode train  \
+            --high_contrast  --debug_dir "${debug_directory}"  \
+            --data_dir "${training_directory}"    \
+            --model_dir "${model_directory}"      \
+            --batch_size 500 --early_stopping 15
+else
+    echo "normal contrast"
+    python3 main.py --mode train  \
+            --data_dir "${training_directory}"    \
+            --model_dir "${model_directory}"      \
+            --batch_size 500 --early_stopping 15
+fi
+
 
