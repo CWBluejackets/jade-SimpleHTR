@@ -68,7 +68,8 @@ class DataLoaderIAM:
                 if len(line_split) == 2:
                     gt_text = line_split[1]
                 else:
-                    gt_text = ''
+                    # CTLoss doesn't accept zero-length labels
+                    gt_text = ' '
                 chars = chars.union(set(list(gt_text)))
 
                 # put sample into list if file is correct
