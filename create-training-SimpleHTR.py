@@ -104,11 +104,13 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
     for wf_id in dataframe['workflow_id'].unique():
         sub_dataframe = grouped.get_group(wf_id)
         logging.info(f'Workflow_id {wf_id} has {sub_dataframe.shape[0]} rows')
-        # optional: apply regex filter to text
+
+        # optional: apply regex filter to text; let everything through if no filter is specified
         wf_pattern = filters0.get(wf_id)
         if wf_pattern:
             sub_dataframe = sub_dataframe[sub_dataframe['text'].str.fullmatch(wf_pattern)]
             logging.info(f'Filter {wf_pattern} passes {sub_dataframe.shape[0]} rows')
+
         # optional: constrain maximum dataset size:
         if max_size0:
             if max_size0 < sub_dataframe.shape[0]:
