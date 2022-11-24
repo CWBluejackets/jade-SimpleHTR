@@ -138,18 +138,32 @@ def parse_args() -> argparse.Namespace:
     """Parses arguments from the command line."""
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--mode', choices=['train', 'validate', 'infer'], default='infer')
-    parser.add_argument('--decoder', choices=['bestpath', 'beamsearch', 'wordbeamsearch'], default='bestpath')
-    parser.add_argument('--batch_size', help='Batch size.', type=int, default=100)
-    parser.add_argument('--data_dir', help='Directory containing IAM dataset.', type=Path, required=False)
-    parser.add_argument('--fast', help='Load samples from LMDB.', default=False, action='store_true')
-    parser.add_argument('--augment', help=' Use data augmentation', default=False, action='store_true')
-    parser.add_argument('--line_mode', help='Train to read text lines instead of single words.', action='store_true')
-    parser.add_argument('--img_file', help='Image used for inference.', type=Path, default='../data/word.png')
-    parser.add_argument('--early_stopping', help='Early stopping epochs.', type=int, default=25)
-    parser.add_argument('--dump', help='Dump output of NN to CSV file(s).', action='store_true')
-    parser.add_argument('--model_dir', help='Path to trained model', type=Path, default='../model')
-    parser.add_argument('--debug_dir', help='directory to dump CV2', type=Path, default=None)
+    parser.add_argument('--mode', choices=['train', 'validate', 'infer'],
+                        default='infer')
+    parser.add_argument('--decoder', choices=['bestpath', 'beamsearch', 'wordbeamsearch'],
+                        default='bestpath')
+    parser.add_argument('--batch_size', help='Batch size.',
+                        type=int, default=100)
+    parser.add_argument('--data_dir', help='Directory containing IAM dataset.',
+                        type=Path, required=False)
+    parser.add_argument('--fast', help='Load samples from LMDB.',
+                        default=False, action='store_true')
+    parser.add_argument('--augment', help=' Use data augmentation',
+                        default=False, action='store_true')
+    parser.add_argument('--line_mode', help='Train to read text lines instead of single words.',
+                        action='store_true', default=False)
+    parser.add_argument('--img_file', help='Image used for inference.',
+                        type=Path, default='../data/word.png')
+    parser.add_argument('--early_stopping', help='Early stopping epochs.',
+                        type=int, default=25)
+    parser.add_argument('--dump', help='Dump output of NN to CSV file(s).',
+                        action='store_true', default=False)
+    parser.add_argument('--model_dir', help='Path to trained model',
+                        type=Path, default='../model')
+    parser.add_argument('--debug_dir', help='directory to dump CV2',
+                        type=Path, default=None)
+    parser.add_argument('--high_contrast', help='normalize image matrix to maximum contrast',
+                        action='store_true', default=False)
 
     return parser.parse_args()
 
@@ -161,6 +175,7 @@ def main():
     args = parse_args()
     locations.set_model_dir(args.model_dir)
     locations.set_debug_dir(args.debug_dir)
+    locations.set_high_contrast(args.high_contrast)
 
     decoder_mapping = {'bestpath': DecoderType.BestPath,
                        'beamsearch': DecoderType.BeamSearch,

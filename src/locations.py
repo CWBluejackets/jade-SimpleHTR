@@ -4,10 +4,20 @@ import os
 
 # default value
 model_dir = '../model'
-
 fn_corpus = '../data/corpus.txt'
 
 debug_directory = None
+high_contrast = False
+
+
+def set_high_contrast(high_contrast0):
+    global high_contrast
+    high_contrast = high_contrast0
+    return
+
+
+def get_high_contrast():
+    return high_contrast
 
 
 def set_model_dir(model_dir0):
