@@ -28,7 +28,7 @@ This does *not* work if the environment is active in the shell when you run `sba
 
 ## Config file
 
-* `input_directory` containing CSV files from Zoonivers
+* `input_directory` containing CSV files from Zooniverse
 * `intermediate_file` our CSV format for generating training data
 * `jpg_directory` contains the JPGs that the annotators use, required
 * `big_jpg_directory` contains the full-size JPGs, optional
@@ -40,7 +40,7 @@ This does *not* work if the environment is active in the shell when you run `sba
 
 ## Filter file (WIP)
 
-Key-value pairs: workflow (`str` will be parsed to `int`) to regex (`str`).
+Key-value pairs: workflow (`str` ) to regex (`str`).
 If a workflow in the data does not have a filter specified, 
 everything is passed through.
 

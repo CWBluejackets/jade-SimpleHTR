@@ -14,6 +14,15 @@ Sample = namedtuple('Sample', ['gt_text', 'file_path'])
 Batch = namedtuple('Batch', ['imgs', 'gt_texts', 'batch_size'])
 
 
+def normalize_image(m: np.ndarray, target_max=255, target_min=0) -> np.ndarray:
+    # v1 = (v0 - min) / (max - min) * (target_max - target_min) + target_min
+    src_min = m.min()
+    src_max = m.max()
+    m1 = (m - src_min) / (src_max - src_min) * (target_max - target_min) + target_min
+    m2 = m1.round().astype(np.int64)
+    return m2
+
+
 class DataLoaderIAM:
     """
     Loads data which corresponds to IAM format,
@@ -124,6 +133,8 @@ class DataLoaderIAM:
                 print(f'{img_path} is missing')
                 return None
             img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+            if locations.get_high_contrast():
+                img = normalize_image(img)
             if locations.get_debug_dir():
                 if img is None:
                     print(f'{img_path} is None')
