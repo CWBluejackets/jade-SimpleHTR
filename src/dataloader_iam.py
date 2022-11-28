@@ -137,7 +137,7 @@ class DataLoaderIAM:
                 return None
             img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
             if locations.get_high_contrast():
-                img = normalize_image(img)
+                img = cv2.normalize(img, 0, 255, cv2.NORM_MINMAX)
             if locations.get_debug_dir():
                 if img is None:
                     print(f'{img_path} is None')
