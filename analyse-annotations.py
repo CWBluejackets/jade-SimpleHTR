@@ -22,11 +22,6 @@ oparser.add_argument('-o', dest='output_file',
                      metavar='FILE.csv',
                      help='output file')
 
-oparser.add_argument('-i', dest='interval',
-                     default=None,
-                     metavar='INTERVAL',
-                     help='optional column interval')
-
 options = oparser.parse_args()
 
 with open(options.config_file) as f:
@@ -53,13 +48,32 @@ input_filename = config['intermediate_file']
 
 logging.info(f'Loading {input_filename}')
 big_df = pd.read_csv(input_filename)
-big_df['date'] = pd.to_datetime(big_df['finished_str']).dt.date
+big_df['datetime'] = pd.to_datetime(big_df['finished_str'])
+big_df['date'] = big_df['datetime'].dt.date
 
 dateless_grouping = big_df.groupby(['annotator', 'workflow_id'])['classification_id'].agg(['count'])
 dateless_grouping.reset_index(inplace=True)
 dateless_pivot = dateless_grouping.pivot(index='annotator', columns='workflow_id',
                                          values='count').fillna(value=0)
 
-# TODO interval grouper
-# columns = [min, meanr, medianr, max]
-# df = df.groupby(pd.Grouper(key='timestamp', freq=config1['averaging'])).agg({'temperature': columns})
+logging.info(f'Writing {options.output_file}')
+
+dateless_pivot.to_csv(options.output_file)
+
+week_grouping = big_df.groupby(by=['annotator',
+                                   pd.Grouper(key='dt',
+                                              freq='W')])['classification_id'].agg(['count'])
+week_grouping.reset_index(inplace=True)
+week_pivot = week_grouping.pivot(index='annotator', columns='wk', values='count').fillna(0)
+
+output_file_parts = os.path.splitext(os.path.basename(options.output_file))
+week_output_file = os.path.join(os.path.dirname(options.output_file),
+                                f'{output_file_parts[0]}_weekly{output_file_parts[1]}')
+
+logging.info(f'Writing {week_output_file}')
+
+week_pivot.to_csv(week_output_file)
+
+
+
+
