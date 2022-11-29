@@ -61,10 +61,11 @@ logging.info(f'Writing {options.output_file}')
 dateless_pivot.to_csv(options.output_file)
 
 week_grouping = big_df.groupby(by=['annotator',
-                                   pd.Grouper(key='dt',
+                                   pd.Grouper(key='datetime',
                                               freq='W')])['classification_id'].agg(['count'])
 week_grouping.reset_index(inplace=True)
-week_pivot = week_grouping.pivot(index='annotator', columns='wk', values='count').fillna(0)
+week_grouping['date'] = week_grouping['datetime'].dt.date
+week_pivot = week_grouping.pivot(index='annotator', columns='date', values='count').fillna(0)
 
 output_file_parts = os.path.splitext(os.path.basename(options.output_file))
 week_output_file = os.path.join(os.path.dirname(options.output_file),
