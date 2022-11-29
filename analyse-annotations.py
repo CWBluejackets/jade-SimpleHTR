@@ -55,11 +55,11 @@ logging.info(f'Loading {input_filename}')
 big_df = pd.read_csv(input_filename)
 big_df['date'] = pd.to_datetime(big_df['finished_str']).dt.date
 
-dateless_grouping = big_df.groupby(['annotator', 'workflow_id'])['classification_id'].agg(['count']).reset_index()
+dateless_grouping = big_df.groupby(['annotator', 'workflow_id'])['classification_id'].agg(['count'])
+dateless_grouping.reset_index(inplace=True)
 dateless_pivot = dateless_grouping.pivot(index='annotator', columns='workflow_id',
-                                         values='count').fillna(value=0, inplace=True)
+                                         values='count').fillna(value=0)
 
-
-# TODO grouper
+# TODO interval grouper
 # columns = [min, meanr, medianr, max]
 # df = df.groupby(pd.Grouper(key='timestamp', freq=config1['averaging'])).agg({'temperature': columns})
