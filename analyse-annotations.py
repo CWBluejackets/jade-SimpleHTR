@@ -35,8 +35,8 @@ log_directory = config.get('log_directory')
 
 if log_directory:
     timestamp = datetime.datetime.now().isoformat(timespec='seconds')
-    logfile = os.path.join(config['log_directory'], f'{timestamp}_create.log')
-    print(f'Logfile f{logfile}')
+    logfile = os.path.join(config['log_directory'], f'{timestamp}_analyse.log')
+    print(f'Logfile {logfile}')
     logging.basicConfig(filename=logfile, level=logging.INFO,
                         format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 else:
