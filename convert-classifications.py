@@ -8,6 +8,7 @@ import logging
 import os
 import re
 
+import maya
 import pandas as pd
 
 DEFAULT_OUTPUT_FILENAME = os.path.join(os.environ['HOME'], 'output.csv')
@@ -15,6 +16,7 @@ TASK_RE = re.compile(r'T(\d+)')
 
 # output format CSV
 COLUMNS = ['subject_id', 'classification_id', 'workflow_id', 'annotator', 'filename',
+           'finished_str', 'finished_epoch',
            'task', 'x', 'y', 'width', 'height', 'text']
 
 
@@ -38,12 +40,16 @@ def process_row(row0: pd.Series):
     subject_id = row0['subject_ids']
     subject_data = json.loads(row0['subject_data'])
     filename = subject_data[str(subject_id)].get('Filename')
+    metadata = json.loads(row0['metadata'])
+    finished_str = metadata.get('finished_at')
+    finished_epoch = maya.parse(finished_str).epoch
     # annotations = list of things
     annotations = json.loads(row0['annotations'])
     for annotation in annotations:
         partial_results = process_annotation(annotation)
         for partial in partial_results:
-            full_result = [subject_id, classification_id, workflow_id, annotator, filename] + partial
+            full_result = [subject_id, classification_id, workflow_id, annotator, filename,
+                           finished_str, finished_epoch] + partial
             results0.append(full_result)
     return results0
 
