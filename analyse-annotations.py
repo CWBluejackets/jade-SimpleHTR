@@ -60,6 +60,8 @@ logging.info(f'Writing {options.output_file}')
 
 dateless_pivot.to_csv(options.output_file)
 
+# TODO force count values to int
+
 week_grouping = big_df.groupby(by=['annotator',
                                    pd.Grouper(key='datetime',
                                               freq='W')])['classification_id'].agg(['count'])
