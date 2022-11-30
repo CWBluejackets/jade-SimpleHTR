@@ -38,7 +38,7 @@ mv -v "${training_directory}" "${training_directory}_${TIMESTAMP}"
 mkdir -vp "${training_directory}"
 echo
 
-python3 create-training-SimpleHTR.py \
+python3 create-training-data.py \
         -c config-jade2.json \
         -f filters.json
 
