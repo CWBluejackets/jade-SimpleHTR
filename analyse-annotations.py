@@ -54,29 +54,37 @@ big_df['date'] = big_df['datetime'].dt.date
 dateless_grouping = big_df.groupby(['annotator', 'workflow_id'])['classification_id'].agg(['count'])
 dateless_grouping.reset_index(inplace=True)
 dateless_pivot = dateless_grouping.pivot(index='annotator', columns='workflow_id',
-                                         values='count').fillna(value=0)
+                                         values='count').fillna(value=0).astype(int)
 
 logging.info(f'Writing {options.output_file}')
-
 dateless_pivot.to_csv(options.output_file)
 
-# TODO force count values to int
+anno_week_grouping = big_df.groupby(by=['annotator',
+                                        pd.Grouper(key='datetime',
+                                                   freq='W')])['classification_id'].agg(['count'])
+anno_week_grouping.reset_index(inplace=True)
+anno_week_grouping['date'] = anno_week_grouping['datetime'].dt.date
+anno_week_pivot = anno_week_grouping.pivot(index='annotator', columns='date',
+                                           values='count').fillna(0).astype(int)
 
-week_grouping = big_df.groupby(by=['annotator',
-                                   pd.Grouper(key='datetime',
-                                              freq='W')])['classification_id'].agg(['count'])
-week_grouping.reset_index(inplace=True)
-week_grouping['date'] = week_grouping['datetime'].dt.date
-week_pivot = week_grouping.pivot(index='annotator', columns='date', values='count').fillna(0)
+aw_file_parts = os.path.splitext(os.path.basename(options.output_file))
+aw_file = os.path.join(os.path.dirname(options.output_file),
+                       f'{aw_file_parts[0]}_anno_weekly{aw_file_parts[1]}')
 
-output_file_parts = os.path.splitext(os.path.basename(options.output_file))
-week_output_file = os.path.join(os.path.dirname(options.output_file),
-                                f'{output_file_parts[0]}_weekly{output_file_parts[1]}')
+logging.info(f'Writing {aw_file}')
+anno_week_pivot.to_csv(aw_file)
 
-logging.info(f'Writing {week_output_file}')
+wf_week_grouping = big_df.groupby(by=['workflow_id',
+                                      pd.Grouper(key='datetime',
+                                                 freq='W')])['classification_id'].agg(['count'])
+wf_week_grouping.reset_index(inplace=True)
+wf_week_grouping['date'] = wf_week_grouping['datetime'].dt.date
+wf_week_pivot = wf_week_grouping.pivot(index='workflow_id', columns='date',
+                                       values='count').fillna(0).astype(int)
 
-week_pivot.to_csv(week_output_file)
+ww_file_parts = os.path.splitext(os.path.basename(options.output_file))
+ww_file = os.path.join(os.path.dirname(options.output_file),
+                       f'{ww_file_parts[0]}_wf_weekly{ww_file_parts[1]}')
 
-
-
-
+logging.info(f'Writing {ww_file}')
+wf_week_pivot.to_csv(ww_file)
