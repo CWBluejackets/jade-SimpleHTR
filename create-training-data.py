@@ -104,6 +104,13 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
         sub_dataframe = grouped.get_group(wf_id)
         logging.info(f'Workflow_id {wf_id} has {sub_dataframe.shape[0]} rows')
 
+        wf_all_counter = Counter(sub_dataframe['text'])
+        wf_all_df = pd.DataFrame.from_dict(wf_all_counter, orient='index', columns=['count'])
+        wf_all_df.sort_values(inplace=True, by='count', ascending=False)
+        wf_count_path = os.path.join(output_directory, f'annotation_count.tsv')
+        wf_all_df.to_csv(wf_count_path, sep='\t')
+        logging.info(f'Saved count file: {wf_count_path}')
+
         # optional: apply regex filter to text; let everything through if no filter is specified
         wf_pattern = filters0.get(wf_id)
         if wf_pattern:
@@ -141,7 +148,7 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
     words_file_data = []
     word_counter = Counter()
     words_file_path = os.path.join(output_subdirectory, 'words.txt')
-    count_file_path = os.path.join(output_subdirectory, 'word_count.tsv')
+    count_file_path = os.path.join(output_subdirectory, 'annotation_count.tsv')
     filename_prefix = uuid.uuid4().hex
 
     # group by filename so we load each JPG file only once
