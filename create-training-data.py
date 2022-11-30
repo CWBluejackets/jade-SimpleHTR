@@ -27,8 +27,8 @@ def clean_string(s0: str):
 def get_jpg_filenames(small_jpg_directory: str, big_jpg_directory: str) -> Dict[str, Tuple[str, str]]:
     """
     Find and index all the *.jpg files in the specified directories.
-    :param big_jpg_directory:
-    :param small_jpg_directory:
+    :param big_jpg_directory: contains the original scanned JPGs
+    :param small_jpg_directory: contains the JPGs reduced below 1 MB for Zooniverse
     :return: index from basename to tuple[2] of full paths
     """
     small_pattern = os.path.join(small_jpg_directory, '**', '*.jpg')
@@ -52,7 +52,7 @@ def get_jpg_filenames(small_jpg_directory: str, big_jpg_directory: str) -> Dict[
 
 def make_workflow_index(dataframe: DataFrame, samples0: list, main_output_directory: str) -> dict:
     """
-    Index and create output subdirectories for the workflows
+    Index and create output subdirectories for the workflows and sampling rates
     :param samples0: list of sampling rates (floats)
     :param dataframe: dataframe with a 'workflow' column
     :param main_output_directory:
@@ -71,16 +71,15 @@ def make_workflow_index(dataframe: DataFrame, samples0: list, main_output_direct
 
 
 def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
-                   stem0: str, max_size0: int, samples0: list, filters0: dict):
+                   max_size0: int, samples0: list, filters0: dict):
     """
-    Process a dataframe from our CSV format to generate training data
+    Process the dataframe from our intermediate CSV format to generate training data
     :param filters0: map of workflow -> regex
     :param samples0:
     :param max_size0:
     :param output_directory0:
     :param dataframe:
     :param jpg_index0: the JPG file index
-    :param stem0: starter for the output filenames
     :return:
     """
     logging.warning(f'Unfiltered rows {dataframe.shape[0]}')
@@ -121,11 +120,18 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
             wf_df = sub_dataframe.sample(frac=sample).reset_index()
             workflow_directory = workflow_index[(wf_id, sample)]
             logging.info(f'Starting workflow {wf_id} with {wf_df.shape[0]} rows (sampled at {sample})')
-            process_workflow_df(wf_df, workflow_directory, jpg_index0, stem0)
+            process_workflow_df(wf_df, workflow_directory, jpg_index0)
     return
 
 
-def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_index0: dict, stem0: str):
+def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_index0: dict):
+    """
+    Process the dataframe for one workflow ID, already sampled
+    :param dataframe: dataframe for selected ID
+    :param output_subdirectory: e.g., path/to23038_0.75
+    :param jpg_index0: index of JPGs
+    :return:
+    """
     os.makedirs(output_subdirectory, exist_ok=True)
     info_subdirectory = os.path.join(output_subdirectory, 'info')
     os.makedirs(info_subdirectory, exist_ok=True)
@@ -170,7 +176,7 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
 
 def generate_words_row(png_filename, row: Series):
     """
-    simplified words.txt format
+    Produce one line for the simplified words.txt format
     :param png_filename:
     :param row:
     :return:
@@ -319,5 +325,4 @@ max_size = config.get('max_size')
 
 logging.info(f'Loading {input_filename}')
 big_df = pd.read_csv(input_filename)
-stem = os.path.splitext(os.path.basename(input_filename))[0]
-process_big_df(big_df, output_directory, jpg_index, stem, max_size, samples, filters)
+process_big_df(big_df, output_directory, jpg_index, max_size, samples, filters)
