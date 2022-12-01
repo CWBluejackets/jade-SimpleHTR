@@ -22,62 +22,63 @@ module load python/anaconda3
 module load cuda/10.1
 echo "modules loaded"
 
-htr_directory="${HOME}/bluejackets/jade-SimpleHTR"
+HTR_DIR="${HOME}/bluejackets/jade-SimpleHTR"
 
 source activate simplehtr1
 echo "environment activated"
+echo
+cd "${HTR_DIR}/src" || exit 99
 
-echo ; echo "PATH:"
-echo "${PATH}"
-
-echo ; echo "PYTHON"
-which python
-which python3
-
-echo ; echo
-cd "${htr_directory}/src" || exit 99
-
-# get the workflow training subdirectory from the command line argument
-# 22014 age
-# 22038 term of enlistment
-# now with sampling '22014_0.50'
-
-# TODO use getopts for flags
 # https://www.golinuxcloud.com/bash-getopts/
 # https://www.computerhope.com/unix/bash/getopts.htm
-# high contrast
-# convert fractions
-# modify the model directories' names accordingly?
 
-training_directory="${HOME}/bluejackets/training_data/$1"
-model_directory="${HOME}/bluejackets/models/$1"
-debug_directory="${HOME}/bluejackets/debug"
+# OPTIONS passed to SimpleHTR
+# -h -> --high_contrast
+# -c -> --convert_fractions
+# TODO -d DEBUG
+# required
+# -t 22014_1.00 = training subdirectory
 
-echo "Training: ${training_directory}"
-echo "Model: ${model_directory}"
+MAIN_OPTIONS="--mode train --batch_size 500 --early_stopping 15"
+MODEL_SUFFIX=""
+
+while getopts "hct:" option
+do
+  case "${option}" in
+    h)
+      MAIN_OPTIONS="${MAIN_OPTIONS} --high_contrast"
+      MODEL_SUFFIX="${MODEL_SUFFIX}_H"
+      ;;
+    c)
+      MAIN_OPTIONS="${MAIN_OPTIONS} --convert_fractions"
+      MODEL_SUFFIX="${MODEL_SUFFIX}_C"
+      ;;
+    t)
+      TRAINING_SUBDIR="${OPTARG}"
+      ;;
+    *)
+      echo "invalid option: ${option}"
+      exit 13
+  esac
+done
+
+TRAINING_DIR="${HOME}/bluejackets/training_data/${TRAINING_SUBDIR}}}"
+MODEL_DIR="${HOME}/bluejackets/models/${TRAINING_SUBDIR}${MODEL_SUFFIX}"
+DEBUG_DIR="${HOME}/bluejackets/debug/${TRAINING_SUBDIR}${MODEL_SUFFIX}"
+
+echo "Training: ${TRAINING_DIR}"
+echo "Model: ${MODEL_DIR}"
 echo
 
 # create if new; empty out if re-used
-rm -fr "${model_directory}"
-mkdir -vp "${model_directory}"
-rm -fr "${debug_directory}"
-mkdir -vp "${debug_directory}"
+rm -fr "${MODEL_DIR}"
+mkdir -vp "${MODEL_DIR}"
+# TODO only if debug option is requested
+# rm -fr "${DEBUG_DIR}"
+# mkdir -vp "${DEBUG_DIR}"
 echo
 
-if [ "$2" = 'h' ]
-then
-    echo "high contrast"
-    python3 main.py --mode train  \
-            --high_contrast  --debug_dir "${debug_directory}"  \
-            --data_dir "${training_directory}"    \
-            --model_dir "${model_directory}"      \
-            --batch_size 500 --early_stopping 15
-else
-    echo "normal contrast"
-    python3 main.py --mode train  \
-            --data_dir "${training_directory}"    \
-            --model_dir "${model_directory}"      \
-            --batch_size 500 --early_stopping 15
-fi
-
+COMMAND="python3 main.py ${MAIN_OPTIONS} --data_dir ${TRAINING_DIR} --model_dir ${MODEL_DIR}"
+echo "${COMMAND}"
+"$COMMAND"
 
