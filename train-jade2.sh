@@ -42,6 +42,13 @@ cd "${htr_directory}/src" || exit 99
 # 22038 term of enlistment
 # now with sampling '22014_0.50'
 
+# TODO use getopts for flags
+# https://www.golinuxcloud.com/bash-getopts/
+# https://www.computerhope.com/unix/bash/getopts.htm
+# high contrast
+# convert fractions
+# modify the model directories' names accordingly?
+
 training_directory="${HOME}/bluejackets/training_data/$1"
 model_directory="${HOME}/bluejackets/models/$1"
 debug_directory="${HOME}/bluejackets/debug"
