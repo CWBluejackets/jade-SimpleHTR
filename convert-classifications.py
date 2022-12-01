@@ -15,8 +15,7 @@ TASK_RE = re.compile(r'T(\d+)')
 
 # output format CSV
 COLUMNS = ['subject_id', 'classification_id', 'workflow_id', 'annotator', 'filename',
-           'finished_str', 'finished_epoch',
-           'task', 'x', 'y', 'width', 'height', 'text']
+           'finished_str', 'task', 'x', 'y', 'width', 'height', 'text']
 
 
 def convert_t_code(task_id):
