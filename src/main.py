@@ -160,6 +160,8 @@ def parse_args() -> argparse.Namespace:
                         action='store_true', default=False)
     parser.add_argument('--model_dir', help='Path to trained model',
                         type=Path, default='../model')
+    parser.add_argument('--convert_fractions', help='convert 1/4 1/2 3/4 to single unicode characters',
+                        action='store_true', default=False)
     parser.add_argument('--debug_dir', help='directory to dump CV2',
                         type=Path, default=None)
     parser.add_argument('--high_contrast', help='normalize image matrix to maximum contrast',
@@ -176,6 +178,7 @@ def main():
     locations.set_model_dir(args.model_dir)
     locations.set_debug_dir(args.debug_dir)
     locations.set_high_contrast(args.high_contrast)
+    locations.set_convert_fractions(args.convert_fractions)
 
     decoder_mapping = {'bestpath': DecoderType.BestPath,
                        'beamsearch': DecoderType.BeamSearch,

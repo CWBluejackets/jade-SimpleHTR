@@ -23,6 +23,10 @@ def normalize_image(m: np.ndarray, target_max=255, target_min=0) -> np.ndarray:
     return m2
 
 
+def convert_fractions(text):
+    return text.replace('1/4', '¼').replace('1/2', '½').replace('3/4', '¾')
+
+
 class DataLoaderIAM:
     """
     Loads data which corresponds to IAM format,
@@ -67,6 +71,8 @@ class DataLoaderIAM:
                 # sometimes the training data includes a correct empty string
                 if len(line_split) == 2:
                     gt_text = line_split[1]
+                    if locations.get_convert_fractions():
+                        gt_text = convert_fractions(gt_text)
                 else:
                     # CTLoss doesn't accept zero-length labels
                     gt_text = ' '

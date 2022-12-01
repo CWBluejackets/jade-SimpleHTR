@@ -8,6 +8,17 @@ fn_corpus = '../data/corpus.txt'
 
 debug_directory = None
 high_contrast = False
+convert_fractions = False
+
+
+def set_convert_fractions(convert_fractions0):
+    global convert_fractions
+    convert_fractions = convert_fractions0
+    return
+
+
+def get_convert_fractions():
+    return convert_fractions
 
 
 def set_high_contrast(high_contrast0):
