@@ -80,5 +80,4 @@ echo
 
 COMMAND="python3 main.py ${MAIN_OPTIONS} --data_dir ${TRAINING_DIR} --model_dir ${MODEL_DIR}"
 echo "${COMMAND}"
-"$COMMAND"
-
+"${COMMAND}"
