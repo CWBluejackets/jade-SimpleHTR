@@ -64,7 +64,7 @@ done
 
 TRAINING_DIR="${HOME}/bluejackets/training_data/${TRAINING_SUBDIR}}}"
 MODEL_DIR="${HOME}/bluejackets/models/${TRAINING_SUBDIR}${MODEL_SUFFIX}"
-DEBUG_DIR="${HOME}/bluejackets/debug/${TRAINING_SUBDIR}${MODEL_SUFFIX}"
+#DEBUG_DIR="${HOME}/bluejackets/debug/${TRAINING_SUBDIR}${MODEL_SUFFIX}"
 
 echo "Training: ${TRAINING_DIR}"
 echo "Model: ${MODEL_DIR}"
@@ -80,4 +80,5 @@ echo
 
 COMMAND="python3 main.py ${MAIN_OPTIONS} --data_dir ${TRAINING_DIR} --model_dir ${MODEL_DIR}"
 echo "${COMMAND}"
-"${COMMAND}"
+echo
+${COMMAND}
