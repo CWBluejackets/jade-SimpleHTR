@@ -62,7 +62,7 @@ do
   esac
 done
 
-TRAINING_DIR="${HOME}/bluejackets/training_data/${TRAINING_SUBDIR}}}"
+TRAINING_DIR="${HOME}/bluejackets/training_data/${TRAINING_SUBDIR}"
 MODEL_DIR="${HOME}/bluejackets/models/${TRAINING_SUBDIR}${MODEL_SUFFIX}"
 #DEBUG_DIR="${HOME}/bluejackets/debug/${TRAINING_SUBDIR}${MODEL_SUFFIX}"
 
