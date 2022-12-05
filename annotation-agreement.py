@@ -9,10 +9,22 @@ import pandas as pd
 
 
 def process_big_df(dataframe):
-    # delete the rows without rectangles or text
+    # delete the rows without rectangles, text, or identifiers
     dataframe.dropna(axis=0, how='any', inplace=True, subset=['x', 'y', 'width', 'height', 'text',
-                                                              'subject_id', 'workflow_id', 'task'])
+                                                              'subject_id', 'workflow_id', 'annotator', 'task'])
     logging.warning(f'Dropped NaN rectangles/text; filtered rows {dataframe.shape[0]}')
+
+    # split into subunits by subject and workflow IDs
+    grouped_columns = dataframe.groupby(by=['subject_id', 'workflow_id'])
+    for muster_column in grouped_columns.groups.keys():
+        muster_column_df = grouped_columns.get_group(muster_column)
+        # split by annotator
+        grouped_annotators = muster_column_df.groupby(by='annotator')
+        annotators = muster_column_df['annotator'].unique()
+        for annotator in annotators:
+            column_annotator_df = grouped_annotators.get_group(annotator)
+            # sort vertically on the page
+            column_annotator_df.sort_values(by='y', inplace=True, ascending=True)
 
     # ...
     return
