@@ -7,7 +7,18 @@ import os
 
 import pandas as pd
 
-oparser = argparse.ArgumentParser(description="Generate training data",
+
+def process_big_df(dataframe):
+    # delete the rows without rectangles or text
+    dataframe.dropna(axis=0, how='any', inplace=True, subset=['x', 'y', 'width', 'height', 'text',
+                                                              'subject_id', 'workflow_id', 'task'])
+    logging.warning(f'Dropped NaN rectangles/text; filtered rows {dataframe.shape[0]}')
+
+    # ...
+    return
+
+
+oparser = argparse.ArgumentParser(description="IAA and stuff",
                                   formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 oparser.add_argument('-c', dest='config_file',
@@ -38,9 +49,10 @@ else:
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
-
 input_filename = config['intermediate_file']
+output_filename = config['agreed_file']
 
 logging.info(f'Loading {input_filename}')
 big_df = pd.read_csv(input_filename)
 
+process_big_df(big_df)
