@@ -22,11 +22,15 @@ def process_big_df(dataframe):
         grouped_annotators = muster_column_df.groupby(by='annotator')
         annotators = muster_column_df['annotator'].unique()
         for annotator in annotators:
-            column_annotator_df = grouped_annotators.get_group(annotator)
+            column_annotator_df_raw = grouped_annotators.get_group(annotator)
             # sort vertically on the page
-            column_annotator_df.sort_values(by='y', inplace=True, ascending=True)
-
+            # create a new DataFrame so we can reset the index and add line numbers
+            column_annotator_df = column_annotator_df_raw.sort_values(by='y', ascending=True)
+            column_annotator_df.reset_index()
+            column_annotator_df['line'] = pd.Series(range(column_annotator_df.shape(0)))
     # ...
+    # TODO
+    # sew back together the various annotations of each muster_column and compare lines
     return
 
 
