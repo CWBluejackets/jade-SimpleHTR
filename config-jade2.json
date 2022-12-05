@@ -1,6 +1,7 @@
 {
   "input_directory": "/jmain02/home/J2AD003/txk64/axf12-txk64/bluejackets/classifications",
   "intermediate_file": "/jmain02/home/J2AD003/txk64/axf12-txk64/bluejackets/annotations.csv",
+  "agreed_file": "/jmain02/home/J2AD003/txk64/axf12-txk64/bluejackets/annotations_agreed.csv",
   "jpg_directory": "/jmain02/home/J2AD003/txk64/axf12-txk64/bluejackets/zooniverse/small",
   "big_jpg_directory": "/jmain02/home/J2AD003/txk64/axf12-txk64/bluejackets/zooniverse/big",
   "training_directory": "/jmain02/home/J2AD003/txk64/axf12-txk64/bluejackets/training_data",

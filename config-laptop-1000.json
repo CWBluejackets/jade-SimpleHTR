@@ -1,6 +1,7 @@
 {
   "input_directory": "/opt/data/bluejackets/classifications",
   "intermediate_file": "/opt/data/bluejackets/annotations.csv",
+  "agreed_file": "/opt/data/bluejackets/annotations_agreed.csv",
   "jpg_directory": "/opt/data/bluejackets/images",
   "big_jpg_directory": "/opt/data/bluejackets/big_images",
   "training_directory": "/opt/data/bluejackets/training_data",
