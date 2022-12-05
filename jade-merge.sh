@@ -29,7 +29,6 @@ echo "environment activated"
 echo
 
 cd "${working_directory}" || exit 99
-training_directory="${HOME}/bluejackets/training_data"
 
 python3 merge_training_sets.py -c jade-SimpleHTR/config-jade2.json \
         -o 22031+22014+22038+22045 \
