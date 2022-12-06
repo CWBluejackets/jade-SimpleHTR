@@ -77,48 +77,47 @@ def apply_one_decision(row: pd.Series, decision_dict: dict):
     key = (row['subject_id'], row['workflow_id'], row['line'])
     return decision_dict.get(key)
 
+if __name__ == "__main__":
+    oparser = argparse.ArgumentParser(description="IAA and stuff",
+                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-oparser = argparse.ArgumentParser(description="IAA and stuff",
-                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    oparser.add_argument('-c', dest='config_file',
+                         type=str,
+                         required=True,
+                         metavar='config.json',
+                         help='config file')
 
-oparser.add_argument('-c', dest='config_file',
-                     type=str,
-                     required=True,
-                     metavar='config.json',
-                     help='config file')
+    options = oparser.parse_args()
 
-options = oparser.parse_args()
+    with open(options.config_file) as f:
+        config = json.load(f)
 
-with open(options.config_file) as f:
-    config = json.load(f)
+    # turn off the chained assignment warnings
+    # https://stackoverflow.com/questions/20625582/how-to-deal-with-settingwithcopywarning-in-pandas
+    pd.options.mode.chained_assignment = None
 
-# turn off the chained assignment warnings
-# https://stackoverflow.com/questions/20625582/how-to-deal-with-settingwithcopywarning-in-pandas
-pd.options.mode.chained_assignment = None
+    log_directory = config.get('log_directory')
 
-log_directory = config.get('log_directory')
+    if log_directory:
+        timestamp = datetime.datetime.now().isoformat(timespec='seconds')
+        logfile = os.path.join(config['log_directory'], f'{timestamp}_adjudicate.log')
+        print(f'Logfile {logfile}')
+        logging.basicConfig(filename=logfile, level=logging.INFO,
+                            format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+    else:
+        print(f'Log stdout')
+        logging.basicConfig(level=logging.INFO,
+                            format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
-if log_directory:
-    timestamp = datetime.datetime.now().isoformat(timespec='seconds')
-    logfile = os.path.join(config['log_directory'], f'{timestamp}_adjudicate.log')
-    print(f'Logfile {logfile}')
-    logging.basicConfig(filename=logfile, level=logging.INFO,
-                        format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-else:
-    print(f'Log stdout')
-    logging.basicConfig(level=logging.INFO,
-                        format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+    input_filename = config['intermediate_file']
+    output_filename = config['agreed_file']
 
-input_filename = config['intermediate_file']
-output_filename = config['agreed_file']
+    logging.info(f'Loading {input_filename}')
+    big_df = pd.read_csv(input_filename)
 
-logging.info(f'Loading {input_filename}')
-big_df = pd.read_csv(input_filename)
+    annotation_store = process_big_df(big_df)
+    decisions = process_database(annotation_store)
 
-annotation_store = process_big_df(big_df)
-decisions = process_database(annotation_store)
-
-big_df1 = apply_decisions(big_df, decisions)
-logging.warning(f'Writing {output_filename}')
-big_df1.to_csv(output_filename)
-
+    big_df1 = apply_decisions(big_df, decisions)
+    logging.warning(f'Writing {output_filename}')
+    big_df1.to_csv(output_filename)

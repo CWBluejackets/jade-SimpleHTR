@@ -267,69 +267,70 @@ def load_images(basename: str, jpg_index0) -> Tuple[Image.Image, Image.Image]:
     return small_image, big_image
 
 
-oparser = argparse.ArgumentParser(description="Generate training data",
-                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+if __name__ == "__main__":
+    oparser = argparse.ArgumentParser(description="Generate training data",
+                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-oparser.add_argument('-c', dest='config_file',
-                     type=str,
-                     required=True,
-                     metavar='config.json',
-                     help='config file')
+    oparser.add_argument('-c', dest='config_file',
+                         type=str,
+                         required=True,
+                         metavar='config.json',
+                         help='config file')
 
-oparser.add_argument('-f', dest='filter_files',
-                     default=[],
-                     action='append',
-                     metavar='FILTER.json',
-                     help='filter file (can be repeated)')
+    oparser.add_argument('-f', dest='filter_files',
+                         default=[],
+                         action='append',
+                         metavar='FILTER.json',
+                         help='filter file (can be repeated)')
 
-options = oparser.parse_args()
+    options = oparser.parse_args()
 
-with open(options.config_file) as f:
-    config = json.load(f)
+    with open(options.config_file) as f:
+        config = json.load(f)
 
-# turn off the chained assignment warnings
-# https://stackoverflow.com/questions/20625582/how-to-deal-with-settingwithcopywarning-in-pandas
-pd.options.mode.chained_assignment = None
+    # turn off the chained assignment warnings
+    # https://stackoverflow.com/questions/20625582/how-to-deal-with-settingwithcopywarning-in-pandas
+    pd.options.mode.chained_assignment = None
 
-log_directory = config.get('log_directory')
+    log_directory = config.get('log_directory')
 
-if log_directory:
-    timestamp = datetime.datetime.now().isoformat(timespec='seconds')
-    logfile = os.path.join(config['log_directory'], f'{timestamp}_create.log')
-    print(f'Logfile {logfile}')
-    logging.basicConfig(filename=logfile, level=logging.INFO,
-                        format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-else:
-    print(f'Log stdout')
-    logging.basicConfig(level=logging.INFO,
-                        format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+    if log_directory:
+        timestamp = datetime.datetime.now().isoformat(timespec='seconds')
+        logfile = os.path.join(config['log_directory'], f'{timestamp}_create.log')
+        print(f'Logfile {logfile}')
+        logging.basicConfig(filename=logfile, level=logging.INFO,
+                            format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+    else:
+        print(f'Log stdout')
+        logging.basicConfig(level=logging.INFO,
+                            format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
-jpg_index = get_jpg_filenames(config['jpg_directory'],
-                              config.get('big_jpg_directory'))
-input_filename = config['intermediate_file']
-output_directory = config['training_directory']
+    jpg_index = get_jpg_filenames(config['jpg_directory'],
+                                  config.get('big_jpg_directory'))
+    input_filename = config['intermediate_file']
+    output_directory = config['training_directory']
 
-filters = {}
+    filters = {}
 
-for filter_file in options.filter_files:
-    with open(filter_file, 'r') as f:
-        addenda = json.load(f)
-        # force keys to be int for compatibility later
-        filters.update({int(k): v for k, v in addenda.items()})
+    for filter_file in options.filter_files:
+        with open(filter_file, 'r') as f:
+            addenda = json.load(f)
+            # force keys to be int for compatibility later
+            filters.update({int(k): v for k, v in addenda.items()})
 
-for k, v in filters.items():
-    logging.info(f'Filter: {k} {v}')
+    for k, v in filters.items():
+        logging.info(f'Filter: {k} {v}')
 
-if config.get('sampling', False):
-    samples = [0.25, 0.5, 0.75, 1.0]
-else:
-    samples = [1.0]
+    if config.get('sampling', False):
+        samples = [0.25, 0.5, 0.75, 1.0]
+    else:
+        samples = [1.0]
 
 
-suppress_spaces = config.get('suppress_spaces', False)
-digits_only = config.get('digits_only', False)
-max_size = config.get('max_size')
+    suppress_spaces = config.get('suppress_spaces', False)
+    digits_only = config.get('digits_only', False)
+    max_size = config.get('max_size')
 
-logging.info(f'Loading {input_filename}')
-big_df = pd.read_csv(input_filename)
-process_big_df(big_df, output_directory, jpg_index, max_size, samples, filters)
+    logging.info(f'Loading {input_filename}')
+    big_df = pd.read_csv(input_filename)
+    process_big_df(big_df, output_directory, jpg_index, max_size, samples, filters)
