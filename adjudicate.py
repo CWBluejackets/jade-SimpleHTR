@@ -4,6 +4,7 @@ import datetime
 import json
 import logging
 import os
+import uuid
 from collections import defaultdict, Counter
 
 import pandas as pd
@@ -35,7 +36,7 @@ def process_big_df(dataframe, options0):
         # create a new DF so we can reset the index and add a column
         muster_column_df = muster_column_raw.sort_values(by='y', ascending=True)
         # index must be reset for the pd range sequence to work
-        muster_column_df.reset_index()
+        muster_column_df.reset_index(inplace=True, drop=True)
         muster_column_df['line'] = pd.Series(range(muster_column_df.shape[0]))
         for i, row in muster_column_df.iterrows():
             subject_id = row['subject_id']
