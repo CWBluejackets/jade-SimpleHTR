@@ -70,6 +70,7 @@ def process_database(annotation_store0: dict):
         # store None to be ignored later
     for k, v in decision_counter.most_common():
         logging.warning(f'Decision type {k} = {v}')
+    logging.warning(f'Total decisions = {sum(decision_counter.values())}')
     return decisions0
 
 
@@ -84,6 +85,7 @@ def decide(key_triple: tuple, annotation_dict: dict, decision_counter: Counter):
         result = mode
         logging.info(f'Voting imperfect: {key_triple} has {c.most_common()}')
     else:  # dodgy
+        decision_counter['failed'] += 1
         result = None
         logging.info(f'Voting failed: {key_triple} has {c.most_common()}')
     return result
