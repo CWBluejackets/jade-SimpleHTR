@@ -50,6 +50,7 @@ def process_database(annotation_store0: dict):
     # key: tuple(subject, workflow, line)
     # value: dict annotator -> annotation
     for key, annotation_dict in annotation_store0.items():
+        
         pass
 
     return
