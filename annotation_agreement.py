@@ -8,6 +8,9 @@ from collections import defaultdict
 
 import pandas as pd
 
+import create_training_data
+
+
 def process_big_df(dataframe):
     # delete the rows without rectangles, text, or identifiers
     dataframe.dropna(axis=0, how='any', inplace=True, subset=['x', 'y', 'width', 'height', 'text',
@@ -15,7 +18,7 @@ def process_big_df(dataframe):
     logging.warning(f'Dropped NaN rectangles/text; filtered rows {dataframe.shape[0]}')
 
     # clean the ends of the strings and suppress newlines
-    #dataframe['text'] = dataframe['text'].apply(clean_string)
+    dataframe['text'] = dataframe['text'].apply(create_training_data.clean_string)
     logging.warning(f'Cleaned text strings')
 
     # put all the annotations into a quasi-database

@@ -38,7 +38,7 @@ training_directory="${HOME}/bluejackets/training_data"
 mkdir -vp "${training_directory}"
 echo
 
-python3 create-training-data.py \
+python3 create_training_data.py \
         -c config-jade2.json \
         -f filters.json
 
