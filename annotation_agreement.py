@@ -4,7 +4,7 @@ import datetime
 import json
 import logging
 import os
-from collections import defaultdict
+from collections import defaultdict, Counter
 
 import pandas as pd
 
@@ -46,14 +46,26 @@ def process_big_df(dataframe):
 
 
 def process_database(annotation_store0: dict):
+    decisions0 = dict()
     # reminder:
     # key: tuple(subject, workflow, line)
     # value: dict annotator -> annotation
     for key, annotation_dict in annotation_store0.items():
-        
-        pass
+        result = decide(key, annotation_dict)
+        decisions0[key] = result
+        # store None to be ignored later
+    return decisions0
 
-    return
+
+def decide(key_triple, annotation_dict):
+    c = Counter(annotation_dict.values())
+    mode, votes = c.most_common(1)[0]
+    if votes > len(c) / 2:
+        # majority :-)
+        return mode
+    # implied else: log as dodgy
+    logging.info(f'Voting failed: {key_triple} has {c.most_common()}')
+    return None
 
 
 oparser = argparse.ArgumentParser(description="IAA and stuff",
@@ -94,5 +106,8 @@ logging.info(f'Loading {input_filename}')
 big_df = pd.read_csv(input_filename)
 
 annotation_store = process_big_df(big_df)
-# TODO process that
+decisions = process_database(annotation_store)
+# apply_decisions(big_df, decisions)
+
+# TODO apply decisions to big df and write out
 
