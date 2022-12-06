@@ -60,22 +60,30 @@ def process_database(annotation_store0: dict):
     # annotation_store value: dict annotator -> annotation
     # decisions value: annotation or None if no majority
     decisions0 = dict()
+    decision_counter = Counter()
     for key, annotation_dict in annotation_store0.items():
-        result = decide(key, annotation_dict)
+        result = decide(key, annotation_dict, decision_counter)
         decisions0[key] = result
         # store None to be ignored later
+    for k, v in decision_counter.most_common():
+        logging.warning(f'Decision type {k} = {v}')
     return decisions0
 
 
-def decide(key_triple: tuple, annotation_dict: dict):
+def decide(key_triple: tuple, annotation_dict: dict, decision_counter: Counter):
     c = Counter(annotation_dict.values())
     mode, votes = c.most_common(1)[0]
-    if votes > len(c) / 2:
-        # majority :-)
-        return mode
-    # implied else: log as dodgy
-    logging.info(f'Voting failed: {key_triple} has {c.most_common()}')
-    return None
+    if votes == len(c):
+        decision_counter['perfect'] += 1
+        result = mode
+    elif votes > len(c) / 2:
+        decision_counter['majority'] += 1
+        result = mode
+        logging.info(f'Voting imperfect: {key_triple} has {c.most_common()}')
+    else: # dodgy
+        result = None
+        logging.info(f'Voting failed: {key_triple} has {c.most_common()}')
+    return result
 
 
 def apply_decisions(dataframe, decisions0):
