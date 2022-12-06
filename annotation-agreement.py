@@ -8,12 +8,16 @@ from collections import defaultdict
 
 import pandas as pd
 
-
 def process_big_df(dataframe):
     # delete the rows without rectangles, text, or identifiers
     dataframe.dropna(axis=0, how='any', inplace=True, subset=['x', 'y', 'width', 'height', 'text',
                                                               'subject_id', 'workflow_id', 'annotator', 'task'])
     logging.warning(f'Dropped NaN rectangles/text; filtered rows {dataframe.shape[0]}')
+
+    # clean the ends of the strings and suppress newlines
+    #dataframe['text'] = dataframe['text'].apply(clean_string)
+    logging.warning(f'Cleaned text strings')
+
     # put all the annotations into a quasi-database
     # key: tuple(subject, workflow, line)
     # value: dict annotator -> annotation
@@ -36,6 +40,16 @@ def process_big_df(dataframe):
             annotation_store0[key][annotator] = annotation
     logging.warning(f'Number of muster lines f{len(annotation_store0)}')
     return annotation_store0
+
+
+def process_database(annotation_store0: dict):
+    # reminder:
+    # key: tuple(subject, workflow, line)
+    # value: dict annotator -> annotation
+    for key, annotation_dict in annotation_store0.items():
+        pass
+
+    return
 
 
 oparser = argparse.ArgumentParser(description="IAA and stuff",
