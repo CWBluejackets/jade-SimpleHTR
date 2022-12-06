@@ -29,19 +29,28 @@ def process_big_df(dataframe):
     # split into subunits by subject and workflow IDs and annotator
     grouped_columns = dataframe.groupby(by=['subject_id', 'workflow_id', 'annotator'])
     for muster_column in grouped_columns.groups.keys():
-        logging.info(f'Processing {muster_column}')
         muster_column_raw = grouped_columns.get_group(muster_column)
+        logging.info(f'Processing {muster_column} with {muster_column_raw.shape[0]} rows')
         # create a new DF so we can reset the index and add a column
         muster_column_df = muster_column_raw.sort_values(by='y', ascending=True)
         # index must be reset for the pd range sequence to work
         muster_column_df.reset_index()
         muster_column_df['line'] = pd.Series(range(muster_column_df.shape[0]))
         for i, row in muster_column_df.iterrows():
-            key = (row['subject_id'], row['workflow_id'], row['line'])
+            subject_id = row['subject_id']
+            workflow_id = row['workflow_id']
+            line = row['line']
+            # add this manual annotation to the annotation store
+            key = (subject_id, workflow_id, line)
             annotator = row['annotator']
             annotation = row['text']
             annotation_store0[key][annotator] = annotation
-    logging.warning(f'Number of muster lines f{len(annotation_store0)}')
+            # add the line number back to the main dataframe for use later
+            main_index = dataframe.index[(dataframe['subject_id'] == subject_id) &
+                                         (dataframe['workflow_id'] == workflow_id) &
+                                         (dataframe['annotator'] == annotator)].tolist()[0]
+            dataframe.at[main_index, 'line'] = line
+    logging.warning(f'Total number of muster lines {len(annotation_store0)}')
     return annotation_store0
 
 
@@ -76,6 +85,7 @@ def apply_decisions(dataframe, decisions0):
 def apply_one_decision(row: pd.Series, decision_dict: dict):
     key = (row['subject_id'], row['workflow_id'], row['line'])
     return decision_dict.get(key)
+
 
 if __name__ == "__main__":
     oparser = argparse.ArgumentParser(description="IAA and stuff",
