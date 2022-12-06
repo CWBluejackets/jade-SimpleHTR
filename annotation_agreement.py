@@ -46,10 +46,10 @@ def process_big_df(dataframe):
 
 
 def process_database(annotation_store0: dict):
-    decisions0 = dict()
-    # reminder:
     # key: tuple(subject, workflow, line)
-    # value: dict annotator -> annotation
+    # annotation_store value: dict annotator -> annotation
+    # decisions value: annotation or None if no majority
+    decisions0 = dict()
     for key, annotation_dict in annotation_store0.items():
         result = decide(key, annotation_dict)
         decisions0[key] = result
@@ -57,7 +57,7 @@ def process_database(annotation_store0: dict):
     return decisions0
 
 
-def decide(key_triple, annotation_dict):
+def decide(key_triple: tuple, annotation_dict: dict):
     c = Counter(annotation_dict.values())
     mode, votes = c.most_common(1)[0]
     if votes > len(c) / 2:
@@ -66,6 +66,16 @@ def decide(key_triple, annotation_dict):
     # implied else: log as dodgy
     logging.info(f'Voting failed: {key_triple} has {c.most_common()}')
     return None
+
+
+def apply_decisions(dataframe, decisions0):
+    dataframe['decision'] = dataframe.apply(apply_one_decision, axis=1, decision_dict=decisions0)
+    return dataframe
+
+
+def apply_one_decision(row: pd.Series, decision_dict: dict):
+    key = (row['subject_id'], row['workflow_id'], row['line'])
+    return decision_dict.get(key)
 
 
 oparser = argparse.ArgumentParser(description="IAA and stuff",
@@ -107,7 +117,9 @@ big_df = pd.read_csv(input_filename)
 
 annotation_store = process_big_df(big_df)
 decisions = process_database(annotation_store)
-# apply_decisions(big_df, decisions)
+big_df1 = apply_decisions(big_df, decisions)
+
+big_df1.to_csv(output_filename)
 
 # TODO apply decisions to big df and write out
 
