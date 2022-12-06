@@ -100,7 +100,7 @@ log_directory = config.get('log_directory')
 
 if log_directory:
     timestamp = datetime.datetime.now().isoformat(timespec='seconds')
-    logfile = os.path.join(config['log_directory'], f'{timestamp}_create.log')
+    logfile = os.path.join(config['log_directory'], f'{timestamp}_adjudicate.log')
     print(f'Logfile {logfile}')
     logging.basicConfig(filename=logfile, level=logging.INFO,
                         format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
@@ -117,9 +117,8 @@ big_df = pd.read_csv(input_filename)
 
 annotation_store = process_big_df(big_df)
 decisions = process_database(annotation_store)
+
 big_df1 = apply_decisions(big_df, decisions)
-
+logging.warning(f'Writing {output_filename}')
 big_df1.to_csv(output_filename)
-
-# TODO apply decisions to big df and write out
 
