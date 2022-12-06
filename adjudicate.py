@@ -11,7 +11,7 @@ import pandas as pd
 import create_training_data
 
 
-def process_big_df(dataframe):
+def process_big_df(dataframe, options0):
     logging.warning(f'Starting rows {dataframe.shape[0]}')
     # delete the rows without rectangles, text, or identifiers
     dataframe.dropna(axis=0, how='any', inplace=True, subset=['x', 'y', 'width', 'height', 'text',
@@ -52,6 +52,8 @@ def process_big_df(dataframe):
                                          (dataframe['annotator'] == annotator)].tolist()[0]
             dataframe.at[main_index, 'line'] = line
     logging.warning(f'Total number of muster lines {len(annotation_store0)}')
+    if options0.debug:
+        dataframe.to_csv('/opt/data/bluejackets/debug_line.csv')
     return annotation_store0
 
 
@@ -80,7 +82,7 @@ def decide(key_triple: tuple, annotation_dict: dict, decision_counter: Counter):
         decision_counter['majority'] += 1
         result = mode
         logging.info(f'Voting imperfect: {key_triple} has {c.most_common()}')
-    else: # dodgy
+    else:  # dodgy
         result = None
         logging.info(f'Voting failed: {key_triple} has {c.most_common()}')
     return result
@@ -105,6 +107,11 @@ if __name__ == "__main__":
                          required=True,
                          metavar='config.json',
                          help='config file')
+
+    oparser.add_argument('-d', dest='debug',
+                         default=False,
+                         action='store_true',
+                         help='debug')
 
     options = oparser.parse_args()
 
@@ -134,7 +141,7 @@ if __name__ == "__main__":
     logging.info(f'Loading {input_filename}')
     big_df = pd.read_csv(input_filename)
 
-    annotation_store = process_big_df(big_df)
+    annotation_store = process_big_df(big_df, options)
     decisions = process_database(annotation_store)
 
     big_df1 = apply_decisions(big_df, decisions)
