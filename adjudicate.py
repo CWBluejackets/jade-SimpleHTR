@@ -12,10 +12,11 @@ import create_training_data
 
 
 def process_big_df(dataframe):
+    logging.warning(f'Starting rows {dataframe.shape[0]}')
     # delete the rows without rectangles, text, or identifiers
     dataframe.dropna(axis=0, how='any', inplace=True, subset=['x', 'y', 'width', 'height', 'text',
                                                               'subject_id', 'workflow_id', 'annotator', 'task'])
-    logging.warning(f'Dropped NaN rectangles/text; filtered rows {dataframe.shape[0]}')
+    logging.warning(f'Dropped NaN rectangles/text/IDs; filtered rows {dataframe.shape[0]}')
 
     # clean the ends of the strings and suppress newlines
     dataframe['text'] = dataframe['text'].apply(create_training_data.clean_string)
