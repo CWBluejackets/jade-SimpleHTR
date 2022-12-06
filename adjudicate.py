@@ -51,6 +51,8 @@ def process_big_df(dataframe, options0):
             main_index = dataframe.index[(dataframe['subject_id'] == subject_id) &
                                          (dataframe['workflow_id'] == workflow_id) &
                                          (dataframe['annotator'] == annotator)].tolist()[0]
+            # TODO DEBUG HERE?
+            # something fishy going on --- not enough line values are filled in 
             dataframe.at[main_index, 'line'] = line
     logging.warning(f'Total number of muster lines {len(annotation_store0)}')
     if options0.debug:
