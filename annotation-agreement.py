@@ -14,20 +14,16 @@ def process_big_df(dataframe):
                                                               'subject_id', 'workflow_id', 'annotator', 'task'])
     logging.warning(f'Dropped NaN rectangles/text; filtered rows {dataframe.shape[0]}')
 
-    # split into subunits by subject and workflow IDs
-    grouped_columns = dataframe.groupby(by=['subject_id', 'workflow_id'])
+    # split into subunits by subject and workflow IDs and annotator
+    grouped_columns = dataframe.groupby(by=['subject_id', 'workflow_id', 'annotator'])
     for muster_column in grouped_columns.groups.keys():
-        muster_column_df = grouped_columns.get_group(muster_column)
-        # split by annotator
-        grouped_annotators = muster_column_df.groupby(by='annotator')
-        annotators = muster_column_df['annotator'].unique()
-        for annotator in annotators:
-            column_annotator_df_raw = grouped_annotators.get_group(annotator)
-            # sort vertically on the page
-            # create a new DataFrame so we can reset the index and add line numbers
-            column_annotator_df = column_annotator_df_raw.sort_values(by='y', ascending=True)
-            column_annotator_df.reset_index()
-            column_annotator_df['line'] = pd.Series(range(column_annotator_df.shape(0)))
+        muster_column_raw = grouped_columns.get_group(muster_column)
+        # create a new DF so we can reset the index and add a column
+        muster_column_df = muster_column_raw.sort_values(by='y', ascending=True)
+        # index must be reset for the pd range sequence to work
+        muster_column_df.reset_index()
+        muster_column_df['line'] = pd.Series(range(muster_column_df.shape[0]))
+
     # ...
     # TODO
     # sew back together the various annotations of each muster_column and compare lines
