@@ -56,8 +56,6 @@ def process_big_df(dataframe, options0):
                                          (dataframe['annotator'] == annotator) &
                                          (dataframe['y'] == y)
                                          ].tolist()[0]
-            # TODO DEBUG HERE?
-            # something fishy going on --- not enough line values are filled in
             dataframe.at[main_index, 'line'] = line
     logging.warning(f'Total number of annotated muster lines {len(annotation_store0)}')
     if options0.debug:
@@ -85,23 +83,26 @@ def decide(key_triple: tuple, annotation_dict: dict, decision_counter: Counter):
     c = Counter(annotation_dict.values())
     mode, votes = c.most_common(1)[0]
     if votes == len(c):
-        decision_counter['perfect'] += 1
+        decision_counter['unanimous'] += 1
         result = mode
     elif votes > len(c) / 2:
         decision_counter['majority'] += 1
         result = mode
-        logging.info(f'Voting imperfect: {key_triple} has {c.most_common()}')
+        logging.info(f'Voting majority: {key_triple} has {c.most_common()}')
+        logging.info(f'  from {annotation_dict}')
     else:  # dodgy
         decision_counter['failed'] += 1
         result = None
         logging.info(f'Voting failed: {key_triple} has {c.most_common()}')
+        logging.info(f'  from {annotation_dict}')
     return result
 
 
 def apply_decisions(dataframe, decisions0):
     dataframe['decision'] = dataframe.apply(apply_one_decision, axis=1, decision_dict=decisions0)
-    logging.info(f"filled in decision = {dataframe['decision'].count()}")
-    logging.info(f"filled in line = {dataframe['line'].count()}")
+    logging.warning(f"filled in decision = {dataframe['decision'].count()}")
+    logging.warning(f"filled in line = {dataframe['line'].count()}")
+    logging.warning(f'Dataframe shape = {dataframe.shape}')
     return dataframe
 
 
