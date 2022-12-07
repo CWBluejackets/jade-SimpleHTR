@@ -82,10 +82,10 @@ def process_database(annotation_store0: dict):
 def decide(key_triple: tuple, annotation_dict: dict, decision_counter: Counter):
     c = Counter(annotation_dict.values())
     mode, votes = c.most_common(1)[0]
-    if votes == len(c):
+    if votes == len(annotation_dict):
         decision_counter['unanimous'] += 1
         result = mode
-    elif votes > len(c) / 2:
+    elif votes > len(annotation_dict) / 2:
         decision_counter['majority'] += 1
         result = mode
         logging.info(f'Voting majority: {key_triple} has {c.most_common()}')
