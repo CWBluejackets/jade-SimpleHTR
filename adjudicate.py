@@ -52,9 +52,9 @@ def process_big_df(dataframe, options0):
                                          (dataframe['workflow_id'] == workflow_id) &
                                          (dataframe['annotator'] == annotator)].tolist()[0]
             # TODO DEBUG HERE?
-            # something fishy going on --- not enough line values are filled in 
+            # something fishy going on --- not enough line values are filled in
             dataframe.at[main_index, 'line'] = line
-    logging.warning(f'Total number of muster lines {len(annotation_store0)}')
+    logging.warning(f'Total number of annotated muster lines {len(annotation_store0)}')
     if options0.debug:
         dataframe.to_csv('/opt/data/bluejackets/debug_line.csv')
     return annotation_store0
@@ -95,6 +95,8 @@ def decide(key_triple: tuple, annotation_dict: dict, decision_counter: Counter):
 
 def apply_decisions(dataframe, decisions0):
     dataframe['decision'] = dataframe.apply(apply_one_decision, axis=1, decision_dict=decisions0)
+    logging.info(f"filled in decision = {dataframe['decision'].count()}")
+    logging.info(f"filled in line = {dataframe['line'].count()}")
     return dataframe
 
 
