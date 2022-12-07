@@ -22,6 +22,8 @@ def process_big_df(dataframe, options0):
     # clean the ends of the strings and suppress newlines
     dataframe['text'] = dataframe['text'].apply(create_training_data.clean_string)
     logging.warning(f'Cleaned text strings')
+    # create column with special value to start it as int64
+    dataframe['line'] = -1
 
     # put all the annotations into a quasi-database
     # key: tuple(subject, workflow, line)
@@ -42,6 +44,7 @@ def process_big_df(dataframe, options0):
             subject_id = row['subject_id']
             workflow_id = row['workflow_id']
             line = row['line']
+            y = row['y']
             # add this manual annotation to the annotation store
             key = (subject_id, workflow_id, line)
             annotator = row['annotator']
@@ -50,7 +53,9 @@ def process_big_df(dataframe, options0):
             # add the line number back to the main dataframe for use later
             main_index = dataframe.index[(dataframe['subject_id'] == subject_id) &
                                          (dataframe['workflow_id'] == workflow_id) &
-                                         (dataframe['annotator'] == annotator)].tolist()[0]
+                                         (dataframe['annotator'] == annotator) &
+                                         (dataframe['y'] == y)
+                                         ].tolist()[0]
             # TODO DEBUG HERE?
             # something fishy going on --- not enough line values are filled in
             dataframe.at[main_index, 'line'] = line
@@ -102,7 +107,8 @@ def apply_decisions(dataframe, decisions0):
 
 def apply_one_decision(row: pd.Series, decision_dict: dict):
     key = (row['subject_id'], row['workflow_id'], row['line'])
-    return decision_dict.get(key)
+    result = decision_dict.get(key)
+    return result
 
 
 if __name__ == "__main__":
