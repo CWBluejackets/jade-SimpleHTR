@@ -119,7 +119,7 @@ def apply_decisions(dataframe, decisions0):
 
 def apply_one_decision(row: pd.Series, decision_dict: dict):
     key = (row['subject_id'], row['workflow_id'], row['line'])
-    result, mode_votes, total_votes = decision_dict.get(key)
+    result, mode_votes, total_votes = decision_dict.get(key, (None, 0, 0))
     return pd.Series([result, mode_votes, total_votes], index=['decision', 'mode_votes', 'total_votes'])
 
 
