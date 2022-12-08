@@ -15,7 +15,6 @@ import pandas as pd
 from PIL import Image
 from pandas import Series, DataFrame
 
-
 NEWLINES = re.compile('\n+')
 
 
@@ -84,8 +83,14 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
     """
     logging.warning(f'Unfiltered rows {dataframe.shape[0]}')
 
+    # use the adjudicated data if present
+    if 'decision' in dataframe.columns:
+        text_column = 'decision'
+    else:
+        text_column = 'text'
+
     # delete the rows without rectangles or text
-    dataframe.dropna(axis=0, how='any', inplace=True, subset=['x', 'y', 'width', 'height', 'text'])
+    dataframe.dropna(axis=0, how='any', inplace=True, subset=['x', 'y', 'width', 'height', text_column])
     logging.warning(f'Dropped NaN rectangles/text; filtered rows {dataframe.shape[0]}')
 
     # delete rows with jpg filenames that are not available
@@ -93,8 +98,9 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
     logging.warning(f'Dropped unavailable jpgs; filtered rows {dataframe.shape[0]}')
 
     # clean the ends of the strings and suppress newlines
-    dataframe['text'] = dataframe['text'].apply(clean_string)
+    dataframe['text'] = dataframe[text_column].apply(clean_string)
     logging.warning(f'Cleaned text strings')
+    # after this stage, the 'text' column has been forced to be the right one to use
 
     # split into separate dataframes by workflow_id
     grouped = dataframe.groupby(dataframe['workflow_id'])
@@ -142,7 +148,7 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
     os.makedirs(output_subdirectory, exist_ok=True)
     info_subdirectory = os.path.join(output_subdirectory, 'info')
     os.makedirs(info_subdirectory, exist_ok=True)
-    img_subdirectory  = os.path.join(output_subdirectory, 'img')
+    img_subdirectory = os.path.join(output_subdirectory, 'img')
     os.makedirs(img_subdirectory, exist_ok=True)
 
     words_file_data = []
@@ -307,8 +313,13 @@ if __name__ == "__main__":
 
     jpg_index = get_jpg_filenames(config['jpg_directory'],
                                   config.get('big_jpg_directory'))
-    input_filename = config['intermediate_file']
+    agreed_filename = config['agreed_file']
     output_directory = config['training_directory']
+
+    if os.path.exists(agreed_filename):
+        input_filename = agreed_filename
+    else:
+        input_filename = config['intermediate_file']
 
     filters = {}
 
@@ -325,7 +336,6 @@ if __name__ == "__main__":
         samples = [0.25, 0.5, 0.75, 1.0]
     else:
         samples = [1.0]
-
 
     suppress_spaces = config.get('suppress_spaces', False)
     digits_only = config.get('digits_only', False)
