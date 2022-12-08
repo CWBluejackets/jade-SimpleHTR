@@ -68,30 +68,34 @@ def process_database(annotation_store0: dict):
     # annotation_store value: dict annotator -> annotation
     # decisions value: annotation or None if no majority
     decisions0 = dict()
-    decision_counter = Counter()
+    # decision type, number of votes -> nbr of matching decisions
+    decision_counter = defaultdict(Counter)
     for key, annotation_dict in annotation_store0.items():
         result = decide(key, annotation_dict, decision_counter)
         decisions0[key] = result
-        # store None to be ignored later
-    for k, v in decision_counter.most_common():
-        logging.warning(f'Decision type {k} = {v}')
+        # decision = None means no majority so no result
+    for vote_type, stuff in decision_counter.items():
+        for vote_size, nbr in stuff.most_common():
+            logging.warning(f'Decision type {vote_type} from {vote_size} = {nbr}')
     logging.warning(f'Total decisions = {sum(decision_counter.values())}')
     return decisions0
 
 
-def decide(key_triple: tuple, annotation_dict: dict, decision_counter: Counter):
+def decide(key_triple: tuple, annotation_dict: dict, decision_counter: dict):
     c = Counter(annotation_dict.values())
-    mode, votes = c.most_common(1)[0]
-    if votes == len(annotation_dict):
-        decision_counter['unanimous'] += 1
+    mc = c.most_common()
+    mode, mode_votes = mc[0]
+    total_votes = len(annotation_dict)
+    if mode_votes == len(annotation_dict):
+        decision_counter['unanimous'][total_votes] += 1
         result = mode
-    elif votes > len(annotation_dict) / 2:
-        decision_counter['majority'] += 1
+    elif mode_votes > len(annotation_dict) / 2:
+        decision_counter['majority'][total_votes] += 1
         result = mode
         logging.info(f'Voting majority: {key_triple} has {c.most_common()}')
         logging.info(f'  from {annotation_dict}')
     else:  # dodgy
-        decision_counter['failed'] += 1
+        decision_counter['failed'][total_votes] += 1
         result = None
         logging.info(f'Voting failed: {key_triple} has {c.most_common()}')
         logging.info(f'  from {annotation_dict}')
