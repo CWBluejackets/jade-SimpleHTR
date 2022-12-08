@@ -63,13 +63,13 @@ def process_big_df(dataframe, options0):
 def process_database(annotation_store0: dict):
     # key: tuple(subject, workflow, line)
     # annotation_store value: dict annotator -> annotation
-    # decisions value: annotation or None if no majority
+    # decisions value: tuple(annotation or None, mode votes, total votes)
     decisions0 = dict()
     # decision type, number of votes -> nbr of matching decisions
     decision_counter = defaultdict(Counter)
     for key, annotation_dict in annotation_store0.items():
-        result = decide(key, annotation_dict, decision_counter)
-        decisions0[key] = result
+        voting_results = decide(key, annotation_dict, decision_counter)
+        decisions0[key] = voting_results
         # decision = None means no majority so no result
     total = 0
     for vote_type, stuff in decision_counter.items():
@@ -77,9 +77,9 @@ def process_database(annotation_store0: dict):
         for vote_size, nbr in stuff.most_common():
             subtotal += nbr
             logging.warning(f'Decision type {vote_type} from {vote_size} = {nbr}')
-        logging.warning(f'Decisions type {vote_type} = {subtotal}')
+        logging.warning(f'Decision type {vote_type} subtotal = {subtotal}')
         total += subtotal
-    logging.warning(f'Total decisions = {total}')
+    logging.warning(f'Decision total = {total}')
     return decisions0
 
 
@@ -106,11 +106,11 @@ def decide(key_triple: tuple, annotation_dict: dict, decision_counter: dict):
         logging.info(f'Voting failed: {key_triple} has {c.most_common()}')
         logging.info(f'  from {annotation_dict}')
         result = None
-    return result
+    return result, mode_votes, total_votes
 
 
 def apply_decisions(dataframe, decisions0):
-    dataframe['decision'] = dataframe.apply(apply_one_decision, axis=1, decision_dict=decisions0)
+    dataframe = dataframe.join(dataframe.apply(apply_one_decision, axis=1, decision_dict=decisions0))
     logging.warning(f"filled in decision = {dataframe['decision'].count()}")
     logging.warning(f"filled in line = {dataframe['line'].count()}")
     logging.warning(f'Dataframe shape = {dataframe.shape}')
@@ -119,8 +119,8 @@ def apply_decisions(dataframe, decisions0):
 
 def apply_one_decision(row: pd.Series, decision_dict: dict):
     key = (row['subject_id'], row['workflow_id'], row['line'])
-    result = decision_dict.get(key)
-    return result
+    result, mode_votes, total_votes = decision_dict.get(key)
+    return pd.Series([result, mode_votes, total_votes], index=['decision', 'mode_votes', 'total_votes'])
 
 
 if __name__ == "__main__":
