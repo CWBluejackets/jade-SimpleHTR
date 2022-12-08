@@ -1,6 +1,7 @@
 import os.path
 import pickle
 import random
+import re
 from collections import namedtuple
 from typing import Tuple
 
@@ -14,17 +15,16 @@ Sample = namedtuple('Sample', ['gt_text', 'file_path'])
 Batch = namedtuple('Batch', ['imgs', 'gt_texts', 'batch_size'])
 
 
-def normalize_image(m: np.ndarray, target_max=255, target_min=0) -> np.ndarray:
-    # v1 = (v0 - min) / (max - min) * (target_max - target_min) + target_min
-    src_min = m.min()
-    src_max = m.max()
-    m1 = (m - src_min) / (src_max - src_min) * (target_max - target_min) + target_min
-    m2 = m1.round().astype(np.int64)
-    return m2
+substitutions = [(re.compile(r'\b1/4\b'), '¼'),
+                 (re.compile(r'\b1/2\b'), '½'),
+                 (re.compile(r'\b3/4\b'), '¾')
+                 ]
 
 
 def convert_fractions(text):
-    return text.replace('1/4', '¼').replace('1/2', '½').replace('3/4', '¾')
+    for pattern, replacement in substitutions:
+        text = pattern.sub(replacement, text)
+    return text
 
 
 class DataLoaderIAM:
