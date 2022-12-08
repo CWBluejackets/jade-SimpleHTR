@@ -74,7 +74,8 @@ def process_database(annotation_store0: dict):
     for vote_type, stuff in decision_counter.items():
         for vote_size, nbr in stuff.most_common():
             logging.warning(f'Decision type {vote_type} from {vote_size} = {nbr}')
-    logging.warning(f'Total decisions = {sum(decision_counter.values())}')
+    nbr_decisions = sum([sum(x.values() for x in decision_counter.values())])
+    logging.warning(f'Total decisions = {nbr_decisions}')
     return decisions0
 
 
