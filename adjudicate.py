@@ -71,11 +71,15 @@ def process_database(annotation_store0: dict):
         result = decide(key, annotation_dict, decision_counter)
         decisions0[key] = result
         # decision = None means no majority so no result
+    total = 0
     for vote_type, stuff in decision_counter.items():
+        subtotal = 0
         for vote_size, nbr in stuff.most_common():
+            subtotal += nbr
             logging.warning(f'Decision type {vote_type} from {vote_size} = {nbr}')
-    nbr_decisions = sum([sum(x.values() for x in decision_counter.values())])
-    logging.warning(f'Total decisions = {nbr_decisions}')
+        logging.warning(f'Decisions type {vote_type} = {subtotal}')
+        total += subtotal
+    logging.warning(f'Total decisions = {total}')
     return decisions0
 
 
