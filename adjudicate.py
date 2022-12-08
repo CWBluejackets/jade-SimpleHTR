@@ -4,7 +4,6 @@ import datetime
 import json
 import logging
 import os
-import uuid
 from collections import defaultdict, Counter
 
 import pandas as pd
@@ -58,8 +57,6 @@ def process_big_df(dataframe, options0):
                                          ].tolist()[0]
             dataframe.at[main_index, 'line'] = line
     logging.warning(f'Total number of annotated muster lines {len(annotation_store0)}')
-    if options0.debug:
-        dataframe.to_csv('/opt/data/bluejackets/debug_line.csv')
     return annotation_store0
 
 
@@ -86,19 +83,24 @@ def decide(key_triple: tuple, annotation_dict: dict, decision_counter: dict):
     mc = c.most_common()
     mode, mode_votes = mc[0]
     total_votes = len(annotation_dict)
-    if mode_votes == len(annotation_dict):
+    if mode_votes == total_votes:
         decision_counter['unanimous'][total_votes] += 1
         result = mode
-    elif mode_votes > len(annotation_dict) / 2:
+    elif mode_votes > total_votes / 2:
         decision_counter['majority'][total_votes] += 1
-        result = mode
         logging.info(f'Voting majority: {key_triple} has {c.most_common()}')
         logging.info(f'  from {annotation_dict}')
+        result = mode
+    elif mode_votes > c.most_common()[1][1]:
+        decision_counter['plurality'][total_votes] += 1
+        logging.info(f'Voting plurality: {key_triple} has {c.most_common()}')
+        logging.info(f'  from {annotation_dict}')
+        result = mode
     else:  # dodgy
         decision_counter['failed'][total_votes] += 1
-        result = None
         logging.info(f'Voting failed: {key_triple} has {c.most_common()}')
         logging.info(f'  from {annotation_dict}')
+        result = None
     return result
 
 
