@@ -100,7 +100,7 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
     # clean the ends of the strings and suppress newlines
     dataframe['text'] = dataframe[text_column].apply(clean_string)
     logging.warning(f'Cleaned text strings')
-    # after this stage, the 'text' column has been forced to be the right one to use
+    # after this stage, the 'text' column has been forced to contain the right content
 
     # split into separate dataframes by workflow_id
     grouped = dataframe.groupby(dataframe['workflow_id'])

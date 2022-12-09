@@ -11,7 +11,7 @@ import pandas as pd
 import create_training_data
 
 
-def process_big_df(dataframe, options0):
+def process_big_df(dataframe):
     logging.warning(f'Starting rows {dataframe.shape[0]}')
     # delete the rows without rectangles, text, or identifiers
     dataframe.dropna(axis=0, how='any', inplace=True, subset=['x', 'y', 'width', 'height', 'text',
@@ -26,7 +26,7 @@ def process_big_df(dataframe, options0):
 
     # put all the annotations into a quasi-database
     # key: tuple(subject, workflow, line)
-    # value: dict annotator -> annotation
+    # value: dict annotator -> (annotation, x, width)
     annotation_store0 = defaultdict(dict)
 
     # split into subunits by subject and workflow IDs and annotator
@@ -48,7 +48,7 @@ def process_big_df(dataframe, options0):
             key = (subject_id, workflow_id, line)
             annotator = row['annotator']
             annotation = row['text']
-            annotation_store0[key][annotator] = annotation
+            annotation_store0[key][annotator] = (annotation, row['x'], row['width'])
             # add the line number back to the main dataframe for use later
             main_index = dataframe.index[(dataframe['subject_id'] == subject_id) &
                                          (dataframe['workflow_id'] == workflow_id) &
@@ -61,8 +61,8 @@ def process_big_df(dataframe, options0):
 
 
 def process_database(annotation_store0: dict):
-    # key: tuple(subject, workflow, line)
-    # annotation_store value: dict annotator -> annotation
+    # annotation_store key: tuple(subject, workflow, line)
+    # annotation_store value: dict annotator -> (annotation, x, width)
     # decisions value: tuple(annotation or None, mode votes, total votes)
     decisions0 = dict()
     # decision type, number of votes -> nbr of matching decisions
@@ -84,7 +84,10 @@ def process_database(annotation_store0: dict):
 
 
 def decide(key_triple: tuple, annotation_dict: dict, decision_counter: dict):
-    c = Counter(annotation_dict.values())
+    # key_triple = subject, workflow, line
+    # annotation_dict = annotator -> (annotation, x, width)
+    c = Counter([x[0] for x  in annotation_dict.values()])
+    # TODO check for overlap
     mc = c.most_common()
     mode, mode_votes = mc[0]
     total_votes = len(annotation_dict)
@@ -169,7 +172,7 @@ if __name__ == "__main__":
     logging.info(f'Loading {input_filename}')
     big_df = pd.read_csv(input_filename)
 
-    annotation_store = process_big_df(big_df, options)
+    annotation_store = process_big_df(big_df)
     decisions = process_database(annotation_store)
 
     big_df1 = apply_decisions(big_df, decisions)
