@@ -337,8 +337,6 @@ if __name__ == "__main__":
     else:
         samples = [1.0]
 
-    suppress_spaces = config.get('suppress_spaces', False)
-    digits_only = config.get('digits_only', False)
     max_size = config.get('max_size')
 
     logging.info(f'Loading {input_filename}')
