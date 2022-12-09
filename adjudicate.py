@@ -112,6 +112,14 @@ def decide(key_triple: tuple, annotation_dict: dict, decision_counter: dict):
     return result, mode_votes, total_votes
 
 
+def get_horizontal_boundaries(annotation_dict: dict):
+    # annotation_dict: annotator -> (annotation, x, width)
+    boundary_dict = {annotator : (value[1], value[1] + value[2])
+                     for annotator, value in annotation_dict.items()}
+    # output: annotator -> (x_left, x_right)
+    return boundary_dict
+
+
 def apply_decisions(dataframe, decisions0):
     dataframe = dataframe.join(dataframe.apply(apply_one_decision, axis=1, decision_dict=decisions0))
     logging.warning(f"filled in decision = {dataframe['decision'].count()}")
