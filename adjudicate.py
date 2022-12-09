@@ -114,13 +114,15 @@ def apply_decisions(dataframe, decisions0):
     logging.warning(f"filled in decision = {dataframe['decision'].count()}")
     logging.warning(f"filled in line = {dataframe['line'].count()}")
     logging.warning(f'Dataframe shape = {dataframe.shape}')
+    # apply makes these float64 for some reason
+    dataframe['mode_votes'] = dataframe['mode_votes'].astype('int64')
+    dataframe['total_votes'] = dataframe['total_votes'].astype('int64')
     return dataframe
 
 
 def apply_one_decision(row: pd.Series, decision_dict: dict):
     key = (row['subject_id'], row['workflow_id'], row['line'])
     result, mode_votes, total_votes = decision_dict.get(key, (None, 0, 0))
-    # TODO force mode_votes and total_votes to int
     return pd.Series([result, mode_votes, total_votes], index=['decision', 'mode_votes', 'total_votes'])
 
 
