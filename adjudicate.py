@@ -113,26 +113,54 @@ def decide(key_triple: tuple, annotation_dict: dict, decision_counter: dict):
 
 
 def get_horizontal_boundaries(annotation_dict: dict):
-    # annotation_dict: annotator -> (annotation, x, width)
+    """
+    Calculate the left and right coordinates for every annotator
+    :param annotation_dict: annotator -> (annotation, x, width)
+    :return: annotator -> (x_left, x_right)
+    """
     boundary_dict = {annotator: (value[1], value[1] + value[2])
                      for annotator, value in annotation_dict.items()}
-    # output: annotator -> (x_left, x_right)
     return boundary_dict
 
 
 def get_absolute_overlap(left0, right0, left1, right1):
+    """
+    Calculate the overlap in pixels between two horizontal ranges
+    :param left0:
+    :param right0:
+    :param left1:
+    :param right1:
+    :return:
+    """
     return max(0, min(right0, right1) - max(left0, left1))
 
 
 def get_overlap_proportion(this_left, this_right, reference_left, reference_right):
+    """
+    Calculate the proportion of the "reference" width overlapped by "this" one
+    :param this_left:
+    :param this_right:
+    :param reference_left:
+    :param reference_right:
+    :return:
+    """
     overlap = get_absolute_overlap(this_left, this_right, reference_left, reference_right)
     reference_width = reference_right - reference_left
     return overlap / reference_width
 
 
-# TODO
-# function that takes dict of annotator -> boxes and
-# returns dict of annotator -> relative overlap
+def get_group_overlaps(annotation_dict: dict):
+    # input: annotator -> (x, width)
+    annotator_boundaries = get_horizontal_boundaries(annotation_dict)
+    # annotator -> (left, right)
+    all_annotators = annotator_boundaries.keys()
+    output = dict()
+    for annotator, boundaries in annotator_boundaries.items():
+        others = all_annotators - annotator
+        others_left = min([annotator_boundaries.get(x)[0] for x in others])
+        others_right = max([annotator_boundaries.get(x)[1] for x in others])
+        output[annotator] = get_overlap_proportion(boundaries[0], boundaries[1], others_left, others_right)
+    return output
 
 
 def apply_decisions(dataframe, decisions0):
