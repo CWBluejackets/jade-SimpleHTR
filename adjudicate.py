@@ -86,7 +86,7 @@ def process_database(annotation_store0: dict):
 def decide(key_triple: tuple, annotation_dict: dict, decision_counter: dict):
     # key_triple = subject, workflow, line
     # annotation_dict = annotator -> (annotation, x, width)
-    c = Counter([x[0] for x  in annotation_dict.values()])
+    c = Counter([x[0] for x in annotation_dict.values()])
     # TODO check for overlap
     mc = c.most_common()
     mode, mode_votes = mc[0]
@@ -114,10 +114,25 @@ def decide(key_triple: tuple, annotation_dict: dict, decision_counter: dict):
 
 def get_horizontal_boundaries(annotation_dict: dict):
     # annotation_dict: annotator -> (annotation, x, width)
-    boundary_dict = {annotator : (value[1], value[1] + value[2])
+    boundary_dict = {annotator: (value[1], value[1] + value[2])
                      for annotator, value in annotation_dict.items()}
     # output: annotator -> (x_left, x_right)
     return boundary_dict
+
+
+def get_absolute_overlap(left0, right0, left1, right1):
+    return max(0, min(right0, right1) - max(left0, left1))
+
+
+def get_overlap_proportion(this_left, this_right, reference_left, reference_right):
+    overlap = get_absolute_overlap(this_left, this_right, reference_left, reference_right)
+    reference_width = reference_right - reference_left
+    return overlap / reference_width
+
+
+# TODO
+# function that takes dict of annotator -> boxes and
+# returns dict of annotator -> relative overlap
 
 
 def apply_decisions(dataframe, decisions0):
