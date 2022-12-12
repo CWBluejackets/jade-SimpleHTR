@@ -61,9 +61,12 @@ def process_big_df(dataframe):
 
 
 def process_database(annotation_store0: dict):
-    # annotation_store key: tuple(subject, workflow, line)
-    # annotation_store value: dict annotator -> (annotation, x, width)
-    # decisions value: tuple(annotation or None, mode votes, total votes)
+    """
+    Carry out the voting on each subject-workflow-line combination
+    :param annotation_store0: tuple(subject, workflow, line) -> dict annotator -> (annotation, x, width)
+    :return: tuple(subject, workflow, line) -> tuple(annotation or None, mode votes, total votes, anno_overlaps)
+    """
+    # decisions value: tuple(annotation or None, mode votes, total votes, annotator_overlaps)
     decisions0 = dict()
     # decision type, number of votes -> nbr of matching decisions
     decision_counter = defaultdict(Counter)
@@ -84,10 +87,15 @@ def process_database(annotation_store0: dict):
 
 
 def decide(key_triple: tuple, annotation_dict: dict, decision_counter: dict):
-    # key_triple = subject, workflow, line
-    # annotation_dict = annotator -> (annotation, x, width)
+    """
+    Carry out the voting on one subject/workflow/line combination
+    :param key_triple: subject, workflow, line
+    :param annotation_dict: annotator -> (annotation, x, width)
+    :param decision_counter: to keep track of decisions by type and size
+    :return:
+    """
     c = Counter([x[0] for x in annotation_dict.values()])
-    # TODO check for overlap
+    annotator_overlap_ratings = get_group_overlaps(annotation_dict)
     mc = c.most_common()
     mode, mode_votes = mc[0]
     total_votes = len(annotation_dict)
@@ -109,12 +117,12 @@ def decide(key_triple: tuple, annotation_dict: dict, decision_counter: dict):
         logging.info(f'Voting failed: {key_triple} has {c.most_common()}')
         logging.info(f'  from {annotation_dict}')
         result = None
-    return result, mode_votes, total_votes
+    return result, mode_votes, total_votes, annotator_overlap_ratings
 
 
 def get_horizontal_boundaries(annotation_dict: dict):
     """
-    Calculate the left and right coordinates for every annotator
+    Calculate the left and right coordinates for each annotator
     :param annotation_dict: annotator -> (annotation, x, width)
     :return: annotator -> (x_left, x_right)
     """
@@ -176,8 +184,11 @@ def apply_decisions(dataframe, decisions0):
 
 def apply_one_decision(row: pd.Series, decision_dict: dict):
     key = (row['subject_id'], row['workflow_id'], row['line'])
-    result, mode_votes, total_votes = decision_dict.get(key, (None, 0, 0))
-    return pd.Series([result, mode_votes, total_votes], index=['decision', 'mode_votes', 'total_votes'])
+    result, mode_votes, total_votes, annotator_overlaps = decision_dict.get(key, (None, 0, 0, dict()))
+    annotator = row['annotator']
+    overlap = annotator_overlaps.get(annotator, 0.0)
+    return pd.Series([result, mode_votes, total_votes, overlap],
+                     index=['decision', 'mode_votes', 'total_votes', 'overlap'])
 
 
 if __name__ == "__main__":
