@@ -106,16 +106,19 @@ def decide(key_triple: tuple, annotation_dict: dict, decision_counter: dict):
         decision_counter['majority'][total_votes] += 1
         logging.info(f'Voting majority: {key_triple} has {c.most_common()}')
         logging.info(f'  from {annotation_dict}')
+        logging.info(f'  horizontal {annotator_overlap_ratings}')
         result = mode
     elif mode_votes > c.most_common()[1][1]:
         decision_counter['plurality'][total_votes] += 1
         logging.info(f'Voting plurality: {key_triple} has {c.most_common()}')
         logging.info(f'  from {annotation_dict}')
+        logging.info(f'  horizontal {annotator_overlap_ratings}')
         result = mode
     else:  # dodgy
         decision_counter['failed'][total_votes] += 1
         logging.info(f'Voting failed: {key_triple} has {c.most_common()}')
         logging.info(f'  from {annotation_dict}')
+        logging.info(f'  horizontal {annotator_overlap_ratings}')
         result = None
     return result, mode_votes, total_votes, annotator_overlap_ratings
 
