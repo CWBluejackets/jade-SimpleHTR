@@ -105,22 +105,32 @@ def decide(key_triple: tuple, annotation_dict: dict, decision_counter: dict):
     elif mode_votes > total_votes / 2:
         decision_counter['majority'][total_votes] += 1
         logging.info(f'Voting majority: {key_triple} has {c.most_common()}')
-        logging.info(f'  from {annotation_dict}')
-        logging.info(f'  horizontal {annotator_overlap_ratings}')
+        log_annotation_disagreement(annotation_dict, annotator_overlap_ratings)
         result = mode
     elif mode_votes > c.most_common()[1][1]:
         decision_counter['plurality'][total_votes] += 1
         logging.info(f'Voting plurality: {key_triple} has {c.most_common()}')
-        logging.info(f'  from {annotation_dict}')
-        logging.info(f'  horizontal {annotator_overlap_ratings}')
+        log_annotation_disagreement(annotation_dict, annotator_overlap_ratings)
         result = mode
     else:  # dodgy
         decision_counter['failed'][total_votes] += 1
         logging.info(f'Voting failed: {key_triple} has {c.most_common()}')
-        logging.info(f'  from {annotation_dict}')
-        logging.info(f'  horizontal {annotator_overlap_ratings}')
+        log_annotation_disagreement(annotation_dict, annotator_overlap_ratings)
         result = None
     return result, mode_votes, total_votes, annotator_overlap_ratings
+
+
+def log_annotation_disagreement(annotation_dict: dict, annotator_overlap_ratings: dict) -> None:
+    """
+    Log/print a simplified dict showing the votes and overlap score for each annotator
+    :param annotation_dict:
+    :param annotator_overlap_ratings:
+    :return:
+    """
+    result = {annotator: (value[0], annotator_overlap_ratings[annotator])
+              for annotator, value in annotation_dict.items()}
+    logging.info(f'  from {result}')
+    return
 
 
 def get_horizontal_boundaries(annotation_dict: dict):
