@@ -265,7 +265,7 @@ if __name__ == "__main__":
     logging.warning(f'Writing {output_filename}')
 
     # sort the output to make it easy to inspect the voting and overlaps
-    big_df1.sort_values(by=['subject_id', 'workflow_id', 'line', 'overlap'],
+    big_df1.sort_values(by=['workflow_id', 'subject_id', 'line', 'overlap'],
                         ascending=[True, True, True, False],
                         na_position='last',
                         inplace=True)
