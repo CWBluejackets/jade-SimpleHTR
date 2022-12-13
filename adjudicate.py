@@ -170,8 +170,12 @@ def get_overlap_proportion(this_left, this_right, reference_left, reference_righ
     return overlap / reference_width
 
 
-def get_group_overlaps(annotation_dict: dict):
-    # input: annotator -> (x, width)
+def get_group_overlaps(annotation_dict: dict) -> dict:
+    """
+    Calculate the relative overlap for each annotator against the complete band of the others
+    :param annotation_dict: annotator -> (annotation, x, width)
+    :return: annotator -> overlap compared with all others
+    """
     annotator_boundaries = get_horizontal_boundaries(annotation_dict)
     # annotator -> (left, right)
     all_annotators = annotator_boundaries.keys()
@@ -184,7 +188,7 @@ def get_group_overlaps(annotation_dict: dict):
     return output
 
 
-def apply_decisions(dataframe, decisions0):
+def apply_decisions(dataframe, decisions0) -> pd.DataFrame:
     dataframe = dataframe.join(dataframe.apply(apply_one_decision, axis=1, decision_dict=decisions0))
     logging.warning(f"filled in decision = {dataframe['decision'].count()}")
     logging.warning(f"filled in line = {dataframe['line'].count()}")
@@ -195,7 +199,14 @@ def apply_decisions(dataframe, decisions0):
     return dataframe
 
 
-def apply_one_decision(row: pd.Series, decision_dict: dict):
+def apply_one_decision(row: pd.Series, decision_dict: dict) -> pd.Series:
+    """
+    Look up the voting results for this task and get the voting results and
+    related information
+    :param row:
+    :param decision_dict:
+    :return: horizontal series to be added to the main DF row
+    """
     key = (row['subject_id'], row['workflow_id'], row['line'])
     result, mode_votes, total_votes, annotator_overlaps = decision_dict.get(key, (None, 0, 0, dict()))
     annotator = row['annotator']
@@ -252,4 +263,11 @@ if __name__ == "__main__":
 
     big_df1 = apply_decisions(big_df, decisions)
     logging.warning(f'Writing {output_filename}')
+
+    # sort the output to make it easy to inspect the voting and overlaps
+    big_df1.sort_values(by=['subject_id', 'workflow_id', 'line', 'overlap'],
+                        ascending=[True, True, True, False],
+                        na_position='last',
+                        inplace=True)
+
     big_df1.to_csv(output_filename)
