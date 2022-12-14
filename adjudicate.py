@@ -146,7 +146,9 @@ def get_horizontal_boundaries(annotation_dict: dict):
     :param annotation_dict: annotator -> (annotation, x, width)
     :return: annotator -> (x_left, x_right)
     """
-    boundary_dict = {annotator: (value[1], value[1] + value[2])
+    # The min 1 is there to prevent division by zero when the annotator
+    # created a zero-width rectangle.
+    boundary_dict = {annotator: (value[1], value[1] + min(value[2], 1))
                      for annotator, value in annotation_dict.items()}
     return boundary_dict
 
