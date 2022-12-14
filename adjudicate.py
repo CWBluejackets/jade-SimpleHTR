@@ -166,8 +166,7 @@ def get_overlap_proportion(this_left, this_right, reference_left, reference_righ
     :return:
     """
     overlap = get_absolute_overlap(this_left, this_right, reference_left, reference_right)
-    reference_width = reference_right - reference_left
-    return overlap / reference_width
+    return overlap / (this_right - this_left)
 
 
 def get_group_overlaps(annotation_dict: dict) -> dict:
@@ -181,7 +180,7 @@ def get_group_overlaps(annotation_dict: dict) -> dict:
     all_annotators = annotator_boundaries.keys()
     output = dict()
     for annotator, boundaries in annotator_boundaries.items():
-        others = all_annotators - annotator
+        others = all_annotators - {annotator}
         others_left = min([annotator_boundaries.get(x)[0] for x in others])
         others_right = max([annotator_boundaries.get(x)[1] for x in others])
         output[annotator] = get_overlap_proportion(boundaries[0], boundaries[1], others_left, others_right)
