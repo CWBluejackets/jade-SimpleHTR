@@ -171,10 +171,13 @@ def get_overlap_proportion(this_left, this_right, reference_left, reference_righ
 
 def get_group_overlaps(annotation_dict: dict) -> dict:
     """
-    Calculate the relative overlap for each annotator against the complete band of the others
+    Calculate the relative overlap for each annotator from all the others
     :param annotation_dict: annotator -> (annotation, x, width)
     :return: annotator -> overlap compared with all others
     """
+    if len(annotation_dict) == 1:
+        return {list(annotation_dict.keys())[0]: 1.0}
+    # Note: one vs others does not work for a singleton!
     annotator_boundaries = get_horizontal_boundaries(annotation_dict)
     # annotator -> (left, right)
     all_annotators = annotator_boundaries.keys()
