@@ -4,11 +4,18 @@ import datetime
 import json
 import logging
 import os
+import re
 from collections import defaultdict, Counter
 
 import pandas as pd
 
-import create_training_data
+
+WHITESPACE = re.compile(r'\s+')
+
+
+def clean_string(s0: str):
+    s1 = s0.strip()
+    return WHITESPACE.sub(' ', s1)
 
 
 def process_big_df(dataframe):
@@ -19,7 +26,7 @@ def process_big_df(dataframe):
     logging.warning(f'Dropped NaN rectangles/text/IDs; filtered rows {dataframe.shape[0]}')
 
     # clean the ends of the strings and suppress newlines
-    dataframe['text'] = dataframe['text'].apply(create_training_data.clean_string)
+    dataframe['text_clean'] = dataframe['text'].apply(clean_string)
     logging.warning(f'Cleaned text strings')
     # create column with special value to start it as int64
     dataframe['line'] = -1
@@ -47,7 +54,7 @@ def process_big_df(dataframe):
             # add this manual annotation to the annotation store
             key = (subject_id, workflow_id, line)
             annotator = row['annotator']
-            annotation = row['text']
+            annotation = row['text_clean']
             annotation_store0[key][annotator] = (annotation, row['x'], row['width'])
             # add the line number back to the main dataframe for use later
             main_index = dataframe.index[(dataframe['subject_id'] == subject_id) &
