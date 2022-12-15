@@ -148,7 +148,7 @@ def get_horizontal_boundaries(annotation_dict: dict):
     """
     # The min 1 is there to prevent division by zero when the annotator
     # created a zero-width rectangle.
-    boundary_dict = {annotator: (value[1], value[1] + min(value[2], 1))
+    boundary_dict = {annotator: (value[1], value[1] + max(value[2], 1))
                      for annotator, value in annotation_dict.items()}
     return boundary_dict
 
