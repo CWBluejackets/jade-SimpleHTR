@@ -107,11 +107,15 @@ def decide(key_triple: tuple, annotation_dict: dict, decision_counter: dict):
     :return:
     """
     annotator_overlap_ratings = get_group_overlaps(annotation_dict)
-    # ignore "wrong column" annotations
-    if len(annotation_dict) > 2:
-        pass
+    # Ignore "wrong column" annotations BUT only if practical;
+    # i.e., do not ignore everything. If there are two disjoint
+    # rectangles, they will both have zero overlap with each other.
+    ignore = {annotator for annotator, overlap in annotator_overlap_ratings.items() if overlap == 0.0}
+    if len(ignore) == len(annotation_dict):
+        ignore = set()
 
-    c = Counter([x[0] for x in annotation_dict.values()])
+    c = Counter([text[0] for annotator, text in annotation_dict.items() if annotator not in ignore])
+    # indicate ignored in output
 
     mc = c.most_common()
     mode, mode_votes = mc[0]
