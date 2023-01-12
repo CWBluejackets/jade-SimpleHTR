@@ -19,6 +19,11 @@ def clean_string(s0: str):
 
 
 def process_big_df(dataframe):
+    """
+    Analyse the input file, generate line numbers, and produce a quasi-database of the annotations
+    :param dataframe:
+    :return: nested dict  tuple(subject, workflow, line) -> annotator -> tuple(annotation, x, width)
+    """
     logging.warning(f'Starting rows {dataframe.shape[0]}')
     # delete the rows without rectangles, text, or identifiers
     dataframe.dropna(axis=0, how='any', inplace=True, subset=['x', 'y', 'width', 'height', 'text',
@@ -101,8 +106,13 @@ def decide(key_triple: tuple, annotation_dict: dict, decision_counter: dict):
     :param decision_counter: to keep track of decisions by type and size
     :return:
     """
-    c = Counter([x[0] for x in annotation_dict.values()])
     annotator_overlap_ratings = get_group_overlaps(annotation_dict)
+    # ignore "wrong column" annotations
+    if len(annotation_dict) > 2:
+        pass
+
+    c = Counter([x[0] for x in annotation_dict.values()])
+
     mc = c.most_common()
     mode, mode_votes = mc[0]
     total_votes = len(annotation_dict)
@@ -114,7 +124,7 @@ def decide(key_triple: tuple, annotation_dict: dict, decision_counter: dict):
         logging.info(f'Voting majority: {key_triple} has {c.most_common()}')
         log_annotation_disagreement(annotation_dict, annotator_overlap_ratings)
         result = mode
-    elif mode_votes > c.most_common()[1][1]:
+    elif mode_votes > mc[1][1]:
         decision_counter['plurality'][total_votes] += 1
         logging.info(f'Voting plurality: {key_triple} has {c.most_common()}')
         log_annotation_disagreement(annotation_dict, annotator_overlap_ratings)
@@ -180,7 +190,8 @@ def get_overlap_proportion(this_left, this_right, reference_left, reference_righ
 
 def get_group_overlaps(annotation_dict: dict) -> dict:
     """
-    Calculate the relative overlap for each annotator from all the others
+    Calculate the relative overlap for each annotator with respect to
+    groups of the others
     :param annotation_dict: annotator -> (annotation, x, width)
     :return: annotator -> overlap compared with all others
     """
