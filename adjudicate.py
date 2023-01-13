@@ -237,7 +237,9 @@ def apply_one_decision(row: pd.Series, decision_dict: dict) -> pd.Series:
     :return: horizontal series to be added to the main DF row
     """
     key = (row['subject_id'], row['workflow_id'], row['line'])
-    result, mode_votes, total_votes, annotator_overlaps, ignored = decision_dict.get(key, (None, 0, 0, dict(), set()))
+    # values (5): mode text, nbr of mode votes, nbr of total non-ignored votes, overlap value, boolean ignored
+    values = decision_dict.get(key, (None, 0, 0, dict(), set()))
+    result, mode_votes, total_votes, annotator_overlaps, ignored = values
     annotator = row['annotator']
     overlap = annotator_overlaps.get(annotator, 0.0)
     return pd.Series([result, mode_votes, total_votes, overlap, annotator in ignored],
