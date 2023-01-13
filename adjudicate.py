@@ -116,11 +116,11 @@ def decide(key_triple: tuple, annotation_dict: dict, decision_counter: dict):
         ignore = set()
 
     c = Counter([text[0] for annotator, text in annotation_dict.items() if annotator not in ignore])
-    # indicate ignored in output
 
     mc = c.most_common()
     mode, mode_votes = mc[0]
-    total_votes = len(annotation_dict)
+    # total_votes excluding ignored annotations
+    total_votes = sum(c.values())
     if mode_votes == total_votes:
         decision_counter['unanimous'][total_votes] += 1
         result = mode
@@ -139,6 +139,9 @@ def decide(key_triple: tuple, annotation_dict: dict, decision_counter: dict):
         logging.info(f'Voting failed: {key_triple} has {c.most_common()}')
         log_annotation_disagreement(annotation_dict, annotator_overlap_ratings)
         result = None
+
+    if ignore:
+        logging.info(f'Ignore: {" ".join(ignore)}')
     return result, mode_votes, total_votes, annotator_overlap_ratings, ignore
 
 
