@@ -84,8 +84,7 @@ def process_database(annotation_store0: dict):
     decision_counter = defaultdict(Counter)
 
     for key, annotation_dict in annotation_store0.items():
-        voting_results = decide(key, annotation_dict, decision_counter)
-        decisions0[key] = voting_results
+        decisions0[key] = decide(key, annotation_dict, decision_counter)
         # decision = None means no majority so no result
     total = 0
     for vote_type, stuff in decision_counter.items():
@@ -238,7 +237,7 @@ def apply_one_decision(row: pd.Series, decision_dict: dict) -> pd.Series:
     :return: horizontal series to be added to the main DF row
     """
     key = (row['subject_id'], row['workflow_id'], row['line'])
-    result, mode_votes, total_votes, annotator_overlaps, ignored = decision_dict.get(key, (None, 0, 0, dict()))
+    result, mode_votes, total_votes, annotator_overlaps, ignored = decision_dict.get(key, (None, 0, 0, dict(), set()))
     annotator = row['annotator']
     overlap = annotator_overlaps.get(annotator, 0.0)
     return pd.Series([result, mode_votes, total_votes, overlap, annotator in ignored],
