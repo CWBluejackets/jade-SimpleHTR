@@ -82,6 +82,7 @@ def process_database(annotation_store0: dict):
     decisions0 = dict()
     # decision type, number of votes -> nbr of matching decisions
     decision_counter = defaultdict(Counter)
+
     for key, annotation_dict in annotation_store0.items():
         voting_results = decide(key, annotation_dict, decision_counter)
         decisions0[key] = voting_results
@@ -138,7 +139,7 @@ def decide(key_triple: tuple, annotation_dict: dict, decision_counter: dict):
         logging.info(f'Voting failed: {key_triple} has {c.most_common()}')
         log_annotation_disagreement(annotation_dict, annotator_overlap_ratings)
         result = None
-    return result, mode_votes, total_votes, annotator_overlap_ratings
+    return result, mode_votes, total_votes, annotator_overlap_ratings, ignore
 
 
 def log_annotation_disagreement(annotation_dict: dict, annotator_overlap_ratings: dict) -> None:
@@ -234,11 +235,11 @@ def apply_one_decision(row: pd.Series, decision_dict: dict) -> pd.Series:
     :return: horizontal series to be added to the main DF row
     """
     key = (row['subject_id'], row['workflow_id'], row['line'])
-    result, mode_votes, total_votes, annotator_overlaps = decision_dict.get(key, (None, 0, 0, dict()))
+    result, mode_votes, total_votes, annotator_overlaps, ignored = decision_dict.get(key, (None, 0, 0, dict()))
     annotator = row['annotator']
     overlap = annotator_overlaps.get(annotator, 0.0)
-    return pd.Series([result, mode_votes, total_votes, overlap],
-                     index=['decision', 'mode_votes', 'total_votes', 'overlap'])
+    return pd.Series([result, mode_votes, total_votes, overlap, annotator in ignored],
+                     index=['decision', 'mode_votes', 'total_votes', 'overlap', 'ignored'])
 
 
 if __name__ == "__main__":
