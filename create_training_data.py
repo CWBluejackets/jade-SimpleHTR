@@ -93,6 +93,11 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
     dataframe.dropna(axis=0, how='any', inplace=True, subset=['x', 'y', 'width', 'height', text_column])
     logging.warning(f'Dropped NaN rectangles/text; filtered rows {dataframe.shape[0]}')
 
+    # if the 'ignored' column is present, delete rows that were ignored in voting
+    if 'ignored' in dataframe.columns:
+        dataframe = dataframe[~ dataframe['ignored']]
+        logging.warning(f'Dropped ignored annotations; filtered rows {dataframe.shape[0]}')
+
     # delete rows with jpg filenames that are not available
     dataframe = dataframe[dataframe['filename'].isin(jpg_index0.keys())]
     logging.warning(f'Dropped unavailable jpgs; filtered rows {dataframe.shape[0]}')
