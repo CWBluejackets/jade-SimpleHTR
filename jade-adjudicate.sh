@@ -28,6 +28,8 @@ source activate simplehtr1
 echo "environment activated"
 echo
 
+cd "${working_directory}" || exit 99
+
 python3 adjudicate.py \
         -c config-jade2.json
 
