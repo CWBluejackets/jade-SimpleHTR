@@ -97,6 +97,14 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
     if 'ignored' in dataframe.columns:
         dataframe = dataframe[~ dataframe['ignored']]
         logging.warning(f'Dropped ignored annotations; filtered rows {dataframe.shape[0]}')
+    else:
+        logging.warning(f'Column "ignored" not present')
+
+    if 'bad_box' in dataframe.columns:
+        dataframe = dataframe[~ dataframe['bad_box']]
+        logging.warning(f'Dropped bad boxes; filtered rows {dataframe.shape[0]}')
+    else:
+        logging.warning(f'Column "bad_box" not present')
 
     # delete rows with jpg filenames that are not available
     dataframe = dataframe[dataframe['filename'].isin(jpg_index0.keys())]

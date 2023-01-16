@@ -11,6 +11,7 @@ import pandas as pd
 
 
 WHITESPACE = re.compile(r'\s+')
+PIXEL_CUTOFF = 5.0
 
 
 def clean_string(s0: str):
@@ -242,8 +243,9 @@ def apply_one_decision(row: pd.Series, decision_dict: dict) -> pd.Series:
     result, mode_votes, total_votes, annotator_overlaps, ignored = values
     annotator = row['annotator']
     overlap = annotator_overlaps.get(annotator, 0.0)
-    return pd.Series([result, mode_votes, total_votes, overlap, annotator in ignored],
-                     index=['decision', 'mode_votes', 'total_votes', 'overlap', 'ignored'])
+    bad_box = (row['width'] < PIXEL_CUTOFF) or (row['height'] < PIXEL_CUTOFF)
+    return pd.Series([result, mode_votes, total_votes, overlap, annotator in ignored, bad_box],
+                     index=['decision', 'mode_votes', 'total_votes', 'overlap', 'ignored', 'bad_box'])
 
 
 if __name__ == "__main__":
