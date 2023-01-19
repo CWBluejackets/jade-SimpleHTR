@@ -135,7 +135,12 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
         if wf_pattern:
             sub_dataframe = sub_dataframe[sub_dataframe['text'].str.fullmatch(wf_pattern)]
             logging.info(f'Filter {wf_pattern} passes {sub_dataframe.shape[0]} rows')
-            # TODO save a DF of rejects in <training_dir>/rejected_<workflow>.csv
+
+            # save a DF of regex rejects in the output directory
+            # with the workflow ID in the filename
+            regex_reject_df = sub_dataframe[~ sub_dataframe['text'].str.fullmatch(wf_pattern)]
+            regex_reject_path = os.path.join(output_directory0, f'filtered_out_{wf_id}.csv')
+            regex_reject_df.to_csv(regex_reject_path)
         else:
             logging.info(f'No filter for this workflow')
 
