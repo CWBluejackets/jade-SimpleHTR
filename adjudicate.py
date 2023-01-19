@@ -22,7 +22,7 @@ def clean_string(s0: str):
 def process_big_df(dataframe):
     """
     Analyse the input file, generate line numbers, and produce a quasi-database of the annotations
-    :param dataframe:
+    :param dataframe: the big CSV unpacked from Zooniverse
     :return: nested dict  tuple(subject, workflow, line) -> annotator -> tuple(annotation, x, width)
     """
     logging.warning(f'Starting rows {dataframe.shape[0]}')
@@ -49,9 +49,10 @@ def process_big_df(dataframe):
         logging.info(f'Processing {muster_column} with {muster_column_raw.shape[0]} rows')
         # create a new DF so we can reset the index and add a column
         muster_column_df = muster_column_raw.sort_values(by='y', ascending=True)
-        # index must be reset for the pd range sequence to work
+        # reset_index is required in order for the pd Series-range trick to work
         muster_column_df.reset_index(inplace=True, drop=True)
         muster_column_df['line'] = pd.Series(range(muster_column_df.shape[0]))
+        # now we copy the line numbers back to the big dataframe
         for i, row in muster_column_df.iterrows():
             subject_id = row['subject_id']
             workflow_id = row['workflow_id']
