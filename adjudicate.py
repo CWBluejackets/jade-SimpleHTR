@@ -14,11 +14,6 @@ WHITESPACE = re.compile(r'\s+')
 PIXEL_CUTOFF = 5.0
 
 
-def clean_string(s0: str):
-    s1 = s0.strip()
-    return WHITESPACE.sub(' ', s1)
-
-
 def process_big_df(dataframe):
     """
     Analyse the input file, generate line numbers, and produce a quasi-database of the annotations
@@ -27,13 +22,10 @@ def process_big_df(dataframe):
     """
     logging.warning(f'Starting rows {dataframe.shape[0]}')
     # delete the rows without rectangles, text, or identifiers
-    dataframe.dropna(axis=0, how='any', inplace=True, subset=['x', 'y', 'width', 'height', 'text',
+    dataframe.dropna(axis=0, how='any', inplace=True, subset=['x', 'y', 'width', 'height', 'text_clean',
                                                               'subject_id', 'workflow_id', 'annotator', 'task'])
     logging.warning(f'Dropped NaN rectangles/text/IDs; filtered rows {dataframe.shape[0]}')
 
-    # clean the ends of the strings and suppress newlines
-    dataframe['text_clean'] = dataframe['text'].apply(clean_string)
-    logging.warning(f'Cleaned text strings')
     # create column with special value to start it as int64
     dataframe['line'] = -1
 
