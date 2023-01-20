@@ -111,9 +111,9 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
     logging.warning(f'Dropped unavailable jpgs; filtered rows {dataframe.shape[0]}')
 
     # clean the ends of the strings and suppress newlines
-    dataframe['text'] = dataframe[text_column].apply(clean_string)
+    dataframe['use_text'] = dataframe[text_column].apply(clean_string)
     logging.warning(f'Cleaned text strings')
-    # after this stage, the 'text' column has been forced to contain the right content
+    # after this stage, the 'use_text' column has been forced to contain the right content
 
     # split into separate dataframes by workflow_id
     grouped = dataframe.groupby(dataframe['workflow_id'])
@@ -123,24 +123,20 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
         sub_dataframe = grouped.get_group(wf_id)
         logging.info(f'Workflow_id {wf_id} has {sub_dataframe.shape[0]} rows')
 
-        wf_all_counter = Counter(sub_dataframe['text'])
-        wf_all_df = pd.DataFrame.from_dict(wf_all_counter, orient='index', columns=['count'])
-        wf_all_df.sort_values(inplace=True, by='count', ascending=False)
-        wf_count_path = os.path.join(output_directory, f'annotation_count.tsv')
-        wf_all_df.to_csv(wf_count_path, sep='\t')
-        logging.info(f'Saved count file: {wf_count_path}')
-
         # optional: apply regex filter to text; let everything through if no filter is specified
         wf_pattern = filters0.get(wf_id)
         if wf_pattern:
-            sub_dataframe = sub_dataframe[sub_dataframe['text'].str.fullmatch(wf_pattern)]
+            # save a DF of regex rejects in the output directory (with workflow ID in the filename)
+            rejected_df = sub_dataframe[~ sub_dataframe['use_text'].str.fullmatch(wf_pattern)]
+            rejected_path = os.path.join(output_directory0, f'filtered_{wf_id}.csv')
+            rejected_df.to_csv(rejected_path)
+            # and a count of the rejected strings
+            reject_counter = rejected_df['use_text'].value_counts()
+            reject_count_path = os.path.join(output_directory0, f'filtered_count_{wf_id}.csv')
+            reject_counter.to_csv(reject_count_path)
+            # now keep the ones that pass the filters
+            sub_dataframe = sub_dataframe[sub_dataframe['use_text'].str.fullmatch(wf_pattern)]
             logging.info(f'Filter {wf_pattern} passes {sub_dataframe.shape[0]} rows')
-
-            # save a DF of regex rejects in the output directory
-            # with the workflow ID in the filename
-            regex_reject_df = sub_dataframe[~ sub_dataframe['text'].str.fullmatch(wf_pattern)]
-            regex_reject_path = os.path.join(output_directory0, f'filtered_out_{wf_id}.csv')
-            regex_reject_df.to_csv(regex_reject_path)
         else:
             logging.info(f'No filter for this workflow')
 
@@ -191,7 +187,7 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
             png_filename = f'{filename_prefix}_{index:07d}.png'
             png_path = os.path.join(img_subdirectory, png_filename)
             words_file_data.append(generate_words_row(png_filename, row))
-            word_counter[row['text']] += 1
+            word_counter[row['use_text']] += 1
             save_shtr_files(cropped_image, row, info_path, png_path)
 
     # write the words.txt file and the annotation count
@@ -216,7 +212,7 @@ def generate_words_row(png_filename, row: Series):
     :return:
     """
     # refer to SimpleHTR.md for the meaning of these
-    text = row['text']
+    text = row['use_text']
     line = f'{png_filename} {text}\n'
     return line
 
