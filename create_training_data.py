@@ -15,13 +15,6 @@ import pandas as pd
 from PIL import Image
 from pandas import Series, DataFrame
 
-NEWLINES = re.compile('\n+')
-
-
-def clean_string(s0: str):
-    s1 = s0.strip()
-    return NEWLINES.sub(' ', s1)
-
 
 def get_jpg_filenames(small_jpg_directory: str, big_jpg_directory: str) -> Dict[str, Tuple[str, str]]:
     """
@@ -87,7 +80,7 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
     if 'decision' in dataframe.columns:
         text_column = 'decision'
     else:
-        text_column = 'text'
+        text_column = 'text_clean'
 
     # delete the rows without rectangles or text
     dataframe.dropna(axis=0, how='any', inplace=True, subset=['x', 'y', 'width', 'height', text_column])
@@ -110,11 +103,6 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
     dataframe = dataframe[dataframe['filename'].isin(jpg_index0.keys())]
     logging.warning(f'Dropped unavailable jpgs; filtered rows {dataframe.shape[0]}')
 
-    # clean the ends of the strings and suppress newlines
-    dataframe['use_text'] = dataframe[text_column].apply(clean_string)
-    logging.warning(f'Cleaned text strings')
-    # after this stage, the 'use_text' column has been forced to contain the right content
-
     # split into separate dataframes by workflow_id
     grouped = dataframe.groupby(dataframe['workflow_id'])
     workflow_index = make_workflow_index(dataframe, samples0, output_directory0)
@@ -127,15 +115,15 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
         wf_pattern = filters0.get(wf_id)
         if wf_pattern:
             # save a DF of regex rejects in the output directory (with workflow ID in the filename)
-            rejected_df = sub_dataframe[~ sub_dataframe['use_text'].str.fullmatch(wf_pattern)]
+            rejected_df = sub_dataframe[~ sub_dataframe[text_column].str.fullmatch(wf_pattern)]
             rejected_path = os.path.join(output_directory0, f'filtered_{wf_id}.csv')
             rejected_df.to_csv(rejected_path)
             # and a count of the rejected strings
-            reject_counter = rejected_df['use_text'].value_counts()
+            reject_counter = rejected_df[text_column].value_counts()
             reject_count_path = os.path.join(output_directory0, f'filtered_count_{wf_id}.csv')
             reject_counter.to_csv(reject_count_path)
             # now keep the ones that pass the filters
-            sub_dataframe = sub_dataframe[sub_dataframe['use_text'].str.fullmatch(wf_pattern)]
+            sub_dataframe = sub_dataframe[sub_dataframe[text_column].str.fullmatch(wf_pattern)]
             logging.info(f'Filter {wf_pattern} passes {sub_dataframe.shape[0]} rows')
         else:
             logging.info(f'No filter for this workflow')
@@ -150,13 +138,14 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
             wf_df = sub_dataframe.sample(frac=sample).reset_index()
             workflow_directory = workflow_index[(wf_id, sample)]
             logging.info(f'Starting workflow {wf_id} with {wf_df.shape[0]} rows (sampled at {sample})')
-            process_workflow_df(wf_df, workflow_directory, jpg_index0)
+            process_workflow_df(wf_df, workflow_directory, jpg_index0, text_column)
     return
 
 
-def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_index0: dict):
+def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_index0: dict, text_column: str):
     """
     Process the dataframe for one workflow ID, already sampled
+    :param text_column: use 'decision' or 'text_clean
     :param dataframe: dataframe for selected ID
     :param output_subdirectory: e.g., path/to23038_0.75
     :param jpg_index0: index of JPGs
@@ -186,8 +175,8 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
             info_path = os.path.join(output_subdirectory, 'info', f'{filename_prefix}_{index:07d}.csv')
             png_filename = f'{filename_prefix}_{index:07d}.png'
             png_path = os.path.join(img_subdirectory, png_filename)
-            words_file_data.append(generate_words_row(png_filename, row))
-            word_counter[row['use_text']] += 1
+            words_file_data.append(generate_words_row(png_filename, row, text_column))
+            word_counter[row[text_column]] += 1
             save_shtr_files(cropped_image, row, info_path, png_path)
 
     # write the words.txt file and the annotation count
@@ -204,15 +193,16 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
     return
 
 
-def generate_words_row(png_filename, row: Series):
+def generate_words_row(png_filename, row: Series, text_column: str):
     """
     Produce one line for the simplified words.txt format
+    :param text_column: use 'decision' or 'text_clean
     :param png_filename:
     :param row:
     :return:
     """
     # refer to SimpleHTR.md for the meaning of these
-    text = row['use_text']
+    text = row[text_column]
     line = f'{png_filename} {text}\n'
     return line
 
