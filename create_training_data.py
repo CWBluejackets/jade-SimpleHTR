@@ -123,11 +123,6 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
         sub_dataframe = grouped.get_group(wf_id)
         logging.info(f'Workflow_id {wf_id} has {sub_dataframe.shape[0]} rows')
 
-        wf_count_series = sub_dataframe['use_text'].value_counts()
-        wf_count_path = os.path.join(output_directory, f'annotation_count.tsv')
-        wf_count_series.to_csv(wf_count_path, sep='\t')
-        logging.info(f'Saved count file: {wf_count_path}')
-
         # optional: apply regex filter to text; let everything through if no filter is specified
         wf_pattern = filters0.get(wf_id)
         if wf_pattern:
