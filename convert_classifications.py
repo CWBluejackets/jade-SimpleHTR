@@ -15,7 +15,17 @@ TASK_RE = re.compile(r'T(\d+)')
 
 # output format CSV
 COLUMNS = ['subject_id', 'classification_id', 'workflow_id', 'annotator', 'filename',
-           'finished_str', 'task', 'x', 'y', 'width', 'height', 'text']
+           'finished_str', 'task', 'x', 'y', 'width', 'height', 'text', 'text_clean']
+
+
+WHITESPACE = re.compile(r'\s+')
+
+
+def clean_string(s0: str):
+    if s0:
+        return WHITESPACE.sub(' ', s0.strip())
+    # could be None
+    return s0
 
 
 def convert_t_code(task_id):
@@ -45,6 +55,7 @@ def process_row(row0: pd.Series):
     for annotation in annotations:
         partial_results = process_annotation(annotation)
         for partial in partial_results:
+            # partial = task, x, y, width, height, text, text_clean
             full_result = [subject_id, classification_id, workflow_id, annotator,
                            filename, finished_str] + partial
             results0.append(full_result)
@@ -59,9 +70,9 @@ def process_annotation(annotation):
     task_str = annotation.get('task', 'MISSING0')
     value = annotation.get('value')
     if value is None:
-        results1 = [[task_str, None, None, None, None, None]]
+        results1 = [[task_str, None, None, None, None, None, None]]
     elif isinstance(value, str):
-        results1 = [[task_str, None, None, None, None, value]]
+        results1 = [[task_str, None, None, None, None, value, clean_string(value)]]
     # otherwise, it should be a list
     else:
         results1 = []
@@ -81,7 +92,7 @@ def process_sub_value(item):
         height = item1.get('height')
         for detail in item1.get('details', []):
             value = detail.get('value')
-            result1 = [task_str, x, y, width, height, value]
+            result1 = [task_str, x, y, width, height, value, clean_string(value)]
             results1.append(result1)
     return results1
 
