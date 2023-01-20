@@ -123,7 +123,7 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
         sub_dataframe = grouped.get_group(wf_id)
         logging.info(f'Workflow_id {wf_id} has {sub_dataframe.shape[0]} rows')
 
-        wf_count_series = sub_dataframe['use_text'].count_values()
+        wf_count_series = sub_dataframe['use_text'].value_counts()
         wf_count_path = os.path.join(output_directory, f'annotation_count.tsv')
         wf_count_series.to_csv(wf_count_path, sep='\t')
         logging.info(f'Saved count file: {wf_count_path}')
@@ -136,7 +136,7 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
             rejected_path = os.path.join(output_directory0, f'filtered_{wf_id}.csv')
             rejected_df.to_csv(rejected_path)
             # and a count of the rejected strings
-            reject_counter = rejected_df['use_text'].count_values()
+            reject_counter = rejected_df['use_text'].value_counts()
             reject_count_path = os.path.join(output_directory0, f'filtered_count_{wf_id}.csv')
             reject_counter.to_csv(reject_count_path)
             # now keep the ones that pass the filters
