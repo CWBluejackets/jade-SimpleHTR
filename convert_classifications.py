@@ -28,6 +28,7 @@ def clean_string(s0: str):
     # conversion to NaN through CSV interchange and to allow HTR to work.
     s1 = WHITESPACE.sub(' ', s0.strip())
     s1 = s1 or ' '
+    # TODO Find out why some input has 'N/A' (which pandas turns into NaN).
     return s1
 
 
@@ -72,8 +73,9 @@ def process_annotation(annotation):
     """
     task_str = annotation.get('task', 'MISSING0')
     value = annotation.get('value')
+    # task, x, y, width, height, text, text_clean
     if value is None:
-        results1 = [[task_str, None, None, None, None, None, None]]
+        results1 = [[task_str, None, None, None, None, None, ' ']]
     elif isinstance(value, str):
         results1 = [[task_str, None, None, None, None, value, clean_string(value)]]
     # otherwise, it should be a list
