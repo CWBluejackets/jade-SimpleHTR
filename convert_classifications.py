@@ -22,10 +22,13 @@ WHITESPACE = re.compile(r'\s+')
 
 
 def clean_string(s0: str):
-    if s0:
-        return WHITESPACE.sub(' ', s0.strip())
-    # could be None
-    return s0
+    if not s0:
+        return ' '
+    # Empty strings need to be changed to one space to prevent automatic
+    # conversion to NaN through CSV interchange and to allow HTR to work.
+    s1 = WHITESPACE.sub(' ', s0.strip())
+    s1 = s1 or ' '
+    return s1
 
 
 def convert_t_code(task_id):
