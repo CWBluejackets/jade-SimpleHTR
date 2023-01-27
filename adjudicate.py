@@ -21,13 +21,34 @@ def process_big_df(dataframe):
     :return: nested dict  tuple(subject, workflow, line) -> annotator -> tuple(annotation, x, width)
     """
     logging.warning(f'Starting rows {dataframe.shape[0]}')
-    # delete the rows without rectangles, text, or identifiers
-    dataframe.dropna(axis=0, how='any', inplace=True, subset=['x', 'y', 'width', 'height', 'text_clean',
+    # delete the rows without rectangles, text, or required identifiers
+    dataframe.dropna(axis=0, how='any', inplace=True, subset=['left', 'right', 'top', 'bottom', 'text_clean',
                                                               'subject_id', 'workflow_id', 'annotator', 'task'])
     logging.warning(f'Dropped NaN rectangles/text/IDs; filtered rows {dataframe.shape[0]}')
 
     # create column with special value to start it as int64
     dataframe['line'] = -1
+
+    # New version: group by subject-workflow, then go through each combination to eliminate wrong-column annotators.
+    # NOTE: deletion of an annotator applies to this subject-workflow combination only.
+    grouped_columns = dataframe.groupby(by=['subject_id', 'workflow_id'])
+    for muster_key in grouped_columns.groups.keys():
+        muster_column_df = grouped_columns.get_group(muster_key)
+        delenda = set()
+        annotator_ranges = dict()
+        annotator_grouped = muster_column_df.groupby('annotator')
+        for annotator in annotator_grouped.groups.keys():
+            anno_df = annotator_grouped.get_group(annotator)
+            annotator_ranges[annotator] = (anno_df['left'].min(), anno_df['right'].max())
+        annotator_set = set(annotator_ranges.keys())
+        for annotator, (left, right) in annotator_ranges.items():
+            others_left = min([annotator_ranges[x][0] for x in annotator_set - {annotator}])
+            others_right = max([annotator_ranges[x][1] for x in annotator_set - {annotator}])
+            overlap = get_overlap_proportion(left, right, others_left, others_right)
+            if overlap == 0.0:
+                delenda.append(annotator)
+
+    # WIP HERE
 
     # put all the annotations into a quasi-database
     # key: tuple(subject, workflow, line)

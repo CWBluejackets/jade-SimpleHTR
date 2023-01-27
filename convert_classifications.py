@@ -5,6 +5,7 @@ import datetime
 import glob
 import json
 import logging
+import math
 import os
 import re
 
@@ -15,10 +16,34 @@ TASK_RE = re.compile(r'T(\d+)')
 
 # output format CSV
 COLUMNS = ['subject_id', 'classification_id', 'workflow_id', 'annotator', 'filename',
-           'finished_str', 'task', 'x', 'y', 'width', 'height', 'text', 'text_clean']
+           'finished_str', 'task', 'x', 'y', 'width', 'height', 'text', 'text_clean',
+           'left', 'right', 'top', 'bottom']
 
 
 WHITESPACE = re.compile(r'\s+')
+
+
+def add_coordinates(row0):
+    '''
+    add left, right, top, bottom values to a row
+    :param row0: row of annotation data
+    :return: original row extended with four more values
+    '''
+    x = row0[COLUMNS.index('x')]
+    y = row0[COLUMNS.index('y')]
+    width = row0[COLUMNS.index('width')]
+    height = row0[COLUMNS.index('height')]
+    if x and width:
+        left = math.floor(x)
+        right = math.ceil(x + width)
+    else:
+        left, right = None, None
+    if y and height:
+        top = math.floor(y)
+        bottom = math.ceil(y + height)
+    else:
+        top, bottom = None, None
+    return row0 + [left, right, top, bottom]
 
 
 def clean_string(s0: str):
@@ -28,7 +53,8 @@ def clean_string(s0: str):
     # conversion to NaN through CSV interchange and to allow HTR to work.
     s1 = WHITESPACE.sub(' ', s0.strip())
     s1 = s1 or ' '
-    # TODO Find out why some input has 'N/A' (which pandas turns into NaN).
+    # Some input contains literally "N/A", which pandas turns into Nan
+    # ignoring this for now
     return s1
 
 
@@ -59,7 +85,7 @@ def process_row(row0: pd.Series):
     for annotation in annotations:
         partial_results = process_annotation(annotation)
         for partial in partial_results:
-            # partial = task, x, y, width, height, text, text_clean
+            # partial = task, x, y, width, height, text, text_clean,
             full_result = [subject_id, classification_id, workflow_id, annotator,
                            filename, finished_str] + partial
             results0.append(full_result)
@@ -130,6 +156,9 @@ for input_filename in glob.iglob(input_pattern, recursive=True):
     for index, row in input_df.iterrows():
         row_results = process_row(row)
         results.extend(row_results)
+
+# add left, right, top, bottom
+results = [add_coordinates(result) for result in results]
 
 output_file = config['intermediate_file']
 with open(output_file, 'w', newline='') as f:
