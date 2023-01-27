@@ -31,24 +31,31 @@ def process_big_df(dataframe):
 
     # New version: group by subject-workflow, then go through each combination to eliminate wrong-column annotators.
     # NOTE: deletion of an annotator applies to this subject-workflow combination only.
+    delenda = []
+    # contains (subject, workflow, annotator) triples
+
     grouped_columns = dataframe.groupby(by=['subject_id', 'workflow_id'])
     for muster_key in grouped_columns.groups.keys():
         muster_column_df = grouped_columns.get_group(muster_key)
-        delenda = set()
-        annotator_ranges = dict()
-        annotator_grouped = muster_column_df.groupby('annotator')
-        for annotator in annotator_grouped.groups.keys():
-            anno_df = annotator_grouped.get_group(annotator)
-            annotator_ranges[annotator] = (anno_df['left'].min(), anno_df['right'].max())
-        annotator_set = set(annotator_ranges.keys())
-        for annotator, (left, right) in annotator_ranges.items():
-            others_left = min([annotator_ranges[x][0] for x in annotator_set - {annotator}])
-            others_right = max([annotator_ranges[x][1] for x in annotator_set - {annotator}])
-            overlap = get_overlap_proportion(left, right, others_left, others_right)
-            if overlap == 0.0:
-                delenda.append(annotator)
+        nbr_annotators = muster_column_df['annotator'].unique().size
+        # You can't calculate overlaps with 1 annotator.
+        # If there are 2 and they don't overlap, you can't tell which is right.
+        if nbr_annotators > 1:
+            annotator_ranges = dict()
+            annotator_grouped = muster_column_df.groupby('annotator')
+            for annotator in annotator_grouped.groups.keys():
+                anno_df = annotator_grouped.get_group(annotator)
+                annotator_ranges[annotator] = (anno_df['left'].min(), anno_df['right'].max())
+            annotator_set = set(annotator_ranges.keys())
+            for annotator, (left, right) in annotator_ranges.items():
+                others_left = min([annotator_ranges[x][0] for x in annotator_set - {annotator}])
+                others_right = max([annotator_ranges[x][1] for x in annotator_set - {annotator}])
+                overlap = get_overlap_proportion(left, right, others_left, others_right)
+                if overlap == 0.0:
+                    delenda.append((muster_column_df[0], muster_column_df[1], annotator))
 
     # WIP HERE
+    # TODO not forget to mark all delenda-matching lines 'wrong_column' True
 
     # put all the annotations into a quasi-database
     # key: tuple(subject, workflow, line)
