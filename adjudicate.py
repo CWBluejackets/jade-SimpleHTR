@@ -67,7 +67,8 @@ def basic_cleaning(dataframe: pd.DataFrame) -> pd.DataFrame:
     logging.warning(f'Dropped NaN rectangles/text/IDs; filtered rows {dataframe.shape[0]}')
 
     # create a column with a special value to start it as int64
-    dataframe['line'] = -1
+    # dataframe['line'] = -1
+    # this would break combine_first(...) later?
     return dataframe
 
 
@@ -112,7 +113,8 @@ def generate_line_numbers(dataframe: pd.DataFrame) -> pd.DataFrame:
         muster_sheet['v_overlap'] = muster_sheet.apply(
             lambda row: get_overlap_proportion(row['top'], row['bottom'], row['prev_top'], row['prev_bottom']), axis=1)
         muster_sheet['line'] = generate_line_series(muster_sheet['v_overlap'])
-        # TODO COPY THE NEW columns back to the dataframe
+        # Copy the new columns back to the dataframe
+        dataframe = dataframe.combine_first(muster_sheet[['prev_top', 'prev_bottom', 'levenshtein', 'v_overlap', 'line']])
     return dataframe
 
 
@@ -127,18 +129,29 @@ def process_big_df(dataframe):
     dataframe = detect_wrong_columns(dataframe)
     dataframe = generate_line_numbers(dataframe)
 
-    # put all the annotations into a quasi-database
+    # Now process each muster sheet (subject, workflow) in line number order
+    # and put all the annotations into a pseudo-database
     # key: tuple(subject, workflow, line)
+    # TODO value is annotation only? horizontal overlap already considered
     # value: dict annotator -> (annotation, x, width)
     annotation_store0 = defaultdict(dict)
 
     # split into subunits by subject and workflow IDs and annotator
-    grouped_columns = dataframe.groupby(by=['subject_id', 'workflow_id', 'annotator'])
-    for muster_column in grouped_columns.groups.keys():
-        muster_column_raw = grouped_columns.get_group(muster_column)
-        logging.info(f'Processing {muster_column} with {muster_column_raw.shape[0]} rows')
+    muster_grouping = dataframe.groupby(by=['subject_id', 'workflow_id'])
+    for muster_key in muster_grouping.groups.keys():
+        muster_sheet = muster_grouping.get_group(muster_key)
+        logging.info(f'Processing {muster_key} with {muster_sheet.shape[0]} rows')
+        # drop rows with wrong column
+        muster_sheet = muster_sheet[~ muster_sheet['wrong_column']]
+        # now group by line
+        line_grouping = muster_sheet.groupby(by=['line'])
+        for line in line_grouping.groups.keys():
+            muster_line = line_grouping.get_group(line)
+            
+
+
         # create a new DF so we can reset the index and add a column
-        muster_column_df = muster_column_raw.sort_values(by='y', ascending=True)
+        muster_column_df = muster_sheet.sort_values(by='y', ascending=True)
         # reset_index is required in order for the pd Series-range trick to work
         muster_column_df.reset_index(inplace=True, drop=True)
         muster_column_df['line'] = pd.Series(range(muster_column_df.shape[0]))
