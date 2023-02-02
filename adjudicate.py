@@ -10,23 +10,20 @@ import Levenshtein
 import numpy as np
 import pandas as pd
 
-# minimum size for a box to be usable
+# Minimum size for a box to be usable
 PIXEL_CUTOFF = 5.0
 
-# deteremined empirically (clean break in histogram)
+# Determined empirically (in a clean break in histogram)
 VERTICAL_OVERLAP_THRESHOLD = 0.6
 
 
-def flag_wrong_column_row(row: pd.Series, wrong_combos: set) -> bool:
-    key = (row['subject_id'], row['workflow_id'], row['annotator'])
-    return key in wrong_combos
-
-
 def detect_wrong_columns(muster_sheet: pd.DataFrame) -> pd.DataFrame:
-    # New version: group by subject-workflow, then go through each combination to eliminate wrong-column annotators.
-    # NOTE: deletion of an annotator applies to this subject-workflow combination only.
+    """
+    Detect annotators working in the wrong column
+    :param muster_sheet: one subject-workflow combination
+    :return: same with extra columns
+    """
     wrong_annotators = set()
-    # contains (subject, workflow, annotator) triples
 
     nbr_annotators = muster_sheet['annotator'].unique().size
     # You can't calculate overlaps with 1 annotator.
@@ -45,7 +42,7 @@ def detect_wrong_columns(muster_sheet: pd.DataFrame) -> pd.DataFrame:
             if overlap == 0.0:
                 wrong_annotators.add(annotator)
 
-    logging.warning(f'Identified {len(wrong_annotators)} wrong-column annotators')
+    logging.warning(f'Identified {len(wrong_annotators)} wrong-column annotators out of {nbr_annotators}')
     # mark all the matching lines
     muster_sheet['wrong_column'] = muster_sheet['annotator'].apply(lambda x: x in wrong_annotators)
     # https://stackoverflow.com/questions/53550988/count-occurrences-of-false-or-true-in-a-column-in-pandas
@@ -72,7 +69,7 @@ def basic_cleaning(dataframe: pd.DataFrame) -> pd.DataFrame:
     return dataframe
 
 
-def series_levenshtein(text_series: pd.Series):
+def make_levenshtein_series(text_series: pd.Series):
     """
     Generate a column of Levenshtein similarity ratios
     :param text_series: column of strings
@@ -83,7 +80,7 @@ def series_levenshtein(text_series: pd.Series):
     return pd.Series(output, index=text_series.index)
 
 
-def generate_line_series(overlap_series: pd.Series) -> pd.Series:
+def make_line_series(overlap_series: pd.Series) -> pd.Series:
     """
     Generate line numbers for one muster sheet (subject-workflow combination)
     :param overlap_series: column of vertical overlaps
@@ -91,7 +88,7 @@ def generate_line_series(overlap_series: pd.Series) -> pd.Series:
     """
     line = 0
     results = [line]
-    # value 0 doesn't count
+    # value 0 is unused
     for this_overlap in overlap_series.values[1:]:
         if this_overlap < VERTICAL_OVERLAP_THRESHOLD:
             line += 1
@@ -99,33 +96,37 @@ def generate_line_series(overlap_series: pd.Series) -> pd.Series:
     return pd.Series(results, index=overlap_series.index, dtype=pd.Int64Dtype)
 
 
-def generate_line_numbers(muster_sheet: pd.DataFrame) -> pd.DataFrame:
+def add_line_numbers(muster_sheet: pd.DataFrame) -> pd.DataFrame:
     # discard wrong-column rows before numbering
     muster_sheet = muster_sheet[~ muster_sheet['wrong_column']]
 
-    # This way of sorting produces a cleaner separation in the histogram (empirically)
+    # This way of sorting produces a slightly cleaner separation in the histogram
+    # for some examples (empirically).
     muster_sheet = muster_sheet.sort_values(by=['top', 'bottom'], ascending=[True, False])
 
     muster_sheet['prev_top'] = muster_sheet['top'].rolling(window=2).min()
     muster_sheet['prev_bottom'] = muster_sheet['bottom'].rolling(window=2).min()
-    muster_sheet['levenshtein'] = series_levenshtein(muster_sheet['text_clean'])
+    muster_sheet['levenshtein'] = make_levenshtein_series(muster_sheet['text_clean'])
     muster_sheet['v_overlap'] = muster_sheet.apply(
         lambda row: get_overlap_proportion(row['top'], row['bottom'], row['prev_top'], row['prev_bottom']), axis=1)
-    muster_sheet['line'] = generate_line_series(muster_sheet['v_overlap'])
+    muster_sheet['line'] = make_line_series(muster_sheet['v_overlap'])
+    logging.warning(f'Lines 0 to {muster_sheet["line"].max()}')
     return muster_sheet
 
 
-def process_big_df(dataframe):
+def process_big_df(dataframe: pd.DataFrame) -> pd.DataFrame:
     """
-    Analyse the input file, generate line numbers, and produce a quasi-database of the annotations
-    :param dataframe: the big CSV unpacked from Zooniverse
-    :return: nested dict  tuple(subject, workflow, line) -> annotator -> tuple(annotation, x, width)
+    Analyse the input file, number the lines, carry out voting
+    :param dataframe: the big CSV unpacked and repacked from Zooniverse exports
+    :return: same thing with more columns
     """
     dataframe = basic_cleaning(dataframe)
     # TODO detect column jumping
+    # example: subject 79888343, workflow 21955, annotator greeneagle245
 
-    # Process each muster sheet (subject, workflow) in line number order
+    # Process each muster sheet (subject-workflow combination) separately
     muster_grouping = dataframe.groupby(by=['subject_id', 'workflow_id'])
+
     # decision type, number of votes -> nbr of matching decisions
     decision_counter = defaultdict(Counter)
 
@@ -137,13 +138,15 @@ def process_big_df(dataframe):
         dataframe = dataframe.combine_first(muster_sheet[['wrong_column']])
 
         # Following step discards wrong-column annotators
-        muster_sheet = generate_line_numbers(muster_sheet)
+        muster_sheet = add_line_numbers(muster_sheet)
         dataframe = dataframe.combine_first(muster_sheet[['prev_top', 'prev_bottom',
                                                           'levenshtein', 'v_overlap', 'line']])
 
         muster_sheet = vote_line_by_line(muster_key, muster_sheet, decision_counter)
         dataframe = dataframe.combine_first(muster_sheet[['decision', 'median', 'decision_type',
                                                           'mode_votes', 'total_votes']])
+
+        # TODO log decision_counter
     return dataframe
 
 
