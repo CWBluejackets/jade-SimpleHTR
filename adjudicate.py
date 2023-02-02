@@ -4,15 +4,16 @@ import datetime
 import json
 import logging
 import os
-import re
 from collections import defaultdict, Counter
 
-import pandas as pd
-import numpy as np
 import Levenshtein
+import numpy as np
+import pandas as pd
 
-WHITESPACE = re.compile(r'\s+')
+# minimum size for a box to be usable
 PIXEL_CUTOFF = 5.0
+
+# deteremined empirically (clean break in histogram)
 VERTICAL_OVERLAP_THRESHOLD = 0.6
 
 
@@ -21,42 +22,36 @@ def flag_wrong_column_row(row: pd.Series, wrong_combos: set) -> bool:
     return key in wrong_combos
 
 
-def detect_wrong_columns(dataframe: pd.DataFrame) -> pd.DataFrame:
+def detect_wrong_columns(muster_sheet: pd.DataFrame) -> pd.DataFrame:
     # New version: group by subject-workflow, then go through each combination to eliminate wrong-column annotators.
     # NOTE: deletion of an annotator applies to this subject-workflow combination only.
-    wrong_column_combos = set()
+    wrong_annotators = set()
     # contains (subject, workflow, annotator) triples
 
-    grouped_columns = dataframe.groupby(by=['subject_id', 'workflow_id'])
-    for muster_key in grouped_columns.groups.keys():
-        muster_column_df = grouped_columns.get_group(muster_key)
-        nbr_annotators = muster_column_df['annotator'].unique().size
-        # You can't calculate overlaps with 1 annotator.
-        # If there are 2 and they don't overlap, you can't tell which is right.
-        if nbr_annotators > 2:
-            annotator_ranges = dict()
-            annotator_grouped = muster_column_df.groupby('annotator')
-            for annotator in annotator_grouped.groups.keys():
-                anno_df = annotator_grouped.get_group(annotator)
-                annotator_ranges[annotator] = (anno_df['left'].min(), anno_df['right'].max())
-            annotator_set = set(annotator_ranges.keys())
-            for annotator, (left, right) in annotator_ranges.items():
-                others_left = min([annotator_ranges[x][0] for x in annotator_set - {annotator}])
-                others_right = max([annotator_ranges[x][1] for x in annotator_set - {annotator}])
-                overlap = get_overlap_proportion(left, right, others_left, others_right)
-                if overlap == 0.0:
-                    key = (muster_key[0], muster_key[1], annotator)
-                    wrong_column_combos.add(key)
+    nbr_annotators = muster_sheet['annotator'].unique().size
+    # You can't calculate overlaps with 1 annotator.
+    # If there are 2 and they don't overlap, you can't tell which is right.
+    if nbr_annotators > 2:
+        annotator_ranges = dict()
+        annotator_grouped = muster_sheet.groupby('annotator')
+        for annotator in annotator_grouped.groups.keys():
+            anno_df = annotator_grouped.get_group(annotator)
+            annotator_ranges[annotator] = (anno_df['left'].min(), anno_df['right'].max())
+        annotator_set = set(annotator_ranges.keys())
+        for annotator, (left, right) in annotator_ranges.items():
+            others_left = min([annotator_ranges[x][0] for x in annotator_set - {annotator}])
+            others_right = max([annotator_ranges[x][1] for x in annotator_set - {annotator}])
+            overlap = get_overlap_proportion(left, right, others_left, others_right)
+            if overlap == 0.0:
+                wrong_annotators.add(annotator)
 
-    logging.warning(f'Identified {len(wrong_column_combos)} wrong-column subject-workflow-annotator combinations')
+    logging.warning(f'Identified {len(wrong_annotators)} wrong-column annotators')
     # mark all the matching lines
-    dataframe['wrong_column'] = dataframe.apply(flag_wrong_column_row,
-                                                axis=1,
-                                                wrong_combos=wrong_column_combos)
+    muster_sheet['wrong_column'] = muster_sheet['annotator'].apply(lambda x: x in wrong_annotators)
     # https://stackoverflow.com/questions/53550988/count-occurrences-of-false-or-true-in-a-column-in-pandas
-    wrong_column_rows = dataframe['wrong_column'].value_counts().loc[True]
+    wrong_column_rows = muster_sheet['wrong_column'].value_counts().loc[True]
     logging.warning(f'Marked {wrong_column_rows} rows as wrong-column')
-    return dataframe
+    return muster_sheet
 
 
 def basic_cleaning(dataframe: pd.DataFrame) -> pd.DataFrame:
@@ -101,30 +96,23 @@ def generate_line_series(overlap_series: pd.Series) -> pd.Series:
         if this_overlap < VERTICAL_OVERLAP_THRESHOLD:
             line += 1
         results.append(line)
-    return pd.Series(results, index=overlap_series.index)
+    return pd.Series(results, index=overlap_series.index, dtype=pd.Int64Dtype)
 
 
-def generate_line_numbers(dataframe: pd.DataFrame) -> pd.DataFrame:
-    # split by subject and workflow ID then sort vertically
-    muster_grouping = dataframe.groupby(by=['subject_id', 'workflow_id'])
-    for muster_key in muster_grouping.groups.keys():
-        logging.warning(f'Assigning line numbers to {muster_key}')
-        muster_sheet = muster_grouping.get_group(muster_key)
-        muster_sheet = muster_sheet[~ muster_sheet['wrong_column']]
+def generate_line_numbers(muster_sheet: pd.DataFrame) -> pd.DataFrame:
+    # discard wrong-column rows before numbering
+    muster_sheet = muster_sheet[~ muster_sheet['wrong_column']]
 
-        # This way of sorting produces a cleaner separation in the histogram (empirically)
-        muster_sheet = muster_sheet.sort_values(by=['top', 'bottom'], ascending=[True, False])
+    # This way of sorting produces a cleaner separation in the histogram (empirically)
+    muster_sheet = muster_sheet.sort_values(by=['top', 'bottom'], ascending=[True, False])
 
-        muster_sheet['prev_top'] = muster_sheet['top'].rolling(window=2).min()
-        muster_sheet['prev_bottom'] = muster_sheet['bottom'].rolling(window=2).min()
-        muster_sheet['levenshtein'] = series_levenshtein(muster_sheet['text_clean'])
-        muster_sheet['v_overlap'] = muster_sheet.apply(
-            lambda row: get_overlap_proportion(row['top'], row['bottom'], row['prev_top'], row['prev_bottom']), axis=1)
-        muster_sheet['line'] = generate_line_series(muster_sheet['v_overlap'])
-        # Copy the new columns back to the main dataframe
-        dataframe = dataframe.combine_first(
-            muster_sheet[['prev_top', 'prev_bottom', 'levenshtein', 'v_overlap', 'line']])
-    return dataframe
+    muster_sheet['prev_top'] = muster_sheet['top'].rolling(window=2).min()
+    muster_sheet['prev_bottom'] = muster_sheet['bottom'].rolling(window=2).min()
+    muster_sheet['levenshtein'] = series_levenshtein(muster_sheet['text_clean'])
+    muster_sheet['v_overlap'] = muster_sheet.apply(
+        lambda row: get_overlap_proportion(row['top'], row['bottom'], row['prev_top'], row['prev_bottom']), axis=1)
+    muster_sheet['line'] = generate_line_series(muster_sheet['v_overlap'])
+    return muster_sheet
 
 
 def process_big_df(dataframe):
@@ -135,34 +123,44 @@ def process_big_df(dataframe):
     """
     dataframe = basic_cleaning(dataframe)
     # TODO detect column jumping
+
+    # Process each muster sheet (subject, workflow) in line number order
+    muster_grouping = dataframe.groupby(by=['subject_id', 'workflow_id'])
+    # decision type, number of votes -> nbr of matching decisions
+    decision_counter = defaultdict(Counter)
+
+    for muster_key in muster_grouping.groups.keys():
+        muster_sheet = muster_grouping.get_group(muster_key)
+        logging.info(f'Processing {muster_key} with {muster_sheet.shape[0]} rows')
+
+        muster_sheet = detect_wrong_columns(muster_sheet)
+        dataframe = dataframe.combine_first(muster_sheet[['wrong_column']])
+
+        # Following step discards wrong-column annotators
+        muster_sheet = generate_line_numbers(muster_sheet)
+        dataframe = dataframe.combine_first(muster_sheet[['prev_top', 'prev_bottom',
+                                                          'levenshtein', 'v_overlap', 'line']])
+
+        muster_sheet = vote_line_by_line(muster_sheet, decision_counter)
+
     dataframe = detect_wrong_columns(dataframe)
+    # TODO make one loop over (subject, workflow) and do wrong-column-detection, line numbering, and
+    #      voting all in one place (must be more efficient)
     dataframe = generate_line_numbers(dataframe)
     dataframe = vote_line_by_line(dataframe)
     return dataframe
 
 
-def vote_line_by_line(dataframe: pd.DataFrame) -> pd.DataFrame:
-    # decision type, number of votes -> nbr of matching decisions
-    decision_counter = defaultdict(Counter)
-
-    # Process each muster sheet (subject, workflow) in line number order
-    muster_grouping = dataframe.groupby(by=['subject_id', 'workflow_id'])
-    for muster_key in muster_grouping.groups.keys():
-        muster_sheet = muster_grouping.get_group(muster_key)
-        logging.info(f'Processing {muster_key} with {muster_sheet.shape[0]} rows')
-        # Drop rows with wrong column
-        muster_sheet = muster_sheet[~ muster_sheet['wrong_column']]
-        logging.info(f'after dropping wrong_column: {muster_sheet.shape[0]} rows')
-        # Group by line
-        line_grouping = muster_sheet.groupby(by=['line'])
-        for line in line_grouping.groups.keys():
-            muster_line = line_grouping.get_group(line)
-            key_triple = (muster_key[0], muster_key[1], line)
-            muster_line = decide_line(muster_line, key_triple, decision_counter)
-            # Copy the new columns back to the main dataframe
-            dataframe = dataframe.combine_first(
-                muster_line[['decision', 'decision_type', 'mode_votes', 'total_votes']])
-
+def vote_line_by_line(muster_key: tuple, muster_sheet: pd.DataFrame,
+                      dataframe: pd.DataFrame, decision_counter: dict) -> pd.DataFrame:
+    line_grouping = muster_sheet.groupby(by=['line'])
+    for line in line_grouping.groups.keys():
+        muster_line = line_grouping.get_group(line)
+        key_triple = (muster_key[0], muster_key[1], line)
+        muster_line = decide_line(muster_line, key_triple, decision_counter)
+        # Copy the new columns back to the main dataframe
+        dataframe = dataframe.combine_first(
+            muster_line[['decision', 'median', 'decision_type', 'mode_votes', 'total_votes']])
     return dataframe
 
 
@@ -203,7 +201,7 @@ def decide_line(muster_line: pd.DataFrame, key_triple: tuple, decision_counter: 
 
 def get_absolute_overlap(left0, right0, left1, right1):
     """
-    Calculate the overlap in pixels between two horizontal ranges
+    Calculate the overlap in pixels across two ranges
     :param left0:
     :param right0:
     :param left1:
@@ -215,7 +213,7 @@ def get_absolute_overlap(left0, right0, left1, right1):
 
 def get_overlap_proportion(this_left, this_right, reference_left, reference_right):
     """
-    Calculate the proportion of the "reference" width overlapped by "this" one
+    Calculate the proportion of "this" width covered by the "reference"
     :param this_left:
     :param this_right:
     :param reference_left:
