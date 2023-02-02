@@ -16,7 +16,7 @@ PIXEL_CUTOFF = 5.0
 VERTICAL_OVERLAP_THRESHOLD = 0.6
 
 
-def flag_wrong_column_row(row: pd.Series, wrong_combos: list) -> bool:
+def flag_wrong_column_row(row: pd.Series, wrong_combos: set) -> bool:
     key = (row['subject_id'], row['workflow_id'], row['annotator'])
     return key in wrong_combos
 
@@ -24,7 +24,7 @@ def flag_wrong_column_row(row: pd.Series, wrong_combos: list) -> bool:
 def detect_wrong_columns(dataframe: pd.DataFrame) -> pd.DataFrame:
     # New version: group by subject-workflow, then go through each combination to eliminate wrong-column annotators.
     # NOTE: deletion of an annotator applies to this subject-workflow combination only.
-    wrong_column_combos = []
+    wrong_column_combos = set()
     # contains (subject, workflow, annotator) triples
 
     grouped_columns = dataframe.groupby(by=['subject_id', 'workflow_id'])
@@ -45,12 +45,13 @@ def detect_wrong_columns(dataframe: pd.DataFrame) -> pd.DataFrame:
                 others_right = max([annotator_ranges[x][1] for x in annotator_set - {annotator}])
                 overlap = get_overlap_proportion(left, right, others_left, others_right)
                 if overlap == 0.0:
-                    key = (muster_column_df['subject_id'], muster_column_df['workflow_id'], annotator)
-                    wrong_column_combos.append(key)
+                    key = (muster_key[0], muster_key[1], annotator)
+                    wrong_column_combos.add(key)
 
     # mark all the matching lines
-    dataframe['wrong_column'] = dataframe.apply(lambda row0: flag_wrong_column_row(row0, wrong_column_combos),
-                                                axis=1)
+    dataframe['wrong_column'] = dataframe.apply(flag_wrong_column_row,
+                                                axis=1,
+                                                wrong_combos=wrong_column_combos)
     return dataframe
 
 
