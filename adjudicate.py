@@ -160,7 +160,6 @@ def log_decision_counts(decision_counter: dict):
     for vote_type, stuff in decision_counter.items():
         for vote_size, nbr in stuff.most_common():
             logging.warning(f'Decision type {vote_type} from {vote_size} = {nbr}')
-    logging.warning(f'Total decisions = {sum(decision_counter.values())}')
     return
 
 
