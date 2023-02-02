@@ -146,8 +146,16 @@ def process_big_df(dataframe: pd.DataFrame) -> pd.DataFrame:
         dataframe = dataframe.combine_first(muster_sheet[['decision', 'median', 'decision_type',
                                                           'mode_votes', 'total_votes']])
 
-        # TODO log decision_counter
+    log_decision_counts(decision_counter)
     return dataframe
+
+
+def log_decision_counts(decision_counter: dict):
+    for vote_type, stuff in decision_counter.items():
+        for vote_size, nbr in stuff.most_common():
+            logging.warning(f'Decision type {vote_type} from {vote_size} = {nbr}')
+    logging.warning(f'Total decisions = {sum(decision_counter.values())}')
+    return
 
 
 def vote_line_by_line(muster_key: tuple, muster_sheet: pd.DataFrame,
