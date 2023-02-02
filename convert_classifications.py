@@ -97,6 +97,7 @@ def process_annotation(annotation):
     :param annotation:
     :return: list of lists without the filenames
     """
+    # TODO add an even cleaner string with [/] stuff removed
     task_str = annotation.get('task', 'MISSING0')
     value = annotation.get('value')
     # task, x, y, width, height, text, text_clean
