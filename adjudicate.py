@@ -48,10 +48,14 @@ def detect_wrong_columns(dataframe: pd.DataFrame) -> pd.DataFrame:
                     key = (muster_key[0], muster_key[1], annotator)
                     wrong_column_combos.add(key)
 
+    logging.warning(f'Identified {len(wrong_column_combos)} wrong-column subject-workflow-annotator combinations')
     # mark all the matching lines
     dataframe['wrong_column'] = dataframe.apply(flag_wrong_column_row,
                                                 axis=1,
                                                 wrong_combos=wrong_column_combos)
+    # https://stackoverflow.com/questions/53550988/count-occurrences-of-false-or-true-in-a-column-in-pandas
+    wrong_column_rows = dataframe['wrong_column'].value_counts().loc[True]
+    logging.warning(f'Marked {wrong_column_rows} rows as wrong-column')
     return dataframe
 
 
