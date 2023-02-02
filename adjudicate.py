@@ -186,7 +186,6 @@ def decide_line(muster_line: pd.DataFrame, key_triple: tuple, decision_counter: 
         decision_type = 'majority'
     elif mode_votes > vote_df.values[1]:
         decision_type = 'plurality'
-        # TODO consider using Levenshtein.median(...)
     else:
         decision_type = 'failed'
 
@@ -196,6 +195,7 @@ def decide_line(muster_line: pd.DataFrame, key_triple: tuple, decision_counter: 
     decision_counter[decision_type][total_votes] += 1
     muster_line['decision'] = None if decision_type == 'failed' else mode
     muster_line['decision_type'] = decision_type
+    muster_line['text_median'] = Levenshtein.median(muster_line['text_clean'].values)
     muster_line['mode_votes'] = mode_votes
     muster_line['total_votes'] = total_votes
     return muster_line
