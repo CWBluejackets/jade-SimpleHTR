@@ -8,10 +8,13 @@ import re
 from collections import defaultdict, Counter
 
 import pandas as pd
+import numpy as np
+import Levenshtein
 
 
 WHITESPACE = re.compile(r'\s+')
 PIXEL_CUTOFF = 5.0
+VERTICAL_OVERLAP_THRESHOLD = 0.6
 
 
 def flag_wrong_column_row(row: pd.Series, wrong_combos: list) -> bool:
@@ -68,7 +71,31 @@ def basic_cleaning(dataframe: pd.DataFrame) -> pd.DataFrame:
     return dataframe
 
 
+def series_levenshtein(text_series: pd.Series):
+    '''
+    Generate a column of Levenshtein similarity ratios
+    :param text_series: column of strings
+    :return: column giving the similarity between each string and the previous one
+    '''
+    texts = text_series.values
+    output = [np.NAN] + [Levenshtein.ratio(texts[i-1], texts[i]) for i in range(1, texts.shape[0])]
+    return pd.Series(output, index=text_series.index)
+
+
 def generate_line_numbers(dataframe: pd.DataFrame) -> pd.DataFrame:
+    # split by subject and workflow ID then sort vertically
+    muster_grouping = dataframe.groupby(by=['subject_id', 'workflow_id'])
+    for muster_key in muster_grouping.groups.keys():
+        muster_sheet = muster_grouping.get_group(muster_key)
+        # This way of sorting produces a cleaner separation in the histogram (empirically)
+        muster_sheet = muster_sheet.sort_values(by=['top', 'bottom'], ascending=[True, False])
+
+        muster_sheet['prev_top'] = muster_sheet['top'].rolling(window=2).min()
+        muster_sheet['prev_bottom'] = muster_sheet['bottom'].rolling(window=2).min()
+        muster_sheet['levenshtein'] = series_levenshtein(muster_sheet['text_clean'])
+        muster_sheet['v_overlap'] = muster_sheet.apply(
+            lambda row: get_overlap_proportion(row['top'], row['bottom'], row['prev_top'], row['prev_bottom']), axis=1)
+
     pass
     return dataframe
 
@@ -80,6 +107,7 @@ def process_big_df(dataframe):
     :return: nested dict  tuple(subject, workflow, line) -> annotator -> tuple(annotation, x, width)
     """
     dataframe = basic_cleaning(dataframe)
+    # TODO detect column jumping
     dataframe = detect_wrong_columns(dataframe)
     dataframe = generate_line_numbers(dataframe)
 
