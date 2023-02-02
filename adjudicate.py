@@ -45,11 +45,12 @@ def detect_wrong_columns(dataframe: pd.DataFrame) -> pd.DataFrame:
                 others_right = max([annotator_ranges[x][1] for x in annotator_set - {annotator}])
                 overlap = get_overlap_proportion(left, right, others_left, others_right)
                 if overlap == 0.0:
-                    wrong_column_combos.append((muster_column_df[0], muster_column_df[1], annotator))
+                    key = (muster_column_df['subject_id'], muster_column_df['workflow_id'], annotator)
+                    wrong_column_combos.append(key)
 
     # mark all the matching lines
     dataframe['wrong_column'] = dataframe.apply(lambda row0: flag_wrong_column_row(row0, wrong_column_combos),
-                                                axis=0)
+                                                axis=1)
     return dataframe
 
 
