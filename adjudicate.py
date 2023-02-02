@@ -141,27 +141,23 @@ def process_big_df(dataframe):
         dataframe = dataframe.combine_first(muster_sheet[['prev_top', 'prev_bottom',
                                                           'levenshtein', 'v_overlap', 'line']])
 
-        muster_sheet = vote_line_by_line(muster_sheet, decision_counter)
-
-    dataframe = detect_wrong_columns(dataframe)
-    # TODO make one loop over (subject, workflow) and do wrong-column-detection, line numbering, and
-    #      voting all in one place (must be more efficient)
-    dataframe = generate_line_numbers(dataframe)
-    dataframe = vote_line_by_line(dataframe)
+        muster_sheet = vote_line_by_line(muster_key, muster_sheet, decision_counter)
+        dataframe = dataframe.combine_first(muster_sheet[['decision', 'median', 'decision_type',
+                                                          'mode_votes', 'total_votes']])
     return dataframe
 
 
 def vote_line_by_line(muster_key: tuple, muster_sheet: pd.DataFrame,
-                      dataframe: pd.DataFrame, decision_counter: dict) -> pd.DataFrame:
+                      decision_counter: dict) -> pd.DataFrame:
     line_grouping = muster_sheet.groupby(by=['line'])
     for line in line_grouping.groups.keys():
         muster_line = line_grouping.get_group(line)
         key_triple = (muster_key[0], muster_key[1], line)
         muster_line = decide_line(muster_line, key_triple, decision_counter)
         # Copy the new columns back to the main dataframe
-        dataframe = dataframe.combine_first(
+        muster_sheet = muster_sheet.combine_first(
             muster_line[['decision', 'median', 'decision_type', 'mode_votes', 'total_votes']])
-    return dataframe
+    return muster_sheet
 
 
 def decide_line(muster_line: pd.DataFrame, key_triple: tuple, decision_counter: dict) -> pd.DataFrame:
