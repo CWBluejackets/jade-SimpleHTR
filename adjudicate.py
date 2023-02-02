@@ -144,7 +144,7 @@ def process_big_df(dataframe: pd.DataFrame) -> pd.DataFrame:
                                                           'levenshtein', 'v_overlap', 'line']])
 
         muster_sheet = vote_line_by_line(muster_key, muster_sheet, decision_counter)
-        dataframe = dataframe.combine_first(muster_sheet[['decision', 'median', 'decision_type',
+        dataframe = dataframe.combine_first(muster_sheet[['decision', 'text_median', 'decision_type',
                                                           'mode_votes', 'total_votes']])
 
     log_decision_counts(decision_counter)
@@ -168,7 +168,7 @@ def vote_line_by_line(muster_key: tuple, muster_sheet: pd.DataFrame,
         muster_line = decide_line(muster_line, key_triple, decision_counter)
         # Copy the new columns back to the main dataframe
         muster_sheet = muster_sheet.combine_first(
-            muster_line[['decision', 'median', 'decision_type', 'mode_votes', 'total_votes']])
+            muster_line[['decision', 'text_median', 'decision_type', 'mode_votes', 'total_votes']])
     return muster_sheet
 
 
