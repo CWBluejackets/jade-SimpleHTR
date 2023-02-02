@@ -14,24 +14,15 @@ WHITESPACE = re.compile(r'\s+')
 PIXEL_CUTOFF = 5.0
 
 
-def process_big_df(dataframe):
-    """
-    Analyse the input file, generate line numbers, and produce a quasi-database of the annotations
-    :param dataframe: the big CSV unpacked from Zooniverse
-    :return: nested dict  tuple(subject, workflow, line) -> annotator -> tuple(annotation, x, width)
-    """
-    logging.warning(f'Starting rows {dataframe.shape[0]}')
-    # delete the rows without rectangles, text, or required identifiers
-    dataframe.dropna(axis=0, how='any', inplace=True, subset=['left', 'right', 'top', 'bottom', 'text_clean',
-                                                              'subject_id', 'workflow_id', 'annotator', 'task'])
-    logging.warning(f'Dropped NaN rectangles/text/IDs; filtered rows {dataframe.shape[0]}')
+def flag_wrong_column_row(row: pd.Series, wrong_combos: list) -> bool:
+    key = (row['subject_id'], row['workflow_id'], row['annotator'])
+    return key in wrong_combos
 
-    # create column with special value to start it as int64
-    dataframe['line'] = -1
 
+def detect_wrong_columns(dataframe: pd.DataFrame) -> pd.DataFrame:
     # New version: group by subject-workflow, then go through each combination to eliminate wrong-column annotators.
     # NOTE: deletion of an annotator applies to this subject-workflow combination only.
-    delenda = []
+    wrong_column_combos = []
     # contains (subject, workflow, annotator) triples
 
     grouped_columns = dataframe.groupby(by=['subject_id', 'workflow_id'])
@@ -40,7 +31,7 @@ def process_big_df(dataframe):
         nbr_annotators = muster_column_df['annotator'].unique().size
         # You can't calculate overlaps with 1 annotator.
         # If there are 2 and they don't overlap, you can't tell which is right.
-        if nbr_annotators > 1:
+        if nbr_annotators > 2:
             annotator_ranges = dict()
             annotator_grouped = muster_column_df.groupby('annotator')
             for annotator in annotator_grouped.groups.keys():
@@ -52,10 +43,45 @@ def process_big_df(dataframe):
                 others_right = max([annotator_ranges[x][1] for x in annotator_set - {annotator}])
                 overlap = get_overlap_proportion(left, right, others_left, others_right)
                 if overlap == 0.0:
-                    delenda.append((muster_column_df[0], muster_column_df[1], annotator))
+                    wrong_column_combos.append((muster_column_df[0], muster_column_df[1], annotator))
 
-    # WIP HERE
-    # TODO not forget to mark all delenda-matching lines 'wrong_column' True
+    # mark all the matching lines
+    dataframe['wrong_column'] = dataframe.apply(lambda row0: flag_wrong_column_row(row0, wrong_column_combos),
+                                                axis=0)
+    return dataframe
+
+
+def basic_cleaning(dataframe: pd.DataFrame) -> pd.DataFrame:
+    """
+    Delete the rows with missing rectangles, cleaned text, or required identifiers
+    :param dataframe:
+    :return:
+    """
+    logging.warning(f'Starting rows {dataframe.shape[0]}')
+    # Note: the text_clean column already contains a single space where the exported text is blank
+    dataframe.dropna(axis=0, how='any', inplace=True, subset=['left', 'right', 'top', 'bottom', 'text_clean',
+                                                              'subject_id', 'workflow_id', 'annotator', 'task'])
+    logging.warning(f'Dropped NaN rectangles/text/IDs; filtered rows {dataframe.shape[0]}')
+
+    # create a column with a special value to start it as int64
+    dataframe['line'] = -1
+    return dataframe
+
+
+def generate_line_numbers(dataframe: pd.DataFrame) -> pd.DataFrame:
+    pass
+    return dataframe
+
+
+def process_big_df(dataframe):
+    """
+    Analyse the input file, generate line numbers, and produce a quasi-database of the annotations
+    :param dataframe: the big CSV unpacked from Zooniverse
+    :return: nested dict  tuple(subject, workflow, line) -> annotator -> tuple(annotation, x, width)
+    """
+    dataframe = basic_cleaning(dataframe)
+    dataframe = detect_wrong_columns(dataframe)
+    dataframe = generate_line_numbers(dataframe)
 
     # put all the annotations into a quasi-database
     # key: tuple(subject, workflow, line)
