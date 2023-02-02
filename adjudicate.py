@@ -82,6 +82,22 @@ def series_levenshtein(text_series: pd.Series):
     return pd.Series(output, index=text_series.index)
 
 
+def generate_line_series(overlap_series: pd.Series) -> pd.Series:
+    '''
+    Generate line numbers for one muster sheet (subject-workflow combination)
+    :param overlap_series: column of vertical overlaps
+    :return: column of line numbers
+    '''
+    line = 0
+    results = [line]
+    # value 0 doesn't count
+    for this_overlap in overlap_series.values[1:]:
+        if this_overlap < VERTICAL_OVERLAP_THRESHOLD:
+            line += 1
+        results.append(line)
+    return pd.Series(results, index=overlap_series.index)
+
+
 def generate_line_numbers(dataframe: pd.DataFrame) -> pd.DataFrame:
     # split by subject and workflow ID then sort vertically
     muster_grouping = dataframe.groupby(by=['subject_id', 'workflow_id'])
@@ -95,8 +111,8 @@ def generate_line_numbers(dataframe: pd.DataFrame) -> pd.DataFrame:
         muster_sheet['levenshtein'] = series_levenshtein(muster_sheet['text_clean'])
         muster_sheet['v_overlap'] = muster_sheet.apply(
             lambda row: get_overlap_proportion(row['top'], row['bottom'], row['prev_top'], row['prev_bottom']), axis=1)
-
-    pass
+        muster_sheet['line'] = generate_line_series(muster_sheet['v_overlap'])
+        # TODO COPY THE NEW columns back to the dataframe
     return dataframe
 
 
