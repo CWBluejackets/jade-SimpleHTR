@@ -46,7 +46,8 @@ def detect_wrong_columns(muster_sheet: pd.DataFrame) -> pd.DataFrame:
     # mark all the matching lines
     muster_sheet['wrong_column'] = muster_sheet['annotator'].apply(lambda x: x in wrong_annotators)
     # https://stackoverflow.com/questions/53550988/count-occurrences-of-false-or-true-in-a-column-in-pandas
-    wrong_column_rows = muster_sheet['wrong_column'].value_counts().loc[True]
+    # https://stackoverflow.com/questions/23403352/return-default-if-pandas-dataframe-loc-location-doesnt-exist
+    wrong_column_rows = muster_sheet['wrong_column'].value_counts().get(True, 0)
     logging.warning(f'Marked {wrong_column_rows} rows as wrong-column')
     return muster_sheet
 
