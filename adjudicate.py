@@ -24,8 +24,8 @@ def detect_wrong_columns(muster_sheet: pd.DataFrame) -> pd.DataFrame:
     :return: same with extra columns
     """
     wrong_annotators = set()
-
     nbr_annotators = muster_sheet['annotator'].unique().size
+
     # You can't calculate overlaps with 1 annotator.
     # If there are 2 and they don't overlap, you can't tell which is right.
     if nbr_annotators > 2:
@@ -124,6 +124,7 @@ def process_big_df(dataframe: pd.DataFrame) -> pd.DataFrame:
     dataframe = basic_cleaning(dataframe)
     # TODO detect column jumping
     # example: subject 79888343, workflow 21955, annotator greeneagle245
+    # Probably in the wrong-column detection code, using h_overlap within each annotator?
 
     # Process each muster sheet (subject-workflow combination) separately
     muster_grouping = dataframe.groupby(by=['subject_id', 'workflow_id'])
