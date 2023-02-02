@@ -78,22 +78,22 @@ def basic_cleaning(dataframe: pd.DataFrame) -> pd.DataFrame:
 
 
 def series_levenshtein(text_series: pd.Series):
-    '''
+    """
     Generate a column of Levenshtein similarity ratios
     :param text_series: column of strings
     :return: column giving the similarity between each string and the previous one
-    '''
+    """
     texts = text_series.values
     output = [np.NAN] + [Levenshtein.ratio(texts[i - 1], texts[i]) for i in range(1, texts.shape[0])]
     return pd.Series(output, index=text_series.index)
 
 
 def generate_line_series(overlap_series: pd.Series) -> pd.Series:
-    '''
+    """
     Generate line numbers for one muster sheet (subject-workflow combination)
     :param overlap_series: column of vertical overlaps
     :return: column of line numbers
-    '''
+    """
     line = 0
     results = [line]
     # value 0 doesn't count
@@ -149,11 +149,13 @@ def vote_line_by_line(dataframe: pd.DataFrame) -> pd.DataFrame:
         logging.info(f'Processing {muster_key} with {muster_sheet.shape[0]} rows')
         # Drop rows with wrong column
         muster_sheet = muster_sheet[~ muster_sheet['wrong_column']]
+        logging.info(f'after dropping wrong_column: {muster_sheet.shape[0]} rows')
         # Group by line
         line_grouping = muster_sheet.groupby(by=['line'])
         for line in line_grouping.groups.keys():
             muster_line = line_grouping.get_group(line)
-            muster_line = decide_line(muster_line, decision_counter)
+            key_triple = (muster_key[0], muster_key[1], line)
+            muster_line = decide_line(muster_line, key_triple, decision_counter)
             # Copy the new columns back to the main dataframe
             dataframe = dataframe.combine_first(
                 muster_line[['decision', 'decision_type', 'mode_votes', 'total_votes']])
@@ -161,9 +163,10 @@ def vote_line_by_line(dataframe: pd.DataFrame) -> pd.DataFrame:
     return dataframe
 
 
-def decide_line(muster_line: pd.DataFrame, decision_counter: dict) -> pd.DataFrame:
+def decide_line(muster_line: pd.DataFrame, key_triple: tuple, decision_counter: dict) -> pd.DataFrame:
     """
     Carry out the voting on one subject/workflow/line combination
+    :param key_triple: for logging
     :param muster_line: one subject-workflow-line combination
     :param decision_counter: to keep track of decisions by type and size
     :return:
@@ -180,10 +183,9 @@ def decide_line(muster_line: pd.DataFrame, decision_counter: dict) -> pd.DataFra
         decision_type = 'majority'
     elif mode_votes > vote_df.values[1]:
         decision_type = 'plurality'
+        # TODO consider using Levenshtein.median(...)
     else:
         decision_type = 'failed'
-
-    # TODO consider using Levenshtein.median(...)
 
     # log and apply the result
     if decision_type != 'unanimous':
@@ -194,19 +196,6 @@ def decide_line(muster_line: pd.DataFrame, decision_counter: dict) -> pd.DataFra
     muster_line['mode_votes'] = mode_votes
     muster_line['total_votes'] = total_votes
     return muster_line
-
-
-def get_horizontal_boundaries(annotation_dict: dict):
-    """
-    Calculate the left and right coordinates for each annotator
-    :param annotation_dict: annotator -> (annotation, x, width)
-    :return: annotator -> (x_left, x_right)
-    """
-    # The min 1 is there to prevent division by zero when the annotator
-    # created a zero-width rectangle.
-    boundary_dict = {annotator: (value[1], value[1] + max(value[2], 1))
-                     for annotator, value in annotation_dict.items()}
-    return boundary_dict
 
 
 def get_absolute_overlap(left0, right0, left1, right1):
