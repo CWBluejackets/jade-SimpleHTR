@@ -108,7 +108,10 @@ def generate_line_numbers(dataframe: pd.DataFrame) -> pd.DataFrame:
     # split by subject and workflow ID then sort vertically
     muster_grouping = dataframe.groupby(by=['subject_id', 'workflow_id'])
     for muster_key in muster_grouping.groups.keys():
+        logging.warning(f'Assigning line numbers to {muster_key}')
         muster_sheet = muster_grouping.get_group(muster_key)
+        muster_sheet = muster_sheet[~ muster_sheet['wrong_column']]
+
         # This way of sorting produces a cleaner separation in the histogram (empirically)
         muster_sheet = muster_sheet.sort_values(by=['top', 'bottom'], ascending=[True, False])
 
