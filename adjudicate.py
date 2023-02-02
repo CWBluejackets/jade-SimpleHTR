@@ -132,6 +132,8 @@ def process_big_df(dataframe: pd.DataFrame) -> pd.DataFrame:
     # decision type, number of votes -> nbr of matching decisions
     decision_counter = defaultdict(Counter)
 
+    total_sheets = len(muster_grouping.groups.keys())
+    sheets_done = 0
     for muster_key in muster_grouping.groups.keys():
         muster_sheet = muster_grouping.get_group(muster_key)
         logging.info(f'Processing {muster_key} with {muster_sheet.shape[0]} rows')
@@ -147,6 +149,8 @@ def process_big_df(dataframe: pd.DataFrame) -> pd.DataFrame:
         muster_sheet = vote_line_by_line(muster_key, muster_sheet, decision_counter)
         dataframe = dataframe.combine_first(muster_sheet[['decision', 'text_median', 'decision_type',
                                                           'mode_votes', 'total_votes']])
+        sheets_done += 1
+        logging.warning(f'Approximate progress: {100*sheets_done/total_sheets:.1f}%')
 
     log_decision_counts(decision_counter)
     return dataframe
