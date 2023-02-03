@@ -164,8 +164,8 @@ def update_progress(rows_done: int, total_rows:int ,
     sheet_ratio = sheets_done / total_sheets
     row_ratio = rows_done / total_rows
     elapsed_time = time.time() - start_time
-    remaining_by_rows = str(timedelta(seconds=(elapsed_time / row_ratio)))
-    remaining_by_sheets = str(timedelta(seconds=(elapsed_time / sheet_ratio)))
+    remaining_by_rows = str(timedelta(seconds=round(elapsed_time / row_ratio)))
+    remaining_by_sheets = str(timedelta(seconds=round(elapsed_time / sheet_ratio)))
     logging.warning(f'Approximate progress: {100 * row_ratio:.1f}% R ~ {100 * sheet_ratio:.1f}% S')
     logging.warning(f'Approximate time remaining: {remaining_by_rows} R ~ {remaining_by_sheets} S')
     return
