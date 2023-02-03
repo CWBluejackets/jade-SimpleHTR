@@ -6,7 +6,6 @@ import json
 import logging
 import math
 import os
-import re
 import uuid
 from collections import Counter
 from typing import Tuple, Dict
@@ -76,7 +75,8 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
     """
     logging.warning(f'Unfiltered rows {dataframe.shape[0]}')
 
-    # use the adjudicated data if present
+    # Use the adjudicated data if present.
+    # TODO use 'text_median' column if voting failed?
     if 'decision' in dataframe.columns:
         text_column = 'decision'
     else:
@@ -163,7 +163,7 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
     count_file_path = os.path.join(output_subdirectory, 'annotation_count.tsv')
     filename_prefix = uuid.uuid4().hex
 
-    # group by filename so we load each JPG file only once
+    # Group by filename so we load each JPG file only once
     grouped_df = dataframe.groupby(dataframe['filename'])
 
     for filename in dataframe['filename'].unique():
