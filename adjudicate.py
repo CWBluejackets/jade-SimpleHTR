@@ -4,7 +4,9 @@ import datetime
 import json
 import logging
 import os
+import time
 from collections import defaultdict, Counter
+from datetime import timedelta
 
 import Levenshtein
 import numpy as np
@@ -52,7 +54,7 @@ def detect_wrong_columns(muster_sheet: pd.DataFrame) -> pd.DataFrame:
     return muster_sheet
 
 
-def basic_cleaning(dataframe: pd.DataFrame) -> pd.DataFrame:
+def basic_cleaning(dataframe: pd.DataFrame):
     """
     Delete the rows with missing rectangles, cleaned text, or required identifiers
     :param dataframe:
@@ -62,12 +64,10 @@ def basic_cleaning(dataframe: pd.DataFrame) -> pd.DataFrame:
     # Note: the text_clean column already contains a single space where the exported text is blank
     dataframe.dropna(axis=0, how='any', inplace=True, subset=['left', 'right', 'top', 'bottom', 'text_clean',
                                                               'subject_id', 'workflow_id', 'annotator', 'task'])
-    logging.warning(f'Dropped NaN rectangles/text/IDs; filtered rows {dataframe.shape[0]}')
-
-    # create a column with a special value to start it as int64
-    # dataframe['line'] = -1
-    # this would break combine_first(...) later?
-    return dataframe
+    clean_rows = dataframe.shape[0]
+    logging.warning(f'Dropped NaN rectangles/text/IDs; filtered rows {clean_rows}')
+    start_time = time.time()
+    return dataframe, clean_rows, start_time
 
 
 def make_levenshtein_series(text_series: pd.Series):
@@ -121,7 +121,7 @@ def process_big_df(dataframe: pd.DataFrame) -> pd.DataFrame:
     :param dataframe: the big CSV unpacked and repacked from Zooniverse exports
     :return: same thing with more columns
     """
-    dataframe = basic_cleaning(dataframe)
+    dataframe, total_rows, start_time = basic_cleaning(dataframe)
     # TODO detect column jumping
     # example: subject 79888343, workflow 21955, annotator greeneagle245
     # Probably in the wrong-column detection code, using h_overlap within each annotator?
@@ -134,9 +134,11 @@ def process_big_df(dataframe: pd.DataFrame) -> pd.DataFrame:
 
     total_sheets = len(muster_grouping.groups.keys())
     sheets_done = 0
+    rows_done = 0
     for muster_key in muster_grouping.groups.keys():
         muster_sheet = muster_grouping.get_group(muster_key)
-        logging.info(f'Processing {muster_key} with {muster_sheet.shape[0]} rows')
+        sheet_rows = muster_sheet.shape[0]
+        logging.info(f'Processing {muster_key} with {sheet_rows} rows')
 
         muster_sheet = detect_wrong_columns(muster_sheet)
         dataframe = dataframe.combine_first(muster_sheet[['wrong_column']])
@@ -150,10 +152,24 @@ def process_big_df(dataframe: pd.DataFrame) -> pd.DataFrame:
         dataframe = dataframe.combine_first(muster_sheet[['decision', 'text_median', 'decision_type',
                                                           'mode_votes', 'total_votes']])
         sheets_done += 1
-        logging.warning(f'Approximate progress: {100*sheets_done/total_sheets:.1f}%')
+        rows_done += sheet_rows
+        update_progress(rows_done, total_rows, sheets_done, total_sheets, start_time)
 
     log_decision_counts(decision_counter)
     return dataframe
+
+
+def update_progress(rows_done: int, total_rows:int ,
+                    sheets_done:int, total_sheets: int, start_time:float):
+    sheet_ratio = sheets_done / total_sheets
+    row_ratio = rows_done / total_rows
+    current_time = time.time()
+    elapsed_time = current_time - start_time
+    remaining_by_rows = str(timedelta(seconds=(elapsed_time / row_ratio + start_time)))
+    remaining_by_sheets = str(timedelta(seconds=(elapsed_time / sheet_ratio + start_time)))
+    logging.warning(f'Approximate progress: {100 * row_ratio:.1f}% R ~ {100 * sheet_ratio:.1f}% S')
+    logging.warning(f'Approximate time remaining: {remaining_by_rows}% R ~ {remaining_by_sheets}% S')
+    return
 
 
 def log_decision_counts(decision_counter: dict):
@@ -205,7 +221,8 @@ def decide_line(muster_line: pd.DataFrame, key_triple: tuple, decision_counter: 
     decision_counter[decision_type][total_votes] += 1
     muster_line['decision'] = None if decision_type == 'failed' else mode
     muster_line['decision_type'] = decision_type
-    muster_line['text_median'] = Levenshtein.median(muster_line['text_clean'].values)
+    # weighting may speed the median up
+    muster_line['text_median'] = Levenshtein.median(vote_df.index, wlist=vote_df.values)
     muster_line['mode_votes'] = mode_votes
     muster_line['total_votes'] = total_votes
     return muster_line
