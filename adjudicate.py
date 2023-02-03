@@ -300,8 +300,8 @@ if __name__ == "__main__":
 
     # sort the output to make it easy to inspect the voting and overlaps
     logging.warning('Sorting results...')
-    big_df.sort_values(by=['workflow_id', 'subject_id', 'line', 'annotator'],
-                       ascending=[True, True, True, True],
+    big_df.sort_values(by=['workflow_id', 'subject_id', 'line', 'top'],
+                       ascending=[True, True, True, True, True],
                        na_position='last',
                        inplace=True)
 
