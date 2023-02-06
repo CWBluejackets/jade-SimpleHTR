@@ -95,7 +95,7 @@ def make_line_series(overlap_series: pd.Series, annotator_series: pd.Series) -> 
     for this_overlap, this_annotator in zip(overlap_series.values[1:], annotator_series[1:]):
         if (this_overlap < VERTICAL_OVERLAP_THRESHOLD) or (this_annotator in current_annotators):
             line += 1
-            current_annotators = set()
+            current_annotators = {this_annotator}
         else:
             current_annotators.add(this_annotator)
         results.append(line)
