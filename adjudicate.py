@@ -91,7 +91,7 @@ def make_line_series(muster_sheet: pd.DataFrame) -> pd.Series:
     line = 0
     results = [line]
     overlaps = muster_sheet['v_overlap'].values
-    annotators = muster_sheet['annotator'].values
+    annotators = muster_sheet['annotators'].values
     current_annotators = {annotators[0]}
     # value 0 is unused
     for this_overlap, this_annotator in zip(overlaps[1:], annotators[1:]):
