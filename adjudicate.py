@@ -81,7 +81,7 @@ def make_levenshtein_series(text_series: pd.Series):
     return pd.Series(output, index=text_series.index)
 
 
-def make_line_series(muster_sheet: pd.DataFrame) -> pd.Series:
+def make_line_series(overlap_series: pd.Series, annotator_series: pd.Series) -> pd.Series:
     """
     Generate line numbers for one muster sheet (subject-workflow combination)
     :param annotator_series: column of annotator IDs
@@ -90,18 +90,16 @@ def make_line_series(muster_sheet: pd.DataFrame) -> pd.Series:
     """
     line = 0
     results = [line]
-    overlaps = muster_sheet['v_overlap'].values
-    annotators = muster_sheet['annotators'].values
-    current_annotators = {annotators[0]}
+    current_annotators = {annotator_series.values[0]}
     # value 0 is unused
-    for this_overlap, this_annotator in zip(overlaps[1:], annotators[1:]):
+    for this_overlap, this_annotator in zip(overlap_series.values[1:], annotator_series[1:]):
         if (this_overlap < VERTICAL_OVERLAP_THRESHOLD) or (this_annotator in current_annotators):
             line += 1
             current_annotators = set()
         else:
             current_annotators.add(this_annotator)
         results.append(line)
-    return pd.Series(results, index=muster_sheet.index, dtype=pd.Int64Dtype)
+    return pd.Series(results, index=overlap_series.index, dtype=pd.Int64Dtype)
 
 
 def add_line_numbers(muster_sheet: pd.DataFrame) -> pd.DataFrame:
@@ -117,7 +115,7 @@ def add_line_numbers(muster_sheet: pd.DataFrame) -> pd.DataFrame:
     muster_sheet['levenshtein'] = make_levenshtein_series(muster_sheet['text_clean'])
     muster_sheet['v_overlap'] = muster_sheet.apply(
         lambda row: get_overlap_proportion(row['top'], row['bottom'], row['prev_top'], row['prev_bottom']), axis=1)
-    muster_sheet['line'] = make_line_series(muster_sheet)
+    muster_sheet['line'] = make_line_series(muster_sheet['v_overlap'], muster_sheet['annotator'])
     logging.warning(f'Lines 0 to {muster_sheet["line"].max()}')
     return muster_sheet
 
