@@ -155,9 +155,9 @@ def process_big_df(dataframe: pd.DataFrame) -> pd.DataFrame:
 
         muster_sheet = vote_line_by_line(muster_key, muster_sheet, decision_counter)
         # Now copy the changes back to the main dataframe
-        dataframe = dataframe.combine_first(muster_sheet[['prev_top', 'prev_bottom',
-                                                          'levenshtein', 'v_overlap', 'line',
-                                                          'decision', 'text_median', 'decision_type',
+        dataframe = dataframe.combine_first(muster_sheet[['prev_top', 'prev_bottom', 'v_overlap',
+                                                          'levenshtein', 'line', 'decision_type',
+                                                          'decision', 'decision1', 'text_median',
                                                           'mode_votes', 'total_votes']])
         sheets_done += 1
         rows_done += sheet_rows
@@ -196,7 +196,7 @@ def vote_line_by_line(muster_key: tuple, muster_sheet: pd.DataFrame,
         muster_line = decide_line(muster_line, key_triple, decision_counter)
         # Copy the new columns back to the output
         muster_sheet = muster_sheet.combine_first(
-            muster_line[['decision', 'text_median', 'decision_type', 'mode_votes', 'total_votes']])
+            muster_line[['decision', 'decision1', 'text_median', 'decision_type', 'mode_votes', 'total_votes']])
     return muster_sheet
 
 
@@ -230,7 +230,12 @@ def decide_line(muster_line: pd.DataFrame, key_triple: tuple, decision_counter: 
     if decision_type != 'unanimous':
         logging.info(f'Voting {decision_type}: {key_triple} has {vote_df.to_dict()} (median={median})')
     decision_counter[decision_type][total_votes] += 1
-    muster_line['decision'] = None if decision_type == 'failed' else mode
+    if decision_type == 'failed':
+        muster_line['decision'] = None
+        muster_line['decision1'] = median
+    else:
+        muster_line['decision'] = mode
+        muster_line['decision1'] = mode
     muster_line['decision_type'] = decision_type
     muster_line['mode_votes'] = mode_votes
     muster_line['total_votes'] = total_votes
