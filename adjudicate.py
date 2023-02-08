@@ -61,7 +61,8 @@ def basic_cleaning(dataframe: pd.DataFrame):
     :return:
     """
     logging.warning(f'Starting rows {dataframe.shape[0]}')
-    # Note: the text_clean column already contains a single space where the exported text is blank
+    # Note: the text_clean column contains a single space where the exported text is blank
+    # but is empty (NaN here) where it ended up empty after stripping tags.
     dataframe.dropna(axis=0, how='any', inplace=True, subset=['left', 'right', 'top', 'bottom', 'text_clean',
                                                               'subject_id', 'workflow_id', 'annotator', 'task'])
     clean_rows = dataframe.shape[0]
