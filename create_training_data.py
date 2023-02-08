@@ -76,8 +76,9 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
     logging.warning(f'Unfiltered rows {dataframe.shape[0]}')
 
     # Use the adjudicated data if present.
-    # TODO use 'text_median' column if voting failed?
-    if 'decision' in dataframe.columns:
+    if 'decision1' in dataframe.columns:
+        text_column = 'decision1'
+    elif 'decision' in dataframe.columns:
         text_column = 'decision'
     else:
         text_column = 'text_clean'
