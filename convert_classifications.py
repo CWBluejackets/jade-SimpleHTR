@@ -13,6 +13,8 @@ import pandas as pd
 
 DEFAULT_OUTPUT_FILENAME = os.path.join(os.environ['HOME'], 'output.csv')
 TASK_RE = re.compile(r'T(\d+)')
+TAG_PURGE = re.compile(r'[\[{][^[{]*[}\]]')
+TAG_MATCH = re.compile(r'[\[{\]}]')
 
 # output format CSV
 COLUMNS = ['subject_id', 'classification_id', 'workflow_id', 'annotator', 'filename',
@@ -24,11 +26,11 @@ WHITESPACE = re.compile(r'\s+')
 
 
 def add_coordinates(row0):
-    '''
+    """
     add left, right, top, bottom values to a row
     :param row0: row of annotation data
     :return: original row extended with four more values
-    '''
+    """
     x = row0[COLUMNS.index('x')]
     y = row0[COLUMNS.index('y')]
     width = row0[COLUMNS.index('width')]
@@ -46,7 +48,7 @@ def add_coordinates(row0):
     return row0 + [left, right, top, bottom]
 
 
-def clean_string(s0: str):
+def clean_string(s0: str) -> str:
     if not s0:
         return ' '
     # Empty strings need to be changed to one space to prevent automatic
@@ -55,7 +57,15 @@ def clean_string(s0: str):
     s1 = s1 or ' '
     # Some input contains literally "N/A", which pandas turns into Nan
     # ignoring this for now
+    if TAG_MATCH.search(s1):
+        s1 = clean_tags(s1)
+    # iIf tag removal leaves an empty string, leave it empty so it will be
+    # Nan and ignored later
     return s1
+
+
+def clean_tags(s0: str) -> str:
+    return TAG_PURGE.sub('', s0)
 
 
 def convert_t_code(task_id):
@@ -97,7 +107,6 @@ def process_annotation(annotation):
     :param annotation:
     :return: list of lists without the filenames
     """
-    # TODO add an even cleaner string with [/] stuff removed
     task_str = annotation.get('task', 'MISSING0')
     value = annotation.get('value')
     # task, x, y, width, height, text, text_clean
