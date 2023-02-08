@@ -8,5 +8,5 @@
   "log_directory": null,
   "suppress_spaces": true,
   "digits_only": true,
-  "sampling": true
+  "sampling": false
 }
