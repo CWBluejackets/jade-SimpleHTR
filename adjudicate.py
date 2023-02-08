@@ -148,13 +148,15 @@ def process_big_df(dataframe: pd.DataFrame) -> pd.DataFrame:
         muster_sheet = detect_wrong_columns(muster_sheet)
         dataframe = dataframe.combine_first(muster_sheet[['wrong_column']])
 
-        # Following step discards wrong-column annotators
+        # Following step ignores wrong-column annotators (they are not in the output
+        # muster sheet dataframe)
         muster_sheet = add_line_numbers(muster_sheet)
-        dataframe = dataframe.combine_first(muster_sheet[['prev_top', 'prev_bottom',
-                                                          'levenshtein', 'v_overlap', 'line']])
 
         muster_sheet = vote_line_by_line(muster_key, muster_sheet, decision_counter)
-        dataframe = dataframe.combine_first(muster_sheet[['decision', 'text_median', 'decision_type',
+        # Now copy the changes back to the main dataframe
+        dataframe = dataframe.combine_first(muster_sheet[['prev_top', 'prev_bottom',
+                                                          'levenshtein', 'v_overlap', 'line',
+                                                          'decision', 'text_median', 'decision_type',
                                                           'mode_votes', 'total_votes']])
         sheets_done += 1
         rows_done += sheet_rows
@@ -172,8 +174,8 @@ def update_progress(rows_done: int, total_rows:int ,
     elapsed_time = current_time - start_time
     remaining_by_rows = str(timedelta(seconds=round(elapsed_time / row_ratio + start_time - current_time)))
     remaining_by_sheets = str(timedelta(seconds=round(elapsed_time / sheet_ratio + start_time - current_time)))
-    logging.warning(f'Approximate progress: {100 * row_ratio:.1f}% R ~ {100 * sheet_ratio:.1f}% S')
-    logging.warning(f'Approximate time remaining: {remaining_by_rows} R ~ {remaining_by_sheets} S')
+    logging.warning(f'Approx progress and time left: {100 * row_ratio:.1f}% {remaining_by_rows} by rows; '
+                    f'{100 * sheet_ratio:.1f}% {remaining_by_sheets} by sheets')
     return
 
 
@@ -191,7 +193,7 @@ def vote_line_by_line(muster_key: tuple, muster_sheet: pd.DataFrame,
         muster_line = line_grouping.get_group(line)
         key_triple = (muster_key[0], muster_key[1], line)
         muster_line = decide_line(muster_line, key_triple, decision_counter)
-        # Copy the new columns back to the main dataframe
+        # Copy the new columns back to the output
         muster_sheet = muster_sheet.combine_first(
             muster_line[['decision', 'text_median', 'decision_type', 'mode_votes', 'total_votes']])
     return muster_sheet
@@ -210,6 +212,9 @@ def decide_line(muster_line: pd.DataFrame, key_triple: tuple, decision_counter: 
     mode = vote_df.index[0]
     mode_votes = vote_df.values[0]
     total_votes = vote_df.values.sum()
+    # weighting may speed the median calculation up
+    median = Levenshtein.median(vote_df.index, wlist=vote_df.values)
+    muster_line['text_median'] = median
 
     if mode_votes == total_votes:
         decision_type = 'unanimous'
@@ -222,12 +227,10 @@ def decide_line(muster_line: pd.DataFrame, key_triple: tuple, decision_counter: 
 
     # log and apply the result
     if decision_type != 'unanimous':
-        logging.info(f'Voting {decision_type}: {key_triple} has {vote_df.to_dict()}')
+        logging.info(f'Voting {decision_type}: {key_triple} has {vote_df.to_dict()} (median={median})')
     decision_counter[decision_type][total_votes] += 1
     muster_line['decision'] = None if decision_type == 'failed' else mode
     muster_line['decision_type'] = decision_type
-    # weighting may speed the median up
-    muster_line['text_median'] = Levenshtein.median(vote_df.index, wlist=vote_df.values)
     muster_line['mode_votes'] = mode_votes
     muster_line['total_votes'] = total_votes
     return muster_line
@@ -236,11 +239,11 @@ def decide_line(muster_line: pd.DataFrame, key_triple: tuple, decision_counter: 
 def get_absolute_overlap(left0, right0, left1, right1):
     """
     Calculate the overlap in pixels across two ranges
-    :param left0:
-    :param right0:
-    :param left1:
-    :param right1:
-    :return:
+    :param left0: left or top
+    :param right0: right or bottom
+    :param left1: other left or top
+    :param right1: other right or bottom
+    :return: overlap in pixels
     """
     return max(0, min(right0, right1) - max(left0, left1))
 
@@ -248,11 +251,11 @@ def get_absolute_overlap(left0, right0, left1, right1):
 def get_overlap_proportion(this_left, this_right, reference_left, reference_right):
     """
     Calculate the proportion of "this" width covered by the "reference"
-    :param this_left:
-    :param this_right:
-    :param reference_left:
-    :param reference_right:
-    :return:
+    :param this_left: left or top
+    :param this_right: right or bottom
+    :param reference_left: other left or top
+    :param reference_right: other right or bottom
+    :return: overlap as a proportion
     """
     overlap = get_absolute_overlap(this_left, this_right, reference_left, reference_right)
     return overlap / (this_right - this_left)
