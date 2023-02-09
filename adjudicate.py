@@ -23,7 +23,7 @@ TWOFER_MIN_OVERLAP = 0.7
 MORE_MIN_OVERLAP = 0.1
 
 
-def detect_wrong_columns(muster_sheet: pd.DataFrame) -> pd.DataFrame:
+def detect_wrong_columns(muster_sheet: pd.DataFrame):
     """
     Detect annotators working in the wrong column
     :param muster_sheet: one subject-workflow combination
@@ -54,14 +54,16 @@ def detect_wrong_columns(muster_sheet: pd.DataFrame) -> pd.DataFrame:
         if (nbr_annotators == 2) and (lowest_overlap < TWOFER_MIN_OVERLAP):
             wrong_annotators.update(annotator_ranges.keys())
 
-    logging.warning(f'Identified {len(wrong_annotators)} wrong-column annotators out of {nbr_annotators}')
+    rejected_annotators = len(wrong_annotators)
+    rejected_all = rejected_annotators == nbr_annotators
+    logging.warning(f'Identified {rejected_annotators} wrong-column annotators out of {nbr_annotators}')
     # mark all the matching lines
     muster_sheet['wrong_column'] = muster_sheet['annotator'].apply(lambda x: x in wrong_annotators)
     # https://stackoverflow.com/questions/53550988/count-occurrences-of-false-or-true-in-a-column-in-pandas
     # https://stackoverflow.com/questions/23403352/return-default-if-pandas-dataframe-loc-location-doesnt-exist
     wrong_column_rows = muster_sheet['wrong_column'].value_counts().get(True, 0)
     logging.warning(f'Marked {wrong_column_rows} rows as wrong-column')
-    return muster_sheet
+    return muster_sheet, rejected_all
 
 
 def basic_cleaning(dataframe: pd.DataFrame):
@@ -156,19 +158,21 @@ def process_big_df(dataframe: pd.DataFrame) -> pd.DataFrame:
         sheet_rows = muster_sheet.shape[0]
         logging.info(f'Processing {muster_key} with {sheet_rows} rows')
 
-        muster_sheet = detect_wrong_columns(muster_sheet)
+        muster_sheet, rejected = detect_wrong_columns(muster_sheet)
         dataframe = dataframe.combine_first(muster_sheet[['wrong_column']])
 
-        # Following step ignores wrong-column annotators (they are not in the output
-        # muster sheet dataframe)
-        muster_sheet = add_line_numbers(muster_sheet)
-
-        muster_sheet = vote_line_by_line(muster_key, muster_sheet, decision_counter)
-        # Now copy the changes back to the main dataframe
-        dataframe = dataframe.combine_first(muster_sheet[['prev_top', 'prev_bottom', 'v_overlap',
-                                                          'levenshtein', 'line', 'decision_type',
-                                                          'decision', 'decision1', 'text_median',
-                                                          'mode_votes', 'total_votes']])
+        # Skip line-numbering and voting if the whole sheet is rejected (two annotators
+        # with different columns).
+        if not rejected:
+            # Add line numbers (ignoring wrong_column annotators)
+            muster_sheet = add_line_numbers(muster_sheet)
+            # Vote for agreement
+            muster_sheet = vote_line_by_line(muster_key, muster_sheet, decision_counter)
+            # Now copy the changes back to the main dataframe
+            dataframe = dataframe.combine_first(muster_sheet[['prev_top', 'prev_bottom', 'v_overlap',
+                                                              'levenshtein', 'line', 'decision_type',
+                                                              'decision', 'decision1', 'text_median',
+                                                              'mode_votes', 'total_votes']])
         sheets_done += 1
         rows_done += sheet_rows
         update_progress(rows_done, total_rows, sheets_done, total_sheets, start_time)
