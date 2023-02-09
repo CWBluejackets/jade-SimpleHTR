@@ -15,8 +15,12 @@ import pandas as pd
 # Minimum size for a box to be usable
 PIXEL_CUTOFF = 5.0
 
-# Determined empirically (in a clean break in histogram)
+# Line separation (determined empirically from the histogram)
 VERTICAL_OVERLAP_THRESHOLD = 0.6
+
+# Wrong column detection
+TWOFER_MIN_OVERLAP = 0.7
+MORE_MIN_OVERLAP = 0.1
 
 
 def detect_wrong_columns(muster_sheet: pd.DataFrame) -> pd.DataFrame:
@@ -29,20 +33,26 @@ def detect_wrong_columns(muster_sheet: pd.DataFrame) -> pd.DataFrame:
     nbr_annotators = muster_sheet['annotator'].unique().size
 
     # You can't calculate overlaps with 1 annotator.
-    # If there are 2 and they don't overlap, you can't tell which is right.
-    if nbr_annotators > 2:
+    # If there are two columns with poor overlap, we assume one of them is wrong
+    # but can't decide which so we mark them both for exclusion.
+    if nbr_annotators > 1:
         annotator_ranges = dict()
         annotator_grouped = muster_sheet.groupby('annotator')
         for annotator in annotator_grouped.groups.keys():
             anno_df = annotator_grouped.get_group(annotator)
             annotator_ranges[annotator] = (anno_df['left'].min(), anno_df['right'].max())
         annotator_set = set(annotator_ranges.keys())
+        lowest_overlap = 1.0
         for annotator, (left, right) in annotator_ranges.items():
             others_left = min([annotator_ranges[x][0] for x in annotator_set - {annotator}])
             others_right = max([annotator_ranges[x][1] for x in annotator_set - {annotator}])
             overlap = get_overlap_proportion(left, right, others_left, others_right)
-            if overlap == 0.0:
+            lowest_overlap = min(lowest_overlap, overlap)
+            if overlap < MORE_MIN_OVERLAP:
                 wrong_annotators.add(annotator)
+        # Special case for 2 annotators
+        if (nbr_annotators == 2) and (lowest_overlap < TWOFER_MIN_OVERLAP):
+            wrong_annotators.update(annotator_ranges.keys())
 
     logging.warning(f'Identified {len(wrong_annotators)} wrong-column annotators out of {nbr_annotators}')
     # mark all the matching lines
