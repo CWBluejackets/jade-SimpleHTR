@@ -4,6 +4,7 @@ import datetime
 import json
 import logging
 import os
+import re
 import time
 from collections import defaultdict, Counter
 from datetime import timedelta
@@ -21,6 +22,15 @@ VERTICAL_OVERLAP_THRESHOLD = 0.6
 # Wrong column detection
 TWOFER_MIN_OVERLAP = 0.7
 MORE_MIN_OVERLAP = 0.1
+
+WHITESPACE = re.compile(r'\s+')
+
+
+def clean_median(s0: str) -> str:
+    # Empty strings need to be changed to one space to prevent automatic
+    # conversion to NaN through CSV interchange and to allow HTR to work.
+    s1 = WHITESPACE.sub(' ', s0.strip())
+    return s1 or ' '
 
 
 def detect_wrong_columns(muster_sheet: pd.DataFrame):
@@ -228,7 +238,7 @@ def decide_line(muster_line: pd.DataFrame, key_triple: tuple, decision_counter: 
     mode_votes = vote_df.values[0]
     total_votes = vote_df.values.sum()
     # weighting may speed the median calculation up
-    median = Levenshtein.median(vote_df.index, wlist=vote_df.values)
+    median = clean_median(Levenshtein.median(vote_df.index, wlist=vote_df.values))
     muster_line['text_median'] = median
 
     if mode_votes == total_votes:

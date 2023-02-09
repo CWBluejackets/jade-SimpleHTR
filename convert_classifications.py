@@ -59,7 +59,7 @@ def clean_string(s0: str) -> str:
     # ignoring this for now
     if TAG_MATCH.search(s1):
         s1 = clean_tags(s1)
-    # iIf tag removal leaves an empty string, leave it empty so it will be
+    # If tag removal leaves an empty string, leave it empty so it will be
     # Nan and ignored later
     return s1
 
