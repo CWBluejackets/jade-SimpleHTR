@@ -26,9 +26,17 @@ MORE_MIN_OVERLAP = 0.1
 WHITESPACE = re.compile(r'\s+')
 
 
+def is_too_small(row: pd.Series) -> bool:
+    return (row['width'] < PIXEL_CUTOFF) or (row['height'] < PIXEL_CUTOFF)
+
+
 def clean_median(s0: str) -> str:
-    # Empty strings need to be changed to one space to prevent automatic
-    # conversion to NaN through CSV interchange and to allow HTR to work.
+    """
+    Strip/clean whitespace for median strings but use a single space instead
+    of an empty string
+    :param s0:
+    :return:
+    """
     s1 = WHITESPACE.sub(' ', s0.strip())
     return s1 or ' '
 
@@ -82,6 +90,7 @@ def basic_cleaning(dataframe: pd.DataFrame):
     :param dataframe:
     :return:
     """
+    start_time = time.time()
     logging.warning(f'Starting rows {dataframe.shape[0]}')
     # Note: the text_clean column contains a single space where the exported text is blank
     # but is empty (NaN here) where it ended up empty after stripping tags.
@@ -89,7 +98,7 @@ def basic_cleaning(dataframe: pd.DataFrame):
                                                               'subject_id', 'workflow_id', 'annotator', 'task'])
     clean_rows = dataframe.shape[0]
     logging.warning(f'Dropped NaN rectangles/text/IDs; filtered rows {clean_rows}')
-    start_time = time.time()
+    dataframe['too_small'] = dataframe.apply(is_too_small, axis=1)
     return dataframe, clean_rows, start_time
 
 

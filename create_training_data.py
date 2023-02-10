@@ -85,20 +85,20 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
 
     # delete the rows without rectangles or text
     dataframe.dropna(axis=0, how='any', inplace=True, subset=['x', 'y', 'width', 'height', text_column])
-    logging.warning(f'Dropped NaN rectangles/text; filtered rows {dataframe.shape[0]}')
+    logging.warning(f'Dropped NaN rectangles/text; rows left {dataframe.shape[0]}')
 
     # if the 'ignored' column is present, delete rows that were ignored in voting
-    if 'ignored' in dataframe.columns:
-        dataframe = dataframe[~ dataframe['ignored']]
-        logging.warning(f'Dropped ignored annotations; filtered rows {dataframe.shape[0]}')
+    if 'wrong_column' in dataframe.columns:
+        dataframe = dataframe[~ dataframe['wrong_column']]
+        logging.warning(f'Dropped wrong column annotations; rows left {dataframe.shape[0]}')
     else:
-        logging.warning(f'Column "ignored" not present')
+        logging.warning(f'Column "wrong_column" not present')
 
-    if 'bad_box' in dataframe.columns:
-        dataframe = dataframe[~ dataframe['bad_box']]
-        logging.warning(f'Dropped bad boxes; filtered rows {dataframe.shape[0]}')
+    if 'too_small' in dataframe.columns:
+        dataframe = dataframe[~ dataframe['too_small']]
+        logging.warning(f'Dropped boxes that are too small; rows left {dataframe.shape[0]}')
     else:
-        logging.warning(f'Column "bad_box" not present')
+        logging.warning(f'Column "too_small" not present')
 
     # delete rows with jpg filenames that are not available
     dataframe = dataframe[dataframe['filename'].isin(jpg_index0.keys())]
