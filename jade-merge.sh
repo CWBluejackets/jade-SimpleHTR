@@ -31,5 +31,5 @@ echo
 cd "${working_directory}" || exit 99
 
 python3 merge_training_sets.py -c config-jade2.json \
-        -o 22031+22014+22038+22045 \
+        -o numbers \
         22031_1.00 22014_1.00 22038_1.00 22045_1.00
