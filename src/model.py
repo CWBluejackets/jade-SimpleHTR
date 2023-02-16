@@ -38,7 +38,7 @@ def make_cnn_layers():
     return layers
 
 
-def make_rnn_layers() -> None:
+def make_rnn_layers(char_list_size) -> None:
     """Create RNN layers."""
     # rnn_in3d = tf.squeeze(self.cnn_out_4d, axis=[2])
 
@@ -80,7 +80,7 @@ class KModel:
             pass
 
         layers += make_cnn_layers()
-        layers += make_rnn_layers()
+        layers += make_rnn_layers(len(self.char_list))
         return
 
 
