@@ -47,15 +47,13 @@ def make_rnn_layers(char_list_size) -> None:
     num_hidden = 256
     cells = [LSTMCell(units=num_hidden) for _ in range(2)]
     stacked = StackedRNNCells(cells)
-    brnn = Bidirectional(layer=stacked, backward_layer=stacked)
+    brnn = Bidirectional(layer=stacked, backward_layer=stacked, merge_mode='concat')
+    layers.append(brnn)
 
-
-
-    # BxTxH + BxTxH -> BxTx2H -> BxTx1X2H
-    concat = tf.expand_dims(tf.concat([fw, bw], 2), 2)
+    kernel = tf.Variable(tf.random.truncated_normal([1, 1, num_hidden * 2, char_list_size + 1], stddev=0.1))
+    # https://stackoverflow.com/questions/64603919/how-to-do-atrous-convolution-in-tensorflow-2-tf-keras
 
     # project output to chars (including blank): BxTx1x2H -> BxTx1xC -> BxTxC
-    kernel = tf.Variable(tf.random.truncated_normal([1, 1, num_hidden * 2, len(self.char_list) + 1], stddev=0.1))
     self.rnn_out_3d = tf.squeeze(tf.nn.atrous_conv2d(value=concat, filters=kernel, rate=1, padding='SAME'),
                                  axis=[2])
     return layers
