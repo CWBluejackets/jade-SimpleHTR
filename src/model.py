@@ -6,6 +6,7 @@ import numpy as np
 import tensorflow as tf
 import keras.api._v2.keras as keras
 from keras.layers import Conv2D, ReLU, BatchNormalization, MaxPool2D, LSTMCell, StackedRNNCells, Bidirectional
+from keras.losses import SparseCategoricalCrossentropy
 
 from dataloader_iam import Batch
 import locations
@@ -18,7 +19,7 @@ class DecoderType:
     WordBeamSearch = 2
 
 
-def make_cnn_layers():
+def make_cnn_layers() -> list:
     # cnn_in4d = tf.expand_dims(input=self.input_imgs, axis=3)
     # list of parameters for the layers
     kernel_vals = [5, 5, 3, 3, 3]
@@ -38,7 +39,7 @@ def make_cnn_layers():
     return layers
 
 
-def make_rnn_layers(char_list_size) -> None:
+def make_rnn_layers(char_list_size) -> list:
     """Create RNN layers."""
     # rnn_in3d = tf.squeeze(self.cnn_out_4d, axis=[2])
 
@@ -52,10 +53,8 @@ def make_rnn_layers(char_list_size) -> None:
 
     kernel = tf.Variable(tf.random.truncated_normal([1, 1, num_hidden * 2, char_list_size + 1], stddev=0.1))
     # https://stackoverflow.com/questions/64603919/how-to-do-atrous-convolution-in-tensorflow-2-tf-keras
-
-    # project output to chars (including blank): BxTx1x2H -> BxTx1xC -> BxTxC
-    self.rnn_out_3d = tf.squeeze(tf.nn.atrous_conv2d(value=concat, filters=kernel, rate=1, padding='SAME'),
-                                 axis=[2])
+    layers.append(Conv2D(kernel=kernel, dilation_rate=(2,2), padding='same'))
+    # not sure yet how to add the squeeze or if it's necessary
     return layers
 
 
@@ -74,11 +73,16 @@ class KModel:
 
         layers = []
         if augmentation:
+            # TODO
             # layers += rotation/translation layers
             pass
 
         layers += make_cnn_layers()
         layers += make_rnn_layers(len(self.char_list))
+
+        self.model = tf.keras.models.Sequential(layers)
+        self.model.compile(optimizer='adam', metrics=['accuracy'],
+                           loss=SparseCategoricalCrossentropy(from_logits=True))
         return
 
 
