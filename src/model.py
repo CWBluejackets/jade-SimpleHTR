@@ -4,11 +4,11 @@ from typing import List, Tuple
 
 import numpy as np
 import tensorflow as tf
+import keras.api._v2.keras as keras
+from keras.layers import Conv2D, ReLU, BatchNormalization, MaxPool2D, LSTMCell, StackedRNNCells, Bidirectional
 
 from dataloader_iam import Batch
 import locations
-# Disable eager mode
-tf.compat.v1.disable_eager_execution()
 
 
 class DecoderType:
@@ -16,6 +16,72 @@ class DecoderType:
     BestPath = 0
     BeamSearch = 1
     WordBeamSearch = 2
+
+
+def make_cnn_layers():
+    # cnn_in4d = tf.expand_dims(input=self.input_imgs, axis=3)
+    # list of parameters for the layers
+    kernel_vals = [5, 5, 3, 3, 3]
+    feature_vals = [1, 32, 64, 128, 128, 256]
+    stride_vals = pool_vals = [(2, 2), (2, 2), (1, 2), (1, 2), (1, 2)]
+    num_layers = len(stride_vals)
+    layers = []
+    for i in range(num_layers):
+        kernel = tf.Variable(
+            tf.random.truncated_normal([kernel_vals[i], kernel_vals[i], feature_vals[i], feature_vals[i + 1]],
+                                       stddev=0.1))
+        layers.append(Conv2D(filers=kernel, padding='same', strides=(1, 1, 1, 1)))
+        layers.append(BatchNormalization())
+        layers.append(ReLU())
+        layers.append(MaxPool2D(size=(1, pool_vals[i][0], pool_vals[i][1], 1),
+                                strides=(1, stride_vals[i][0], stride_vals[i][1], 1), padding='valid'))
+    return layers
+
+
+def make_rnn_layers() -> None:
+    """Create RNN layers."""
+    # rnn_in3d = tf.squeeze(self.cnn_out_4d, axis=[2])
+
+    layers = []
+    # basic cells which is used to build RNN
+    num_hidden = 256
+    cells = [LSTMCell(units=num_hidden) for _ in range(2)]
+    stacked = StackedRNNCells(cells)
+    brnn = Bidirectional(layer=stacked, backward_layer=stacked)
+
+
+
+    # BxTxH + BxTxH -> BxTx2H -> BxTx1X2H
+    concat = tf.expand_dims(tf.concat([fw, bw], 2), 2)
+
+    # project output to chars (including blank): BxTx1x2H -> BxTx1xC -> BxTxC
+    kernel = tf.Variable(tf.random.truncated_normal([1, 1, num_hidden * 2, len(self.char_list) + 1], stddev=0.1))
+    self.rnn_out_3d = tf.squeeze(tf.nn.atrous_conv2d(value=concat, filters=kernel, rate=1, padding='SAME'),
+                                 axis=[2])
+    return layers
+
+
+class KModel:
+    def __init__(self,
+                 char_list: List[str],
+                 decoder_type: str = DecoderType.BestPath,
+                 must_restore: bool = False,
+                 dump: bool = False,
+                 augmentation: bool = False) -> None:
+        self.dump = dump
+        self.char_list = char_list
+        self.decoder_type = decoder_type
+        self.must_restore = must_restore
+        self.augmentation = augmentation
+
+        layers = []
+        if augmentation:
+            # layers += rotation/translation layers
+            pass
+
+        layers += make_cnn_layers()
+        layers += make_rnn_layers()
+        return
 
 
 class Model:

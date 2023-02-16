@@ -6,5 +6,5 @@ tensorflow==2.11.0
 pandas>=1.5.3
 pillow>=9.4.0
 levenshtein>=0.20.9
-# replaced editdistance in original code with levenshtein
+# replace editdistance in original code with levenshtein
 # replace path with pathlib?
