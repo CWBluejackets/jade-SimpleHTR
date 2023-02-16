@@ -1,10 +1,10 @@
-editdistance==0.5.2
-lmdb==1.0.0
-matplotlib==3.2.1
-numpy==1.19.5
-opencv-python==4.4.0.46
-path==15.0.0
-tensorflow==2.4.0
-pandas>=1.1.5
-pillow>=9.2.0
+matplotlib==3.6
+numpy>=1.24.0
+opencv-python==4.7.0.68
+path>=16.6
+tensorflow==2.11.0
+pandas>=1.5.3
+pillow>=9.4.0
 levenshtein>=0.20.9
+# replaced editdistance in original code with levenshtein
+# replace path with pathlib?

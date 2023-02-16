@@ -1,16 +1,15 @@
 import argparse
 import json
-import os
 from typing import Tuple, List
 
 import cv2
 import editdistance
 from path import Path
 
+import locations
 from dataloader_iam import DataLoaderIAM, Batch
 from model import Model, DecoderType
 from preprocessor import Preprocessor
-import locations
 
 
 def get_img_height() -> int:
@@ -144,23 +143,21 @@ def parse_args() -> argparse.Namespace:
                         default='bestpath')
     parser.add_argument('--batch_size', help='Batch size.',
                         type=int, default=100)
-    parser.add_argument('--data_dir', help='Directory containing IAM dataset.',
+    parser.add_argument('--data_dir', help='Directory containing trainig data.',
                         type=Path, required=False)
-    parser.add_argument('--fast', help='Load samples from LMDB.',
+    parser.add_argument('--augment', help='Use Keras data augmentation',
                         default=False, action='store_true')
-    parser.add_argument('--augment', help=' Use data augmentation',
-                        default=False, action='store_true')
-    parser.add_argument('--line_mode', help='Train to read text lines instead of single words.',
-                        action='store_true', default=False)
     parser.add_argument('--img_file', help='Image used for inference.',
                         type=Path, default='../data/word.png')
     parser.add_argument('--early_stopping', help='Early stopping epochs.',
                         type=int, default=25)
-    parser.add_argument('--dump', help='Dump output of NN to CSV file(s).',
-                        action='store_true', default=False)
     parser.add_argument('--model_dir', help='Path to trained model',
                         type=Path, default='../model')
     parser.add_argument('--convert_fractions', help='convert 1/4 1/2 3/4 to single unicode characters',
+                        action='store_true', default=False)
+
+    # options that might be removed
+    parser.add_argument('--dump', help='Dump output of NN to CSV file(s).',
                         action='store_true', default=False)
     parser.add_argument('--debug_dir', help='directory to dump CV2',
                         type=Path, default=None)
@@ -171,8 +168,6 @@ def parse_args() -> argparse.Namespace:
 
 
 def main():
-    """Main function."""
-
     # parse arguments and set model location and CTC decoder
     args = parse_args()
     locations.set_model_dir(args.model_dir)
@@ -187,7 +182,7 @@ def main():
 
     # train the model
     if args.mode == 'train':
-        loader = DataLoaderIAM(args.data_dir, args.batch_size, fast=args.fast)
+        loader = DataLoaderIAM(args.data_dir, args.batch_size)
 
         # when in line mode, take care to have a whitespace in the char list
         char_list = loader.char_list
@@ -207,11 +202,11 @@ def main():
 
     # evaluate it on the validation set
     elif args.mode == 'validate':
-        loader = DataLoaderIAM(args.data_dir, args.batch_size, fast=args.fast)
+        loader = DataLoaderIAM(args.data_dir, args.batch_size)
         model = Model(char_list_from_file(), decoder_type, must_restore=True)
         validate(model, loader, args.line_mode)
 
-    # infer text on test image
+    # infer text on one test image
     elif args.mode == 'infer':
         model = Model(char_list_from_file(), decoder_type, must_restore=True, dump=args.dump)
         infer(model, args.img_file)
