@@ -19,6 +19,26 @@ class DecoderType:
     WordBeamSearch = 2
 
 
+class CTCLayer(keras.layers.Layer):
+    # https://keras.io/examples/vision/handwriting_recognition/
+    def __init__(self, name=None):
+        super().__init__(name=name)
+        self.loss_fn = keras.backend.ctc_batch_cost
+
+    def call(self, y_true, y_pred):
+        batch_len = tf.cast(tf.shape(y_true)[0], dtype="int64")
+        input_length = tf.cast(tf.shape(y_pred)[1], dtype="int64")
+        label_length = tf.cast(tf.shape(y_true)[1], dtype="int64")
+
+        input_length = input_length * tf.ones(shape=(batch_len, 1), dtype="int64")
+        label_length = label_length * tf.ones(shape=(batch_len, 1), dtype="int64")
+        loss = self.loss_fn(y_true, y_pred, input_length, label_length)
+        self.add_loss(loss)
+
+        # At test time, just return the computed predictions.
+        return y_pred
+
+
 def make_cnn_layers() -> list:
     # cnn_in4d = tf.expand_dims(input=self.input_imgs, axis=3)
     # list of parameters for the layers
@@ -79,6 +99,8 @@ class KModel:
 
         layers += make_cnn_layers()
         layers += make_rnn_layers(len(self.char_list))
+        layers.append()
+        # TODO ctc
 
         self.model = tf.keras.models.Sequential(layers)
         self.model.compile(optimizer='adam', metrics=['accuracy'],
