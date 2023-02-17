@@ -99,7 +99,7 @@ class KModel:
 
         layers += make_cnn_layers()
         layers += make_rnn_layers(len(self.char_list))
-        layers.append()
+        # layers.append()
         # TODO ctc
 
         self.model = tf.keras.models.Sequential(layers)
