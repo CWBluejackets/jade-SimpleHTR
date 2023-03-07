@@ -102,7 +102,7 @@ if __name__ == "__main__":
 
     if log_directory:
         timestamp = datetime.datetime.now().isoformat(timespec='seconds')
-        logfile = os.path.join(config['log_directory'], f'{timestamp}_create.log')
+        logfile = os.path.join(config['log_directory'], f'{timestamp}_filter.log')
         print(f'Logfile {logfile}')
         logging.basicConfig(filename=logfile, level=logging.INFO,
                             format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
