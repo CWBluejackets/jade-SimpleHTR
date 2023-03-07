@@ -113,6 +113,7 @@ if __name__ == "__main__":
 
     agreed_filename = config['agreed_file']
     output_directory = options.output_directory
+    os.makedirs(output_directory, exist_ok=True)
 
     if os.path.exists(agreed_filename):
         input_filename = agreed_filename
