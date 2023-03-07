@@ -81,7 +81,7 @@ if __name__ == "__main__":
                          type=str,
                          default='.',
                          metavar='DIR',
-                         help='config file')
+                         help='output directory')
 
     oparser.add_argument('-f', dest='filter_files',
                          default=[],
