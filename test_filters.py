@@ -1,17 +1,12 @@
 #!/usr/bin/env python3
 import argparse
 import datetime
-import glob
 import json
 import logging
-import math
 import os
-import uuid
-from collections import Counter
-from typing import Tuple, Dict
 
 import pandas as pd
-from pandas import Series, DataFrame
+from pandas import DataFrame
 
 
 def process_big_df(dataframe: DataFrame, output_directory0, filters0: dict):
@@ -49,13 +44,8 @@ def process_big_df(dataframe: DataFrame, output_directory0, filters0: dict):
     else:
         logging.warning(f'Column "too_small" not present')
 
-    # delete rows with jpg filenames that are not available
-    dataframe = dataframe[dataframe['filename'].isin(jpg_index0.keys())]
-    logging.warning(f'Dropped unavailable jpgs; filtered rows {dataframe.shape[0]}')
-
     # split into separate dataframes by workflow_id
     grouped = dataframe.groupby(dataframe['workflow_id'])
-    workflow_index = make_workflow_index(dataframe, samples0, output_directory0)
 
     for wf_id in dataframe['workflow_id'].unique():
         sub_dataframe = grouped.get_group(wf_id)
@@ -72,40 +62,9 @@ def process_big_df(dataframe: DataFrame, output_directory0, filters0: dict):
             reject_counter = rejected_df[text_column].value_counts()
             reject_count_path = os.path.join(output_directory0, f'filtered_count_{wf_id}.csv')
             reject_counter.to_csv(reject_count_path)
-            # now keep the ones that pass the filters
-            sub_dataframe = sub_dataframe[sub_dataframe[text_column].str.fullmatch(wf_pattern)]
-            logging.info(f'Filter {wf_pattern} passes {sub_dataframe.shape[0]} rows')
         else:
             logging.info(f'No filter for this workflow')
-
-        # optional: constrain maximum dataset size:
-        if max_size0:
-            if max_size0 < sub_dataframe.shape[0]:
-                sub_dataframe = sub_dataframe.sample(n=max_size0)
-            logging.warning(f'Max size {max_size0} applied; filtered rows {sub_dataframe.shape[0]}')
-
-        for sample in samples0:
-            wf_df = sub_dataframe.sample(frac=sample).reset_index()
-            workflow_directory = workflow_index[(wf_id, sample)]
-            logging.info(f'Starting workflow {wf_id} with {wf_df.shape[0]} rows (sampled at {sample})')
-            process_workflow_df(wf_df, workflow_directory, jpg_index0, text_column)
     return
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 if __name__ == "__main__":
