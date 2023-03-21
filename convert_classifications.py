@@ -16,13 +16,14 @@ TASK_RE = re.compile(r'T(\d+)')
 TAG_PURGE = re.compile(r'[\[{][^[{]*[}\]]')
 TAG_MATCH = re.compile(r'[\[{\]}]')
 
+WHITESPACE = re.compile(r'\s+')
+FILENAME_START = re.compile(r'^[\d_]+')
+FILENAME_END = re.compile(r'[\d_]+\.\w+$')
+
 # output format CSV
-COLUMNS = ['subject_id', 'classification_id', 'workflow_id', 'annotator', 'filename',
+COLUMNS = ['subject_id', 'vessel', 'classification_id', 'workflow_id', 'annotator', 'filename',
            'finished_str', 'task', 'x', 'y', 'width', 'height', 'text', 'text_clean',
            'left', 'right', 'top', 'bottom']
-
-
-WHITESPACE = re.compile(r'\s+')
 
 
 def add_coordinates(row0):
@@ -80,6 +81,17 @@ def convert_t_code(task_id):
     return int(match.group(1))
 
 
+def get_vessel(filename: str) -> str:
+    """
+    Extract the vessel name from the image filename
+    :param filename:
+    :return: vessel name
+    """
+    f0 = FILENAME_START.sub('', filename)
+    f1 = FILENAME_END.sub('', f0)
+    return f1
+
+
 def process_row(row0: pd.Series):
     results0 = []
     classification_id = row0['classification_id']
@@ -88,6 +100,7 @@ def process_row(row0: pd.Series):
     subject_id = row0['subject_ids']
     subject_data = json.loads(row0['subject_data'])
     filename = subject_data[str(subject_id)].get('Filename')
+    vessel = get_vessel(filename)
     metadata = json.loads(row0['metadata'])
     finished_str = metadata.get('finished_at')
     # annotations = list of things
@@ -96,7 +109,7 @@ def process_row(row0: pd.Series):
         partial_results = process_annotation(annotation)
         for partial in partial_results:
             # partial = task, x, y, width, height, text, text_clean,
-            full_result = [subject_id, classification_id, workflow_id, annotator,
+            full_result = [subject_id, vessel, classification_id, workflow_id, annotator,
                            filename, finished_str] + partial
             results0.append(full_result)
     return results0
