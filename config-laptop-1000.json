@@ -9,5 +9,6 @@
   "suppress_spaces": true,
   "digits_only": true,
   "max_size": 1000,
-  "sampling": true
+  "sampling": true,
+  "exclusions": "exclusions.csv"
 }

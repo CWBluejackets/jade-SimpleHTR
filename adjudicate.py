@@ -41,6 +41,31 @@ def clean_median(s0: str) -> str:
     return s1 or ' '
 
 
+def get_exclusions(config0) -> set:
+    """
+    Load the exclusion file if present and return the known bad annotation sets
+    :param config0:
+    :return: set of triples (subject_id, workflow_id, annotator)
+    """
+    result = set()
+    exclusion_file = config0.get('exclusions')
+    if exclusion_file:
+        logging.info(f'Loading exclusions from {exclusion_file}')
+        with open(exclusion_file, 'r') as f0:
+            for line in f0.readlines():
+                line = line.strip()
+                if line and not line.startswith('#'):
+                    triple = line.split(',', maxsplit=2)
+                    if len(triple) < 3:
+                        logging.warning(f'Bad line: {line}')
+                    else:
+                        result.add(triple)
+        logging.info(f'Loaded {len(result)} exclusions')
+    else:
+        logging.info('No exclusion file specified')
+    return result
+
+
 def detect_wrong_columns(muster_sheet: pd.DataFrame):
     """
     Detect annotators working in the wrong column
@@ -84,9 +109,10 @@ def detect_wrong_columns(muster_sheet: pd.DataFrame):
     return muster_sheet, rejected_all
 
 
-def basic_cleaning(dataframe: pd.DataFrame):
+def basic_cleaning(dataframe: pd.DataFrame, exclusions0: set):
     """
     Delete the rows with missing rectangles, cleaned text, or required identifiers
+    :param exclusions0:
     :param dataframe:
     :return:
     """
@@ -98,6 +124,7 @@ def basic_cleaning(dataframe: pd.DataFrame):
                                                               'subject_id', 'workflow_id', 'annotator', 'task'])
     clean_rows = dataframe.shape[0]
     logging.warning(f'Dropped NaN rectangles/text/IDs; filtered rows {clean_rows}')
+    dataframe['exclude'] = dataframe.apply(lambda row: should_exclude(row, exclusions0), axis=1)
     dataframe['too_small'] = dataframe.apply(is_too_small, axis=1)
     return dataframe, clean_rows, start_time
 
@@ -135,8 +162,8 @@ def make_line_series(overlap_series: pd.Series, annotator_series: pd.Series) -> 
 
 
 def add_line_numbers(muster_sheet: pd.DataFrame) -> pd.DataFrame:
-    # discard wrong-column rows before numbering
-    muster_sheet = muster_sheet[~ muster_sheet['wrong_column']]
+    # discard wrong-column rows and manually excluded annotation sets before numbering
+    muster_sheet = muster_sheet[~ (muster_sheet['wrong_column'] | muster_sheet['exclude'] )]
 
     # This way of sorting produces a slightly cleaner separation in the histogram
     # for some examples (empirically).
@@ -152,13 +179,19 @@ def add_line_numbers(muster_sheet: pd.DataFrame) -> pd.DataFrame:
     return muster_sheet
 
 
-def process_big_df(dataframe: pd.DataFrame) -> pd.DataFrame:
+def should_exclude(row: pd.Series, exclusions0: set) -> bool:
+    key = (row['subject_id'], row['workflow_id'], row['annotator'])
+    return key in exclusions0
+
+
+def process_big_df(dataframe: pd.DataFrame, exclusions0) -> pd.DataFrame:
     """
     Analyse the input file, number the lines, carry out voting
+    :param exclusions0:
     :param dataframe: the big CSV unpacked and repacked from Zooniverse exports
     :return: same thing with more columns
     """
-    dataframe, total_rows, start_time = basic_cleaning(dataframe)
+    dataframe, total_rows, start_time = basic_cleaning(dataframe, exclusions0)
     # TODO detect column jumping
     # example: subject 79888343, workflow 21955, annotator greeneagle245
     # Probably in the wrong-column detection code, using h_overlap within each annotator?
@@ -178,7 +211,7 @@ def process_big_df(dataframe: pd.DataFrame) -> pd.DataFrame:
         logging.info(f'Processing {muster_key} with {sheet_rows} rows')
 
         muster_sheet, rejected = detect_wrong_columns(muster_sheet)
-        dataframe = dataframe.combine_first(muster_sheet[['wrong_column']])
+        dataframe = dataframe.combine_first(muster_sheet[['wrong_column', 'exclude']])
 
         # Skip line-numbering and voting if the whole sheet is rejected (two annotators
         # with different columns).
@@ -340,10 +373,11 @@ if __name__ == "__main__":
 
     input_filename = config['intermediate_file']
     output_filename = config['agreed_file']
+    exclusions = get_exclusions(config)
 
     logging.info(f'Loading {input_filename}')
     big_df = pd.read_csv(input_filename)
-    big_df = process_big_df(big_df)
+    big_df = process_big_df(big_df, exclusions)
 
     # sort the output to make it easy to inspect the voting and overlaps
     logging.warning('Sorting results...')

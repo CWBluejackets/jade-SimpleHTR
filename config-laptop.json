@@ -8,5 +8,6 @@
   "log_directory": "/opt/data/bluejackets/logs",
   "suppress_spaces": true,
   "digits_only": true,
-  "sampling": true
+  "sampling": true,
+  "exclusions": "exclusions.csv"
 }
