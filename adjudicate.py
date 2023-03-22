@@ -59,7 +59,7 @@ def get_exclusions(config0) -> set:
                     if len(triple) < 3:
                         logging.warning(f'Bad line: {line}')
                     else:
-                        result.add(triple)
+                        result.add(tuple(triple))
         logging.info(f'Loaded {len(result)} exclusions')
     else:
         logging.info('No exclusion file specified')
