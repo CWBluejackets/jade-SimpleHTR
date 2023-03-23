@@ -59,6 +59,8 @@ def get_exclusions(config0) -> set:
                     if len(triple) < 3:
                         logging.warning(f'Bad line: {line}')
                     else:
+                        # workflow and subject IDs are numeric
+                        result.add((int(triple[0]), int(triple[1]), triple[2]))
                         result.add(tuple(triple))
         logging.info(f'Loaded {len(result)} exclusions')
     else:
@@ -124,6 +126,10 @@ def basic_cleaning(dataframe: pd.DataFrame, exclusions0: set):
                                                               'subject_id', 'workflow_id', 'annotator', 'task'])
     clean_rows = dataframe.shape[0]
     logging.warning(f'Dropped NaN rectangles/text/IDs; filtered rows {clean_rows}')
+    # force workflow and subject IDs to int
+    dataframe['workflow_id'] = pd.to_numeric(dataframe['workflow_id'], downcast='integer')
+    dataframe['subject_id'] = pd.to_numeric(dataframe['subject_id'], downcast='integer')
+    # flag manual exclusions and small boxes
     dataframe['exclude'] = dataframe.apply(lambda row: should_exclude(row, exclusions0), axis=1)
     dataframe['too_small'] = dataframe.apply(is_too_small, axis=1)
     return dataframe, clean_rows, start_time
