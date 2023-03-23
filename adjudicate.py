@@ -51,7 +51,7 @@ def get_vessel_page(row: pd.Series) -> pd.Series:
     filename = row['filename']
     match = FILENAME_PATTERN.fullmatch(filename)
     if match:
-        result = [match.group(1), match.group(2)]
+        result = [match.group(1), int(match.group(2))]
     else:
         result = [None, None]
     return pd.Series(data=result, index=['vessel', 'vessel_page'])
