@@ -143,11 +143,13 @@ def basic_cleaning(dataframe: pd.DataFrame, exclusions0: set):
                                                               'subject_id', 'workflow_id', 'annotator', 'task'])
     clean_rows = dataframe.shape[0]
     logging.warning(f'Dropped NaN rectangles/text/IDs; filtered rows {clean_rows}')
-    # force workflow and subject IDs to int
-    dataframe.loc[:, 'workflow_id'] = pd.to_numeric(dataframe['workflow_id'], downcast='integer')
-    dataframe.loc[:, 'subject_id'] = pd.to_numeric(dataframe['subject_id'], downcast='integer')
     # add vessel names and page numbers extracted from image filenames
     dataframe.loc[:, ['vessel', 'vessel_page']] = dataframe.apply(get_vessel_page, axis=1)
+    # force ID numbers and page numbers to int
+    dataframe.loc[:, 'workflow_id'] = pd.to_numeric(dataframe['workflow_id'], downcast='integer')
+    dataframe.loc[:, 'subject_id'] = pd.to_numeric(dataframe['subject_id'], downcast='integer')
+    dataframe.loc[:, 'vessel_page'] = pd.to_numeric(dataframe['vessel_page'], downcast='integer')
+    dataframe.loc[:, 'classification_id'] = pd.to_numeric(dataframe['classification_id'], downcast='integer')
     # flag manual exclusions and small boxes
     dataframe.loc[:, 'exclude'] = dataframe.apply(lambda row: should_exclude(row, exclusions0), axis=1)
     dataframe.loc[:, 'too_small'] = dataframe.apply(is_too_small, axis=1)
