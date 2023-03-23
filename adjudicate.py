@@ -24,7 +24,7 @@ TWOFER_MIN_OVERLAP = 0.7
 MORE_MIN_OVERLAP = 0.1
 
 WHITESPACE = re.compile(r'\s+')
-
+FILENAME_PATTERN = re.compile(r'\d+_(\S+)_(\d+)\.\w+]')
 
 def is_too_small(row: pd.Series) -> bool:
     return (row['width'] < PIXEL_CUTOFF) or (row['height'] < PIXEL_CUTOFF)
@@ -39,6 +39,16 @@ def clean_median(s0: str) -> str:
     """
     s1 = WHITESPACE.sub(' ', s0.strip())
     return s1 or ' '
+
+
+def get_vessel_page(row: pd.Series) -> pd.Series:
+    filename = row['filename']
+    match = FILENAME_PATTERN.fullmatch(filename)
+    if match:
+        result = [match.group(1), match.group(2)]
+    else:
+        result = [None, None]
+    return pd.Series(data=result, index=['vessel', 'vessel_page'])
 
 
 def get_exclusions(config0) -> set:
