@@ -24,7 +24,8 @@ TWOFER_MIN_OVERLAP = 0.7
 MORE_MIN_OVERLAP = 0.1
 
 WHITESPACE = re.compile(r'\s+')
-FILENAME_PATTERN = re.compile(r'\d+_(\S+)_(\d+)\.\w+]')
+FILENAME_PATTERN = re.compile(r'\d+_(\S+)_(\d+)\.\w+')
+
 
 def is_too_small(row: pd.Series) -> bool:
     return (row['width'] < PIXEL_CUTOFF) or (row['height'] < PIXEL_CUTOFF)
@@ -42,6 +43,11 @@ def clean_median(s0: str) -> str:
 
 
 def get_vessel_page(row: pd.Series) -> pd.Series:
+    """
+    Extract the vessel name and page sequence from the image filename
+    :param row: dataframe row including 'filename' column
+    :return: vessel, vessel_page
+    """
     filename = row['filename']
     match = FILENAME_PATTERN.fullmatch(filename)
     if match:
@@ -132,16 +138,19 @@ def basic_cleaning(dataframe: pd.DataFrame, exclusions0: set):
     logging.warning(f'Starting rows {dataframe.shape[0]}')
     # Note: the text_clean column contains a single space where the exported text is blank
     # but is empty (NaN here) where it ended up empty after stripping tags.
+    # TODO eventually: use the muster date tasks instead of dropping them
     dataframe.dropna(axis=0, how='any', inplace=True, subset=['left', 'right', 'top', 'bottom', 'text_clean',
                                                               'subject_id', 'workflow_id', 'annotator', 'task'])
     clean_rows = dataframe.shape[0]
     logging.warning(f'Dropped NaN rectangles/text/IDs; filtered rows {clean_rows}')
     # force workflow and subject IDs to int
-    dataframe['workflow_id'] = pd.to_numeric(dataframe['workflow_id'], downcast='integer')
-    dataframe['subject_id'] = pd.to_numeric(dataframe['subject_id'], downcast='integer')
+    dataframe.loc[:, 'workflow_id'] = pd.to_numeric(dataframe['workflow_id'], downcast='integer')
+    dataframe.loc[:, 'subject_id'] = pd.to_numeric(dataframe['subject_id'], downcast='integer')
+    # add vessel names and page numbers extracted from image filenames
+    dataframe.loc[:, ['vessel', 'vessel_page']] = dataframe.apply(get_vessel_page, axis=1)
     # flag manual exclusions and small boxes
-    dataframe['exclude'] = dataframe.apply(lambda row: should_exclude(row, exclusions0), axis=1)
-    dataframe['too_small'] = dataframe.apply(is_too_small, axis=1)
+    dataframe.loc[:, 'exclude'] = dataframe.apply(lambda row: should_exclude(row, exclusions0), axis=1)
+    dataframe.loc[:, 'too_small'] = dataframe.apply(is_too_small, axis=1)
     return dataframe, clean_rows, start_time
 
 
@@ -179,7 +188,7 @@ def make_line_series(overlap_series: pd.Series, annotator_series: pd.Series) -> 
 
 def add_line_numbers(muster_sheet: pd.DataFrame) -> pd.DataFrame:
     # discard wrong-column rows and manually excluded annotation sets before numbering
-    muster_sheet = muster_sheet[~ (muster_sheet['wrong_column'] | muster_sheet['exclude'] )]
+    muster_sheet = muster_sheet[~ (muster_sheet['wrong_column'] | muster_sheet['exclude'])]
 
     # This way of sorting produces a slightly cleaner separation in the histogram
     # for some examples (empirically).
@@ -249,8 +258,8 @@ def process_big_df(dataframe: pd.DataFrame, exclusions0) -> pd.DataFrame:
     return dataframe
 
 
-def update_progress(rows_done: int, total_rows:int ,
-                    sheets_done:int, total_sheets: int, start_time:float):
+def update_progress(rows_done: int, total_rows: int,
+                    sheets_done: int, total_sheets: int, start_time: float):
     sheet_ratio = sheets_done / total_sheets
     row_ratio = rows_done / total_rows
     current_time = time.time()
