@@ -206,7 +206,7 @@ def add_line_numbers(muster_sheet: pd.DataFrame) -> pd.DataFrame:
         muster_sheet['line'] = make_line_series(muster_sheet['v_overlap'], muster_sheet['annotator'])
         logging.warning(f'Lines 0 to {muster_sheet["line"].max()}')
     else:
-        logging.warning(f'Muster sheet empty after cleaning}')
+        logging.warning(f'Muster sheet empty after cleaning')
     return muster_sheet
 
 
