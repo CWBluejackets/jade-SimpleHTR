@@ -192,17 +192,21 @@ def add_line_numbers(muster_sheet: pd.DataFrame) -> pd.DataFrame:
     # discard wrong-column rows and manually excluded annotation sets before numbering
     muster_sheet = muster_sheet[~ (muster_sheet['wrong_column'] | muster_sheet['exclude'])]
 
-    # This way of sorting produces a slightly cleaner separation in the histogram
-    # for some examples (empirically).
-    muster_sheet = muster_sheet.sort_values(by=['top', 'bottom'], ascending=[True, False])
+    # ignore sheets that have 0 valid annotations
+    if muster_sheet.shape[0]:
+        # This way of sorting produces a slightly cleaner separation in the histogram
+        # for some examples (empirically).
+        muster_sheet = muster_sheet.sort_values(by=['top', 'bottom'], ascending=[True, False])
 
-    muster_sheet['prev_top'] = muster_sheet['top'].rolling(window=2).min()
-    muster_sheet['prev_bottom'] = muster_sheet['bottom'].rolling(window=2).min()
-    muster_sheet['levenshtein'] = make_levenshtein_series(muster_sheet['text_clean'])
-    muster_sheet['v_overlap'] = muster_sheet.apply(
-        lambda row: get_overlap_proportion(row['top'], row['bottom'], row['prev_top'], row['prev_bottom']), axis=1)
-    muster_sheet['line'] = make_line_series(muster_sheet['v_overlap'], muster_sheet['annotator'])
-    logging.warning(f'Lines 0 to {muster_sheet["line"].max()}')
+        muster_sheet['prev_top'] = muster_sheet['top'].rolling(window=2).min()
+        muster_sheet['prev_bottom'] = muster_sheet['bottom'].rolling(window=2).min()
+        muster_sheet['levenshtein'] = make_levenshtein_series(muster_sheet['text_clean'])
+        muster_sheet['v_overlap'] = muster_sheet.apply(
+            lambda row: get_overlap_proportion(row['top'], row['bottom'], row['prev_top'], row['prev_bottom']), axis=1)
+        muster_sheet['line'] = make_line_series(muster_sheet['v_overlap'], muster_sheet['annotator'])
+        logging.warning(f'Lines 0 to {muster_sheet["line"].max()}')
+    else:
+        logging.warning(f'Muster sheet empty after cleaning}')
     return muster_sheet
 
 
