@@ -69,15 +69,16 @@ def get_exclusions(config0) -> set:
         logging.info(f'Loading exclusions from {exclusion_file}')
         with open(exclusion_file, 'r') as f0:
             for line in f0.readlines():
-                line = line.strip()
-                if line and not line.startswith('#'):
-                    triple = line.split(',', maxsplit=2)
+                line1 = line.strip()
+                if line1 and not line1.startswith('#'):
+                    triple = line1.split(',', maxsplit=2)
                     if len(triple) < 3:
-                        logging.warning(f'Bad line: {line}')
+                        logging.warning(f'Bad line: {line1}')
                     else:
                         # workflow and subject IDs are numeric
-                        result.add((int(triple[0]), int(triple[1]), triple[2]))
-                        result.add(tuple(triple))
+                        triple1 = (int(triple[0]), int(triple[1]), triple[2])
+                        logging.info(f'Exclusion: {triple1}')
+                        result.add(triple1)
         logging.info(f'Loaded {len(result)} exclusions')
     else:
         logging.info('No exclusion file specified')
