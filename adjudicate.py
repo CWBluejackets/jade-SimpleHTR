@@ -79,7 +79,7 @@ def get_exclusions(config0) -> set:
                         triple1 = (int(triple[0]), int(triple[1]), triple[2])
                         logging.info(f'Exclusion: {triple1}')
                         result.add(triple1)
-        logging.info(f'Loaded {len(result)} exclusions')
+        logging.info(f'Nbr of exclusions: {len(result)}')
     else:
         logging.info('No exclusion file specified')
     return result
@@ -206,9 +206,11 @@ def add_line_numbers(muster_sheet: pd.DataFrame) -> pd.DataFrame:
             lambda row: get_overlap_proportion(row['top'], row['bottom'], row['prev_top'], row['prev_bottom']), axis=1)
         muster_sheet['line'] = make_line_series(muster_sheet['v_overlap'], muster_sheet['annotator'])
         logging.warning(f'Lines 0 to {muster_sheet["line"].max()}')
+        rejected = False
     else:
         logging.warning(f'Muster sheet empty after cleaning')
-    return muster_sheet
+        rejected = True
+    return muster_sheet, rejected
 
 
 def should_exclude(row: pd.Series, exclusions0: set) -> bool:
@@ -249,14 +251,15 @@ def process_big_df(dataframe: pd.DataFrame, exclusions0) -> pd.DataFrame:
         # with different columns).
         if not rejected:
             # Add line numbers (ignoring wrong_column annotators)
-            muster_sheet = add_line_numbers(muster_sheet)
-            # Vote for agreement
-            muster_sheet = vote_line_by_line(muster_key, muster_sheet, decision_counter)
-            # Now copy the changes back to the main dataframe
-            dataframe = dataframe.combine_first(muster_sheet[['prev_top', 'prev_bottom', 'v_overlap',
-                                                              'levenshtein', 'line', 'decision_type',
-                                                              'decision', 'decision1', 'text_median',
-                                                              'mode_votes', 'total_votes']])
+            muster_sheet, rejected1 = add_line_numbers(muster_sheet)
+            if not rejected1:
+                # Vote for agreement
+                muster_sheet = vote_line_by_line(muster_key, muster_sheet, decision_counter)
+                # Now copy the changes back to the main dataframe
+                dataframe = dataframe.combine_first(muster_sheet[['prev_top', 'prev_bottom', 'v_overlap',
+                                                                  'levenshtein', 'line', 'decision_type',
+                                                                  'decision', 'decision1', 'text_median',
+                                                                  'mode_votes', 'total_votes']])
         sheets_done += 1
         rows_done += sheet_rows
         update_progress(rows_done, total_rows, sheets_done, total_sheets, start_time)
