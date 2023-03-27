@@ -3,6 +3,7 @@ import json
 import os
 from typing import Tuple, List
 
+import Levenshtein
 import cv2
 import editdistance
 from path import Path
@@ -146,8 +147,8 @@ def apply(model: Model, control_file: Path) -> None:
             img = preprocessor.process_img(img)
             batch = Batch([img], None, 1)
             recognized, probability = model.infer_batch(batch, True)
-            # TODO limit nbr of answers and write output
-    pass
+            similarity = Levenshtein.ratio(label, recognized[0])
+            print(f'{label} -> {recognized[0]} probability {probability[0]:.3f} similarity {similarity}:.3f')
     return
 
 
