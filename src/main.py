@@ -132,13 +132,30 @@ def infer(model: Model, fn_img: Path) -> None:
     recognized, probability = model.infer_batch(batch, True)
     print(f'Recognized: "{recognized[0]}"')
     print(f'Probability: {probability[0]}')
+    return
+
+
+def apply(model: Model, control_file: Path) -> None:
+    img_dir = os.path.join(os.path.dirname(control_file), 'img')
+    with open(control_file, 'r') as f:
+        for line in f.readlines():
+            img_filename, label = line.strip().split(maxsplit=1)
+            img_path = os.path.join(img_dir, img_filename)
+            img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+            preprocessor = Preprocessor(get_img_size(), dynamic_width=True, padding=16)
+            img = preprocessor.process_img(img)
+            batch = Batch([img], None, 1)
+            recognized, probability = model.infer_batch(batch, True)
+            # TODO limit nbr of answers and write output
+    pass
+    return
 
 
 def parse_args() -> argparse.Namespace:
     """Parses arguments from the command line."""
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--mode', choices=['train', 'validate', 'infer'],
+    parser.add_argument('--mode', choices=['train', 'validate', 'infer', 'apply'],
                         default='infer')
     parser.add_argument('--decoder', choices=['bestpath', 'beamsearch', 'wordbeamsearch'],
                         default='bestpath')
@@ -154,6 +171,8 @@ def parse_args() -> argparse.Namespace:
                         action='store_true', default=False)
     parser.add_argument('--img_file', help='Image used for inference.',
                         type=Path, default='../data/word.png')
+    parser.add_argument('--img_list_file', help='control file for apply mode',
+                        type=Path)
     parser.add_argument('--early_stopping', help='Early stopping epochs.',
                         type=int, default=25)
     parser.add_argument('--dump', help='Dump output of NN to CSV file(s).',
@@ -215,6 +234,10 @@ def main():
     elif args.mode == 'infer':
         model = Model(char_list_from_file(), decoder_type, must_restore=True, dump=args.dump)
         infer(model, args.img_file)
+
+    elif args.mode == 'apply':
+        model = Model(char_list_from_file(), decoder_type, must_restore=True, dump=args.dump)
+        apply(model, args.img_list_file)
 
 
 if __name__ == '__main__':
