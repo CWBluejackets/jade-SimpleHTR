@@ -1,5 +1,6 @@
 import argparse
 import json
+import math
 import os
 from typing import Tuple, List
 
@@ -153,7 +154,9 @@ def apply(model: Model, control_file: Path, output_file: Path) -> None:
             print(f'{label} -> {recognized[0]} probability {probability[0]:.3f} similarity {similarity:.3f}')
             results.append([label, recognized[0], probability[0], similarity])
     df = pd.DataFrame.from_records(results, columns=['label', 'output', 'probability', 'similarity'])
+    df.iloc[:, 'logprob'] = df['probability'].apply(math.log())
     print(str(df.describe()))
+    print(str(df.corr('pearson')))
     if output_file:
         df.to_csv(output_file)
     return
