@@ -155,7 +155,9 @@ def apply(model: Model, control_file: Path, output_file: Path) -> None:
             results.append([label, recognized[0], probability[0], similarity])
     df = pd.DataFrame.from_records(results, columns=['label', 'output', 'probability', 'similarity'])
     df['logprob'] = df['probability'].apply(math.log)
+    print()
     print(str(df.describe()))
+    print()
     print(str(df.corr('pearson')))
     if output_file:
         df.to_csv(output_file)
