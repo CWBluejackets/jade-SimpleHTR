@@ -6,12 +6,13 @@ from typing import Tuple, List
 import Levenshtein
 import cv2
 import editdistance
+import pandas as pd
 from path import Path
 
+import locations
 from dataloader_iam import DataLoaderIAM, Batch
 from model import Model, DecoderType
 from preprocessor import Preprocessor
-import locations
 
 
 def get_img_height() -> int:
@@ -136,7 +137,8 @@ def infer(model: Model, fn_img: Path) -> None:
     return
 
 
-def apply(model: Model, control_file: Path) -> None:
+def apply(model: Model, control_file: Path, output_file: Path) -> None:
+    results = []
     img_dir = os.path.join(os.path.dirname(control_file), 'img')
     with open(control_file, 'r') as f:
         for line in f.readlines():
@@ -148,7 +150,12 @@ def apply(model: Model, control_file: Path) -> None:
             batch = Batch([img], None, 1)
             recognized, probability = model.infer_batch(batch, True)
             similarity = Levenshtein.ratio(label, recognized[0])
-            print(f'{label} -> {recognized[0]} probability {probability[0]:.3f} similarity {similarity}:.3f')
+            print(f'{label} -> {recognized[0]} probability {probability[0]:.3f} similarity {similarity:.3f}')
+            results.append([label, recognized[0], probability[0], similarity])
+    df = pd.DataFrame.from_records(results, columns=['label', 'output', 'probability', 'similarity'])
+    print(str(df.describe()))
+    if output_file:
+        df.to_csv(output_file)
     return
 
 
@@ -186,6 +193,8 @@ def parse_args() -> argparse.Namespace:
                         type=Path, default=None)
     parser.add_argument('--high_contrast', help='normalize image matrix to maximum contrast',
                         action='store_true', default=False)
+    parser.add_argument('--output_file', help='output file for apply mode',
+                        type=Path, default=None)
 
     return parser.parse_args()
 
@@ -238,7 +247,7 @@ def main():
 
     elif args.mode == 'apply':
         model = Model(char_list_from_file(), decoder_type, must_restore=True, dump=args.dump)
-        apply(model, args.img_list_file)
+        apply(model, args.img_list_file, args.output_file)
 
 
 if __name__ == '__main__':
