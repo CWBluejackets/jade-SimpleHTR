@@ -34,14 +34,18 @@ cd "${HTR_DIR}/src" || exit 99
 
 # OPTIONS passed to SimpleHTR
 # required
+# -c convert fractions
 # -a data subdirectory
 # -m model subdirectory
 
 OPTIONS="--mode apply "
 
-while getopts "a:m:" option
+while getopts "ca:m:" option
 do
   case "${option}" in
+    c)
+      OPTIONS="${OPTIONS} --convert_fractions"
+      ;;
     a)
       DATA="${OPTARG}"
       ;;

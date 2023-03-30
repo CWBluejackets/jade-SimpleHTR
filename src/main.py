@@ -11,7 +11,7 @@ import pandas as pd
 from path import Path
 
 import locations
-from dataloader_iam import DataLoaderIAM, Batch
+from dataloader_iam import DataLoaderIAM, Batch, convert_fractions
 from model import Model, DecoderType
 from preprocessor import Preprocessor
 
@@ -143,7 +143,16 @@ def apply(model: Model, control_file: Path, output_file: Path) -> None:
     img_dir = os.path.join(os.path.dirname(control_file), 'img')
     with open(control_file, 'r') as f:
         for line in f.readlines():
-            img_filename, label = line.strip().split(' ', maxsplit=1)
+            line_split = line.strip().split(' ', maxsplit=1)
+            img_filename = line_split[0]
+            # sometimes the training data includes a correct empty string
+            if len(line_split) == 2:
+                label = line_split[1]
+                if locations.get_convert_fractions():
+                    label = convert_fractions(label)
+            else:
+                label = ' '
+
             img_path = os.path.join(img_dir, img_filename)
             img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
             preprocessor = Preprocessor(get_img_size(), dynamic_width=True, padding=16)
