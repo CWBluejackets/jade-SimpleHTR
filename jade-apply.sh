@@ -35,7 +35,7 @@ cd "${HTR_DIR}/src" || exit 99
 # OPTIONS passed to SimpleHTR
 # required
 # -a path/to/words.txt data list
-# -m path/to/model model directory
+# -m model model subdirectory
 
 OPTIONS="--mode apply "
 
@@ -46,7 +46,7 @@ do
       LIST_FILE="${OPTARG}"
       ;;
     m)
-      MODEL_DIR="${OPTARG}"
+      MODEL="${OPTARG}"
       ;;
     *)
       echo "invalid option: ${option}"
@@ -55,6 +55,7 @@ do
 done
 
 OUTPUT_FILE="${HOME}/bluejackets/test_${SLURM_JOB_ID}.csv"
+MODEL_DIR="${HOME}/bluejackets/models/${MODEL}"
 
 echo "Output file: ${OUTPUT_FILE}"
 echo "Model: ${MODEL_DIR}"
