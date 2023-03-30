@@ -143,7 +143,7 @@ def apply(model: Model, control_file: Path, output_file: Path) -> None:
     img_dir = os.path.join(os.path.dirname(control_file), 'img')
     with open(control_file, 'r') as f:
         for line in f.readlines():
-            img_filename, label = line.strip().split(maxsplit=1)
+            img_filename, label = line.strip().split(' ', maxsplit=1)
             img_path = os.path.join(img_dir, img_filename)
             img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
             preprocessor = Preprocessor(get_img_size(), dynamic_width=True, padding=16)
