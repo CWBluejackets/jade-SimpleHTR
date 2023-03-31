@@ -292,9 +292,12 @@ class Model:
             eval_list = self.loss_per_element
             feed_dict = {self.saved_ctc_input: ctc_input, self.gt_texts: sparse,
                          self.seq_len: [max_text_len] * num_batch_elements, self.is_train: False}
-            loss_vals = self.sess.run(eval_list, feed_dict)
-            probs = np.exp(-loss_vals)
-
+            try:
+                loss_vals = self.sess.run(eval_list, feed_dict)
+                probs = np.exp(-loss_vals)
+            except ValueError:
+                print('ValueError sess.run')
+                probs = [0] * batch.batch_size
         # dump the output of the NN to CSV file(s)
         if self.dump:
             self.dump_nn_output(eval_res[1])
