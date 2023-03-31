@@ -163,7 +163,7 @@ def apply(model: Model, control_file: Path, output_file: Path) -> None:
             print(f'{label} -> {recognized[0]} probability {probability[0]:.3f} similarity {similarity:.3f}')
             results.append([label, recognized[0], probability[0], similarity])
     df = pd.DataFrame.from_records(results, columns=['label', 'output', 'probability', 'similarity'])
-    df['logprob'] = df['probability'].apply(math.log)
+    df['logprob'] = df['probability'].apply(math.log1p)
     print()
     print(str(df.describe()))
     print()
