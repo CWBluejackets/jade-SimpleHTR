@@ -161,14 +161,15 @@ def apply(model: Model, control_file: Path, output_file: Path) -> None:
             recognized, probability = model.infer_batch(batch, True)
             similarity = Levenshtein.ratio(label, recognized[0])
             print(f'{label} -> {recognized[0]} probability {probability[0]:.3f} similarity {similarity:.3f}')
-            results.append([label, recognized[0], probability[0], similarity])
-    df = pd.DataFrame.from_records(results, columns=['label', 'output', 'probability', 'similarity'])
+            results.append([img_filename, label, recognized[0], probability[0], similarity])
+    df = pd.DataFrame.from_records(results, columns=['file', 'label', 'output', 'probability', 'similarity'])
     df['logprob'] = df['probability'].apply(math.log1p)
     print()
     print(str(df.describe()))
     print()
     print(str(df.corr('pearson')))
     if output_file:
+        print(f'Writing to {output_file}')
         df.to_csv(output_file)
     return
 
