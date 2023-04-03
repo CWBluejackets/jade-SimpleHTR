@@ -135,6 +135,14 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
         else:
             logging.info(f'No filter for this workflow')
 
+        # optional: holdout
+        if holdout0:
+            holdout_df = sub_dataframe.sample(frac=holdout0)
+            sub_dataframe = sub_dataframe.drop(holdout_df.index)
+            workflow_directory = workflow_index[(wf_id, 'holdout')]
+            logging.info(f'Starting workflow {wf_id} with {holdout_df.shape[0]} rows (holdout set))')
+            process_workflow_df(holdout_df, workflow_directory, jpg_index0, text_column)
+
         # optional: constrain maximum dataset size:
         if max_size0:
             if max_size0 < sub_dataframe.shape[0]:
