@@ -9,5 +9,6 @@
   "suppress_spaces": true,
   "digits_only": true,
   "sampling": false,
-  "exclusions": "exclusions.csv"
+  "exclusions": "exclusions.csv",
+  "holdout": 0.10
 }

@@ -41,7 +41,8 @@ def get_jpg_filenames(small_jpg_directory: str, big_jpg_directory: str) -> Dict[
     return index
 
 
-def make_workflow_index(dataframe: DataFrame, samples0: list, main_output_directory: str) -> dict:
+def make_workflow_index(dataframe: DataFrame, samples0: list, main_output_directory: str,
+                        holdout0: float) -> dict:
     """
     Index and create output subdirectories for the workflows and sampling rates
     :param samples0: list of sampling rates (floats)
@@ -58,11 +59,16 @@ def make_workflow_index(dataframe: DataFrame, samples0: list, main_output_direct
             index[(workflow, sample)] = wf_directory
             logging.info(f'Workflow directory {wf_directory}')
             os.makedirs(wf_directory, exist_ok=True)
+        if holdout:
+            wf_directory = os.path.join(main_output_directory, f'{workflow}_holdout')
+            index[(workflow, 'holdout')] = wf_directory
+            logging.info(f'Workflow directory {wf_directory}')
+            os.makedirs(wf_directory, exist_ok=True)
     return index
 
 
 def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
-                   max_size0: int, samples0: list, filters0: dict):
+                   max_size0: int, samples0: list, filters0: dict, holdout0: float):
     """
     Process the dataframe from our intermediate CSV format to generate training data
     :param filters0: map of workflow -> regex
@@ -106,7 +112,7 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
 
     # split into separate dataframes by workflow_id
     grouped = dataframe.groupby(dataframe['workflow_id'])
-    workflow_index = make_workflow_index(dataframe, samples0, output_directory0)
+    workflow_index = make_workflow_index(dataframe, samples0, output_directory0, holdout0)
 
     for wf_id in dataframe['workflow_id'].unique():
         sub_dataframe = grouped.get_group(wf_id)
@@ -346,7 +352,8 @@ if __name__ == "__main__":
         samples = [1.0]
 
     max_size = config.get('max_size')
+    holdout = config.get('holdout', 0)
 
     logging.info(f'Loading {input_filename}')
     big_df = pd.read_csv(input_filename)
-    process_big_df(big_df, output_directory, jpg_index, max_size, samples, filters)
+    process_big_df(big_df, output_directory, jpg_index, max_size, samples, filters, holdout)
