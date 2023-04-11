@@ -41,7 +41,7 @@ class DataLoaderIAM:
         """Loader for dataset."""
 
         assert data_file.exists()
-        data_dir = os.path.dirname(data_file)
+        data_dir = data_file.dirname()
 
         self.fast = fast
         if fast:
