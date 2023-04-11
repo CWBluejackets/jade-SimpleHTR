@@ -10,5 +10,6 @@
   "digits_only": true,
   "max_size": 1000,
   "sampling": true,
-  "exclusions": "exclusions.csv"
+  "exclusions": "exclusions.csv",
+  "holdout": 0.1
 }

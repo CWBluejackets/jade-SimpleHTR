@@ -181,7 +181,7 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
         random.shuffle(words_file_data)
         holdout_size = math.ceil(len(words_file_data) * holdout0)
         holdout_data = words_file_data[:holdout_size]
-        words_file_data = words_file_data[:holdout_size]
+        words_file_data = words_file_data[holdout_size:]
         save_words_file(output_subdirectory, 'holdout', holdout_data)
 
     for sample in samples0:
