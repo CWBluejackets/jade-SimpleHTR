@@ -27,7 +27,6 @@ HTR_DIR="${HOME}/bluejackets/jade-SimpleHTR"
 source activate simplehtr1
 echo "environment activated"
 echo
-cd "${HTR_DIR}/src" || exit 99
 
 # https://www.golinuxcloud.com/bash-getopts/
 # https://www.computerhope.com/unix/bash/getopts.htm
@@ -76,6 +75,8 @@ mkdir -vp "${MODEL_DIR}"
 echo "Training: ${TRAINING_FILE}"
 echo "Model: ${MODEL_DIR}"
 echo
+
+cd "${HTR_DIR}/src" || exit 99
 
 COMMAND="python3 main.py ${OPTIONS} --data_file ${TRAINING_FILE} --model_dir ${MODEL_DIR}"
 echo "${COMMAND}"
