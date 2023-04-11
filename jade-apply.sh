@@ -35,7 +35,7 @@ cd "${HTR_DIR}/src" || exit 99
 # OPTIONS passed to SimpleHTR
 # required
 # -c convert fractions
-# -a data subdirectory
+# -a data control file
 # -m model subdirectory
 
 OPTIONS="--mode apply "
@@ -60,14 +60,13 @@ done
 
 OUTPUT_FILE="${HOME}/bluejackets/test_${SLURM_JOB_ID}.csv"
 MODEL_DIR="${HOME}/bluejackets/models/${MODEL}"
-LIST_FILE="${HOME}/bluejackets/training_data/${DATA}/words.txt"
 
 echo "Output file: ${OUTPUT_FILE}"
 echo "Model: ${MODEL_DIR}"
-echo "Word list: ${LIST_FILE}"
+echo "Word list: ${DATA}"
 echo
 
-COMMAND="python3 main.py ${OPTIONS} --img_list_file ${LIST_FILE} --model_dir ${MODEL_DIR} --output_file ${OUTPUT_FILE}"
+COMMAND="python3 main.py ${OPTIONS} --img_list_file ${DATA} --model_dir ${MODEL_DIR} --output_file ${OUTPUT_FILE}"
 echo "${COMMAND}"
 echo
 ${COMMAND}
