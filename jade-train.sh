@@ -61,7 +61,8 @@ do
       echo "Debug: ${DEBUG_DIR}"
       ;;
     t)
-      TRAINING_FILE="${OPTARG}"
+      # shellcheck disable=SC2006
+      TRAINING_FILE=$(realpath "${OPTARG}")
       ;;
     *)
       echo "invalid option: ${option}"
