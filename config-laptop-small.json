@@ -8,7 +8,7 @@
   "log_directory": "/opt/data/bluejackets/logs",
   "suppress_spaces": true,
   "digits_only": true,
-  "max_size": 1000,
+  "max_size": 300,
   "sampling": true,
   "exclusions": "exclusions.csv",
   "holdout": 0.1
