@@ -8,7 +8,7 @@
   "log_directory": null,
   "suppress_spaces": true,
   "digits_only": true,
-  "sampling": false,
+  "sampling": true,
   "exclusions": "exclusions.csv",
   "holdout": 0.10
 }
