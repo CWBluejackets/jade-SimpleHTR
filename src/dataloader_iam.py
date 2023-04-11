@@ -34,13 +34,14 @@ class DataLoaderIAM:
     """
 
     def __init__(self,
-                 data_dir: Path,
+                 data_file: Path,
                  batch_size: int,
                  data_split: float = 0.95,
                  fast: bool = True) -> None:
         """Loader for dataset."""
 
-        assert data_dir.exists()
+        assert data_file.exists()
+        data_dir = os.path.dirname(data_file)
 
         self.fast = fast
         if fast:
@@ -53,7 +54,7 @@ class DataLoaderIAM:
 
         chars = set()
 
-        with open(data_dir / 'words.txt') as f:
+        with open(data_file) as f:
             for line in f:
                 # ignore empty and comment lines
                 line = line.strip()
