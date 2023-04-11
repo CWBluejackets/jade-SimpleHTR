@@ -6,6 +6,7 @@ import json
 import logging
 import math
 import os
+import random
 import uuid
 from collections import Counter
 from typing import Tuple, Dict
@@ -41,11 +42,9 @@ def get_jpg_filenames(small_jpg_directory: str, big_jpg_directory: str) -> Dict[
     return index
 
 
-def make_workflow_index(dataframe: DataFrame, samples0: list, main_output_directory: str,
-                        holdout0: float) -> dict:
+def make_workflow_index(dataframe: DataFrame, main_output_directory: str) -> dict:
     """
     Index and create output subdirectories for the workflows and sampling rates
-    :param samples0: list of sampling rates (floats)
     :param dataframe: dataframe with a 'workflow' column
     :param main_output_directory:
     :return: index from workflow ID and sampling to full path
@@ -53,17 +52,11 @@ def make_workflow_index(dataframe: DataFrame, samples0: list, main_output_direct
     workflows = dataframe['workflow_id'].unique()
     index = dict()
     for workflow in workflows:
-        for sample in samples0:
-            # subdirectory, e.g., "23456_0.75" for workflow and sampling rate
-            wf_directory = os.path.join(main_output_directory, f'{workflow}_{sample:.2f}')
-            index[(workflow, sample)] = wf_directory
-            logging.info(f'Workflow directory {wf_directory}')
-            os.makedirs(wf_directory, exist_ok=True)
-        if holdout:
-            wf_directory = os.path.join(main_output_directory, f'{workflow}_holdout')
-            index[(workflow, 'holdout')] = wf_directory
-            logging.info(f'Workflow directory {wf_directory}')
-            os.makedirs(wf_directory, exist_ok=True)
+        # subdirectory, e.g., "23456_0.75" for workflow and sampling rate
+        wf_directory = os.path.join(main_output_directory, str(workflow))
+        index[workflow] = wf_directory
+        logging.info(f'Workflow directory {wf_directory}')
+        os.makedirs(wf_directory, exist_ok=True)
     return index
 
 
@@ -112,7 +105,7 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
 
     # split into separate dataframes by workflow_id
     grouped = dataframe.groupby(dataframe['workflow_id'])
-    workflow_index = make_workflow_index(dataframe, samples0, output_directory0, holdout0)
+    workflow_index = make_workflow_index(dataframe, output_directory0)
 
     for wf_id in dataframe['workflow_id'].unique():
         sub_dataframe = grouped.get_group(wf_id)
@@ -135,29 +128,19 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
         else:
             logging.info(f'No filter for this workflow')
 
-        # optional: holdout
-        if holdout0:
-            holdout_df = sub_dataframe.sample(frac=holdout0)
-            sub_dataframe = sub_dataframe.drop(holdout_df.index)
-            workflow_directory = workflow_index[(wf_id, 'holdout')]
-            logging.info(f'Starting workflow {wf_id} with {holdout_df.shape[0]} rows (holdout set))')
-            process_workflow_df(holdout_df, workflow_directory, jpg_index0, text_column)
-
         # optional: constrain maximum dataset size:
         if max_size0:
             if max_size0 < sub_dataframe.shape[0]:
                 sub_dataframe = sub_dataframe.sample(n=max_size0)
             logging.warning(f'Max size {max_size0} applied; filtered rows {sub_dataframe.shape[0]}')
 
-        for sample in samples0:
-            wf_df = sub_dataframe.sample(frac=sample).reset_index()
-            workflow_directory = workflow_index[(wf_id, sample)]
-            logging.info(f'Starting workflow {wf_id} with {wf_df.shape[0]} rows (sampled at {sample})')
-            process_workflow_df(wf_df, workflow_directory, jpg_index0, text_column)
+        workflow_directory = workflow_index[wf_id]
+        process_workflow_df(sub_dataframe, workflow_directory, jpg_index0, text_column, samples0, holdout0)
     return
 
 
-def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_index0: dict, text_column: str):
+def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_index0: dict, text_column: str,
+                        samples0: list, holdout0: float):
     """
     Process the dataframe for one workflow ID, already sampled
     :param text_column: use 'decision' or 'text_clean
@@ -166,7 +149,6 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
     :param jpg_index0: index of JPGs
     :return:
     """
-    os.makedirs(output_subdirectory, exist_ok=True)
     info_subdirectory = os.path.join(output_subdirectory, 'info')
     os.makedirs(info_subdirectory, exist_ok=True)
     img_subdirectory = os.path.join(output_subdirectory, 'img')
@@ -174,7 +156,6 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
 
     words_file_data = []
     word_counter = Counter()
-    words_file_path = os.path.join(output_subdirectory, 'words.txt')
     count_file_path = os.path.join(output_subdirectory, 'annotation_count.tsv')
     filename_prefix = uuid.uuid4().hex
 
@@ -194,17 +175,34 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
             word_counter[row[text_column]] += 1
             save_shtr_files(cropped_image, row, info_path, png_path)
 
-    # write the words.txt file and the annotation count
-    with open(words_file_path, 'w') as f0:
-        words_file_data.sort()
-        for line in words_file_data:
-            f0.write(line)
-    logging.info(f'Saved words file: {words_file_path}')
-    logging.info(f'Number of entries: {len(words_file_data)}')
+    # carry out holdout and sampling on the control files so we write the images only once
+    # optional: holdout
+    if holdout0:
+        random.shuffle(words_file_data)
+        holdout_size = math.ceil(len(words_file_data) * holdout0)
+        holdout_data = words_file_data[:holdout_size]
+        words_file_data = words_file_data[:holdout_size]
+        save_words_file(output_subdirectory, 'holdout', holdout_data)
+
+    for sample in samples0:
+        sample_count = math.ceil(len(words_file_data) * sample)
+        sample_suffix = f'{sample:.2f}'
+        sample_data = random.sample(words_file_data, sample_count)
+        save_words_file(output_subdirectory, sample_suffix, sample_data)
+
     count_df = pd.DataFrame.from_dict(word_counter, orient='index', columns=['count'])
     count_df.sort_values(inplace=True, by='count', ascending=False)
     count_df.to_csv(count_file_path, sep='\t')
     logging.info(f'Saved count file: {count_file_path}')
+    return
+
+
+def save_words_file(directory, suffix: str, data: list):
+    filename = os.path.join(directory, f'words_{suffix}.txt')
+    with open(filename, 'w') as f0:
+        for line in sorted(data):
+            f0.write(line)
+    logging.info(f'Saved words file: {filename} with {len(data)} entries')
     return
 
 
