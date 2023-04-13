@@ -47,7 +47,7 @@ do
       OPTIONS="${OPTIONS} --convert_fractions"
       ;;
     a)
-      DATA="${OPTARG}"
+      DATA=$(realpath "${OPTARG}")
       ;;
     m)
       MODEL="${OPTARG}"
