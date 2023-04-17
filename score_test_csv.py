@@ -20,7 +20,8 @@ def get_distance(row: pd.Series) -> int:
 def process_csv(input0, output0):
     results = []
     # read the data and add some columns
-    dataframe = pd.read_csv(input0, index_col=0, header=0)
+    dataframe = pd.read_csv(input0, index_col=0, header=0,
+                            dtype={'label': str, 'output': str})
     dataframe['correct'] = dataframe.apply(is_label_correct, axis='columns')
     dataframe['distance'] = dataframe.apply(get_distance, axis='columns')
     dataframe['length'] = dataframe['label'].str.len()
