@@ -42,7 +42,7 @@ def dump(results, output0):
                 f.write(f'{line}\n')
     else:
         for line in results:
-            print(f'{line}\n')
+            print(f'{line}')
     return
 
 
@@ -55,7 +55,7 @@ if __name__ == "__main__":
 
     parser.add_argument('-o', dest='output_directory',
                         type=str,
-                        default='.',
+                        default=None,
                         metavar='FILE',
                         help='output file')
 
