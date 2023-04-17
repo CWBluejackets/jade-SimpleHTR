@@ -14,19 +14,19 @@ def is_label_correct(row: pd.Series) -> bool:
 
 
 def get_distance(row: pd.Series) -> int:
-    return Levenshtein.distance(row['label'], row['output'])
+    return Levenshtein.distance(str(row['label']), str(row['output']))
 
 
 def process_csv(input0, output0):
     results = []
     # read the data and add some columns
     dataframe = pd.read_csv(input0, index_col=0, header=0)
-    dataframe['distance'] = dataframe.apply(get_distance, axis=1)
+    dataframe['correct'] = dataframe.apply(is_label_correct, axis='columns')
+    dataframe['distance'] = dataframe.apply(get_distance, axis='columns')
     dataframe['length'] = dataframe['label'].str.len()
     # generate statistics
     pearson = dataframe[['similarity', 'probability', 'logprob', 'distance', 'length']].corr(method='pearson')
     results.extend(['PEARSON CORRELATIONS', pearson.to_string(), ''])
-    dataframe['correct'] = dataframe.apply(is_label_correct, axis=1)
     nbr_correct = dataframe['correct'].value_counts()[True]
     word_accuracy = nbr_correct / dataframe['correct'].size
     results.extend(['WORD ACCURACY', f'{word_accuracy}', f'{word_accuracy:.1%}', ''])
