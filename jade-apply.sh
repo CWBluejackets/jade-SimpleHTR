@@ -47,6 +47,9 @@ do
       OPTIONS="${OPTIONS} --convert_fractions"
       ;;
     a)
+      echo "${OPTARG}"
+      X="$(realpath "${OPTARG}")"
+      echo "${X}"
       DATA=$(realpath "${OPTARG}")
       ;;
     m)
