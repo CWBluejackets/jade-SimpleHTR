@@ -10,6 +10,12 @@ import matplotlib.pyplot as plt
 # character error, word accuracy, and other statistics
 
 
+COMBINATIONS = [('probability', 'similarity'), ('logprob', 'similarity'),
+                ('probability', 'distance'), ('length', 'probability'),
+                ('length', 'similarity'),
+                ('length', 'distance')]
+
+
 def is_label_correct(row: pd.Series) -> bool:
     return row['label'] == row['output']
 
@@ -28,18 +34,20 @@ def process_csv(dataframe0):
 
 
 def generate_scatter_plots(dataframe0: pd.DataFrame, output0):
-    combinations = [('probability', 'similarity'), ('logprob', 'similarity'),
-                    ('probability', 'distance'), ('length', 'similarity')]
-    for i, columns in enumerate(combinations):
+    for i, columns in enumerate(COMBINATIONS):
         ax = dataframe0.plot.scatter(*columns)
-        ax.get_figure()
+        fig = ax.get_figure()
         filename = f'{output0}_{i:02d}.png'
+        print(f'saving to {filename}')
         plt.savefig(filename, dpi=200, format='png')
+        # https://stackoverflow.com/questions/45933886/python-plt-close-or-clear-figure-does-not-work
+        plt.close(fig)
     return
 
 
 def dump(results0, output0):
     if output0:
+        print(f'saving to {output0}')
         with open(output0, 'w') as f:
             for line in results0:
                 f.write(f'{line}\n')
@@ -70,7 +78,7 @@ if __name__ == "__main__":
         results = process_csv(dataframe)
         if options.output_directory:
             os.makedirs(options.output_directory, exist_ok=True)
-            output_path = os.path.join(os.path.dirname(options.output_directory),
+            output_path = os.path.join(options.output_directory,
                                        os.path.splitext(os.path.basename(input_file))[0])
             dump(results, output_path + '_scores.txt')
             generate_scatter_plots(dataframe, output_path)
