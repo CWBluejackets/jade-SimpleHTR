@@ -3,7 +3,6 @@ import argparse
 import os.path
 from io import BytesIO
 
-import Levenshtein
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -13,10 +12,6 @@ import matplotlib.pyplot as plt
 
 def is_label_correct(row: pd.Series) -> bool:
     return row['label'] == row['output']
-
-
-def get_distance(row: pd.Series) -> int:
-    return Levenshtein.distance(str(row['label']), str(row['output']))
 
 
 def process_csv(dataframe0):
@@ -36,7 +31,6 @@ def generate_scatter_plots(dataframe0: pd.DataFrame, output0):
     combinations = [('probability', 'similarity'), ('logprob', 'similarity'),
                     ('probability', 'distance'), ('length', 'similarity')]
     for i, columns in enumerate(combinations):
-        buffer = BytesIO()
         ax = dataframe0.plot.scatter(*columns)
         ax.get_figure()
         filename = f'{output0}_{i:02d}.png'
@@ -44,13 +38,13 @@ def generate_scatter_plots(dataframe0: pd.DataFrame, output0):
     return
 
 
-def dump(results, output0):
+def dump(results0, output0):
     if output0:
         with open(output0, 'w') as f:
-            for line in results:
+            for line in results0:
                 f.write(f'{line}\n')
     else:
-        for line in results:
+        for line in results0:
             print(f'{line}')
     return
 
@@ -75,6 +69,7 @@ if __name__ == "__main__":
                                 dtype={'label': str, 'output': str})
         results = process_csv(dataframe)
         if options.output_directory:
+            os.makedirs(options.output_directory, exist_ok=True)
             output_path = os.path.join(os.path.dirname(options.output_directory),
                                        os.path.splitext(os.path.basename(input_file))[0])
             dump(results, output_path + '_scores.txt')
