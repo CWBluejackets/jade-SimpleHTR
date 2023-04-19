@@ -19,13 +19,9 @@ def get_distance(row: pd.Series) -> int:
 
 def process_csv(input0, output0):
     results = []
-    # read the data and add some columns
     dataframe = pd.read_csv(input0, index_col=0, header=0,
                             dtype={'label': str, 'output': str})
-    dataframe['correct'] = dataframe.apply(is_label_correct, axis='columns')
-    dataframe['distance'] = dataframe.apply(get_distance, axis='columns')
-    dataframe['length'] = dataframe['label'].str.len()
-    # generate statistics
+    # generate statistics and overall scores
     pearson = dataframe[['similarity', 'probability', 'logprob', 'distance', 'length']].corr(method='pearson')
     results.extend(['PEARSON CORRELATIONS', pearson.to_string(), ''])
     nbr_correct = dataframe['correct'].value_counts()[True]
@@ -34,6 +30,7 @@ def process_csv(input0, output0):
     character_error = dataframe['distance'].sum() / dataframe['length'].sum()
     results.extend(['CHARACTER ERROR', f'{character_error}', f'{character_error:.1%}', ''])
     dump(results, output0)
+    return
 
 
 def dump(results, output0):
