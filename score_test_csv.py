@@ -10,8 +10,11 @@ import matplotlib.pyplot as plt
 # character error, word accuracy, and other statistics
 
 
-COMBINATIONS = [('probability', 'similarity'), ('logprob', 'similarity'),
-                ('probability', 'distance'), ('length', 'probability'),
+COMBINATIONS = [('probability', 'similarity'),
+                ('logprob', 'similarity'),
+                ('distance', 'probability'),
+                ('distance', 'similarity'),
+                ('length', 'probability'),
                 ('length', 'similarity'),
                 ('length', 'distance')]
 
