@@ -21,7 +21,8 @@ def get_jpg_filenames(small_jpg_directory: str, big_jpg_directory: str) -> Dict[
     Find and index all the *.jpg files in the specified directories.
     :param big_jpg_directory: contains the original scanned JPGs
     :param small_jpg_directory: contains the JPGs reduced below 1 MB for Zooniverse
-    :return: index from basename to tuple[2] of full paths
+    :return: index from basename to tuple[2] of full paths with None in the second position if
+    the big JPG is not available
     """
     small_pattern = os.path.join(small_jpg_directory, '**', '*.jpg')
     logging.info(f'Using {small_pattern}')
@@ -40,6 +41,15 @@ def get_jpg_filenames(small_jpg_directory: str, big_jpg_directory: str) -> Dict[
 
     index = {key: (small_path, big_index.get(key)) for key, small_path in small_index.items()}
     return index
+
+
+def identify_big_jpgs(jpg_index0: dict) -> set:
+    """
+    find the available big JPG filenames
+    :param jpg_index0: index from get_jpg_filenames(...)
+    :return: set of available big JPG keys
+    """
+    return {key for key in jpg_index0.keys() if jpg_index0[key][1]}
 
 
 def make_workflow_index(dataframe: DataFrame, main_output_directory: str) -> dict:
@@ -64,6 +74,7 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
                    max_size0: int, samples0: list, filters0: dict, holdout0: float):
     """
     Process the dataframe from our intermediate CSV format to generate training data
+    :param holdout0:
     :param filters0: map of workflow -> regex
     :param samples0:
     :param max_size0:
@@ -98,6 +109,23 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
         logging.warning(f'Dropped boxes that are too small; rows left {dataframe.shape[0]}')
     else:
         logging.warning(f'Column "too_small" not present')
+
+    # identify missing jpg files (both sizes)
+    jpgs_requested = set(dataframe['filename'].unique())
+    missing_small_jpgs = sorted(jpgs_requested - jpg_index0.keys())
+    missing_big_jpgs = sorted(jpgs_requested - identify_big_jpgs(jpg_index0))
+
+    missing_small_path = os.path.join(output_directory0, 'missing_small_jpgs.txt')
+    logging.info(f'Missing small jpgs {len(missing_small_jpgs)} -> {missing_small_path}')
+    with open(missing_small_path, 'w') as f:
+        for k in missing_small_jpgs:
+            f.write(f'{k}\n')
+
+    missing_big_path = os.path.join(output_directory0, 'missing_big_jpgs.txt')
+    logging.info(f'Missing big jpgs {len(missing_big_jpgs)} -> {missing_big_path}')
+    with open(missing_big_path, 'w') as f:
+        for k in missing_big_jpgs:
+            f.write(f'{k}\n')
 
     # delete rows with jpg filenames that are not available
     dataframe = dataframe[dataframe['filename'].isin(jpg_index0.keys())]
