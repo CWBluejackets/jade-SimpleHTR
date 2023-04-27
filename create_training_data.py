@@ -9,14 +9,14 @@ import os
 import random
 import uuid
 from collections import Counter
-from typing import Tuple, Dict
+from typing import Tuple
 
 import pandas as pd
 from PIL import Image
 from pandas import Series, DataFrame
 
 
-def get_jpg_filenames(small_jpg_directory: str, big_jpg_directory: str) -> Dict[str, Tuple[str, str]]:
+def get_jpg_filenames(small_jpg_directory: str, big_jpg_directory: str):
     """
     Find and index all the *.jpg files in the specified directories.
     :param big_jpg_directory: contains the original scanned JPGs
@@ -40,7 +40,8 @@ def get_jpg_filenames(small_jpg_directory: str, big_jpg_directory: str) -> Dict[
         big_index = dict()
 
     index = {key: (small_path, big_index.get(key)) for key, small_path in small_index.items()}
-    return index
+    surplus_big_jpgs = sorted(big_index.keys() - small_index.keys())
+    return index, surplus_big_jpgs
 
 
 def identify_big_jpgs(jpg_index0: dict) -> set:
@@ -68,6 +69,39 @@ def make_workflow_index(dataframe: DataFrame, main_output_directory: str) -> dic
         logging.info(f'Workflow directory {wf_directory}')
         os.makedirs(wf_directory, exist_ok=True)
     return index
+
+
+def save_list(path, data: list):
+    with open(path, 'w') as f0:
+        for item in data:
+            f0.write(f'{item}\n')
+    return
+
+
+def log_image_problems(jpg_index0: dict, surplus_big_jpgs: list, dataframe: DataFrame,
+                       output_directory0):
+    # identify missing jpg files (both sizes)
+    jpgs_requested = set(dataframe['filename'].unique())
+    missing_small_jpgs = sorted(jpgs_requested - jpg_index0.keys())
+    missing_big_jpgs = sorted(jpgs_requested - identify_big_jpgs(jpg_index0))
+    unused_small_jpgs = sorted(jpg_index0.keys() - jpgs_requested)
+
+    missing_small_path = os.path.join(output_directory0, 'missing_small_jpgs.txt')
+    logging.info(f'Missing small jpgs {len(missing_small_jpgs)} -> {missing_small_path}')
+    save_list(missing_small_path, missing_small_jpgs)
+
+    missing_big_path = os.path.join(output_directory0, 'missing_big_jpgs.txt')
+    logging.info(f'Missing big jpgs {len(missing_big_jpgs)} -> {missing_big_path}')
+    save_list(missing_big_path, missing_big_jpgs)
+
+    unused_small_path = os.path.join(output_directory0, 'unused_small_jpgs.txt')
+    logging.info(f'Unused small jpgs {len(unused_small_jpgs)} -> {unused_small_path}')
+    save_list(unused_small_path, unused_small_jpgs)
+
+    surplus_big_path = os.path.join(output_directory0, 'unmatched_large_jpgs.txt')
+    logging.info(f'Unmatched large jpgs {len(surplus_big_jpgs)} -> {surplus_big_path}')
+    save_list(surplus_big_path, surplus_big_jpgs)
+    return
 
 
 def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
@@ -109,23 +143,6 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
         logging.warning(f'Dropped boxes that are too small; rows left {dataframe.shape[0]}')
     else:
         logging.warning(f'Column "too_small" not present')
-
-    # identify missing jpg files (both sizes)
-    jpgs_requested = set(dataframe['filename'].unique())
-    missing_small_jpgs = sorted(jpgs_requested - jpg_index0.keys())
-    missing_big_jpgs = sorted(jpgs_requested - identify_big_jpgs(jpg_index0))
-
-    missing_small_path = os.path.join(output_directory0, 'missing_small_jpgs.txt')
-    logging.info(f'Missing small jpgs {len(missing_small_jpgs)} -> {missing_small_path}')
-    with open(missing_small_path, 'w') as f:
-        for k in missing_small_jpgs:
-            f.write(f'{k}\n')
-
-    missing_big_path = os.path.join(output_directory0, 'missing_big_jpgs.txt')
-    logging.info(f'Missing big jpgs {len(missing_big_jpgs)} -> {missing_big_path}')
-    with open(missing_big_path, 'w') as f:
-        for k in missing_big_jpgs:
-            f.write(f'{k}\n')
 
     # delete rows with jpg filenames that are not available
     dataframe = dataframe[dataframe['filename'].isin(jpg_index0.keys())]
@@ -171,6 +188,8 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
                         samples0: list, holdout0: float):
     """
     Process the dataframe for one workflow ID, already sampled
+    :param holdout0:
+    :param samples0:
     :param text_column: use 'decision' or 'text_clean
     :param dataframe: dataframe for selected ID
     :param output_subdirectory: e.g., path/to23038_0.75
@@ -205,7 +224,9 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
 
     # carry out holdout and sampling on the control files so we write the images only once
     # optional: holdout
+    # but create a separate all file to speed up reshuffling later if something looks fishy
     if holdout0:
+        save_words_file(output_subdirectory, 'all', words_file_data)
         random.shuffle(words_file_data)
         holdout_size = math.ceil(len(words_file_data) * holdout0)
         holdout_data = words_file_data[:holdout_size]
@@ -359,8 +380,8 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.INFO,
                             format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
-    jpg_index = get_jpg_filenames(config['jpg_directory'],
-                                  config.get('big_jpg_directory'))
+    jpg_index, surplus_big_images = get_jpg_filenames(config['jpg_directory'],
+                                                      config.get('big_jpg_directory'))
     agreed_filename = config['agreed_file']
     output_directory = config['training_directory']
 
@@ -390,4 +411,5 @@ if __name__ == "__main__":
 
     logging.info(f'Loading {input_filename}')
     big_df = pd.read_csv(input_filename)
+    log_image_problems(jpg_index, surplus_big_images, big_df, output_directory)
     process_big_df(big_df, output_directory, jpg_index, max_size, samples, filters, holdout)
