@@ -21,8 +21,9 @@ def get_jpg_filenames(small_jpg_directory: str, big_jpg_directory: str):
     Find and index all the *.jpg files in the specified directories.
     :param big_jpg_directory: contains the original scanned JPGs
     :param small_jpg_directory: contains the JPGs reduced below 1 MB for Zooniverse
-    :return: index from basename to tuple[2] of full paths with None in the second position if
-    the big JPG is not available
+    :return: index from basename to tuple[2] of full paths with None
+    in the second position if the big JPG is not available
+    'foo_012.jpg' -> ('/path/to/small/foo_012.jpg', '/path/to/big/foo_012.jpg')
     """
     small_pattern = os.path.join(small_jpg_directory, '**', '*.jpg')
     logging.info(f'Using {small_pattern}')
@@ -41,16 +42,8 @@ def get_jpg_filenames(small_jpg_directory: str, big_jpg_directory: str):
 
     index = {key: (small_path, big_index.get(key)) for key, small_path in small_index.items()}
     surplus_big_jpgs = sorted(big_index.keys() - small_index.keys())
-    return index, surplus_big_jpgs
-
-
-def identify_big_jpgs(jpg_index0: dict) -> set:
-    """
-    find the available big JPG filenames
-    :param jpg_index0: index from get_jpg_filenames(...)
-    :return: set of available big JPG keys
-    """
-    return {key for key in jpg_index0.keys() if jpg_index0[key][1]}
+    missing_big_jpgs = sorted(small_index.keys() - big_index.keys())
+    return index, surplus_big_jpgs, missing_big_jpgs
 
 
 def make_workflow_index(dataframe: DataFrame, main_output_directory: str) -> dict:
@@ -63,7 +56,7 @@ def make_workflow_index(dataframe: DataFrame, main_output_directory: str) -> dic
     workflows = dataframe['workflow_id'].unique()
     index = dict()
     for workflow in workflows:
-        # subdirectory, e.g., "23456_0.75" for workflow and sampling rate
+        # training_data/23456 using workflow ID
         wf_directory = os.path.join(main_output_directory, str(workflow))
         index[workflow] = wf_directory
         logging.info(f'Workflow directory {wf_directory}')
@@ -72,18 +65,23 @@ def make_workflow_index(dataframe: DataFrame, main_output_directory: str) -> dic
 
 
 def save_list(path, data: list):
+    """
+    Write a flat list to a text file
+    :param path:
+    :param data:
+    :return:
+    """
     with open(path, 'w') as f0:
         for item in data:
             f0.write(f'{item}\n')
     return
 
 
-def log_image_problems(jpg_index0: dict, surplus_big_jpgs: list, dataframe: DataFrame,
-                       output_directory0):
+def log_image_problems(jpg_index0: dict, surplus_big_jpgs: list, missing_big_jpgs,
+                       dataframe: DataFrame, output_directory0):
     # identify missing jpg files (both sizes)
     jpgs_requested = set(dataframe['filename'].unique())
     missing_small_jpgs = sorted(jpgs_requested - jpg_index0.keys())
-    missing_big_jpgs = sorted(jpgs_requested - identify_big_jpgs(jpg_index0))
     unused_small_jpgs = sorted(jpg_index0.keys() - jpgs_requested)
 
     missing_small_path = os.path.join(output_directory0, 'missing_small_jpgs.txt')
@@ -280,7 +278,7 @@ def crop_image(small_image: Image, big_image: Image, row: Series) -> Image:
     # Both PIL and Zooniverse: (0, 0) is top left; all coordinates in pixels.
     # Zooniverse box: x, y = top left corner of box; and use width and height.
     # PIL box: tuple (left, top, right, bottom) absolute locations within image.
-    # To be careful, round x and y down; width and height up.
+    # To be careful, round left and top down; right and bottom up.
     if big_image:
         left = math.floor(row['x'] * big_image.width / small_image.width)
         top = math.floor(row['y'] * big_image.height / small_image.height)
@@ -380,8 +378,8 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.INFO,
                             format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
-    jpg_index, surplus_big_images = get_jpg_filenames(config['jpg_directory'],
-                                                      config.get('big_jpg_directory'))
+    jpg_index, surplus_big_images, missing_big_images = get_jpg_filenames(config['jpg_directory'],
+                                                                          config.get('big_jpg_directory'))
     agreed_filename = config['agreed_file']
     output_directory = config['training_directory']
 
@@ -411,5 +409,5 @@ if __name__ == "__main__":
 
     logging.info(f'Loading {input_filename}')
     big_df = pd.read_csv(input_filename)
-    log_image_problems(jpg_index, surplus_big_images, big_df, output_directory)
+    log_image_problems(jpg_index, surplus_big_images, missing_big_images, big_df, output_directory)
     process_big_df(big_df, output_directory, jpg_index, max_size, samples, filters, holdout)
