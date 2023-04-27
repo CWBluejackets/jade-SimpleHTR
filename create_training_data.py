@@ -40,7 +40,10 @@ def get_jpg_filenames(small_jpg_directory: str, big_jpg_directory: str):
     else:
         big_index = dict()
 
-    index = {key: (small_path, big_index.get(key)) for key, small_path in small_index.items()}
+    # filter out big JPGs with the wrong aspect ratios
+    index = {key: (small_path, big_index.get(key)) for key, small_path in small_index.items()
+             if aspect_ratios_match(small_path, big_index.get(key))}
+
     surplus_big_jpgs = sorted(big_index.keys() - small_index.keys())
     missing_big_jpgs = sorted(small_index.keys() - big_index.keys())
     return index, surplus_big_jpgs, missing_big_jpgs
@@ -313,30 +316,44 @@ def save_shtr_files(cropped_image: Image, row: Series, info_file_path: str, png_
     return
 
 
+def aspect_ratios_match(small_image_path, big_image_path) -> bool:
+    """
+    Check that the small (annotated) and big (raw) JPGs have the same aspect ratio.
+    :param small_image_path:
+    :param big_image_path:
+    :return:
+    """
+    if big_image_path is None:
+        # don't try to test missing big JPGs
+        return True
+    small_image = Image.open(small_image_path, 'r')
+    big_image = Image.open(big_image_path, 'r')
+    expected_width = big_image.width * small_image.height / big_image.height
+    if abs(expected_width - small_image.width) > 1:
+        big_aspect = big_image.width / big_image.height
+        small_aspect = small_image.width / small_image.height
+        logging.info(f'Big jpg rejected for aspect ratio: {big_image_path} {big_aspect:.3f} {small_aspect:.3f}')
+        result = False
+    else:
+        result = True
+    return result
+
+
 def load_images(basename: str, jpg_index0) -> Tuple[Image.Image, Image.Image]:
     """
-    Locate a jpg file from its basename and load it
+    Locate a jpg file from its basename and load it.
     :param basename: 'foo.jpg'
     :param jpg_index0: the index
     :return: PIL image
     """
     small_path, big_path = jpg_index0[basename]
     small_image = Image.open(small_path, 'r')
+    # Aspect ratios are now checked once each, earlier in the process, when indexing the JPGs.
     if big_path:
         big_image = Image.open(big_path, 'r')
-        # check that the aspect ratios are close
-        expected_width = big_image.width * small_image.height / big_image.height
-        if abs(expected_width - small_image.width) > 1:
-            big_aspect = big_image.width / big_image.height
-            small_aspect = small_image.width / small_image.height
-            logging.info(f'Big jpg rejected for aspect ratio: {big_path} {big_aspect:.3f} {small_aspect:.3f}')
-            big_image = None
-        else:
-            logging.info(f'Big jpg valid: {big_path}')
     else:
         # big image was missing from the directory
         big_image = None
-        logging.info(f'Big jpg missing: {small_path}')
     return small_image, big_image
 
 
