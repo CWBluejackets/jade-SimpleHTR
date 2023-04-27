@@ -378,7 +378,7 @@ if __name__ == "__main__":
     with open(options.config_file) as f:
         config = json.load(f)
 
-    # turn off the chained assignment warnings
+    # TODO do it right instead of suppressing the chained assignment warnings
     # https://stackoverflow.com/questions/20625582/how-to-deal-with-settingwithcopywarning-in-pandas
     pd.options.mode.chained_assignment = None
 
