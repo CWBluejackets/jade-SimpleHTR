@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+import math
 import os.path
 
 import matplotlib.pyplot as plt
@@ -60,22 +61,24 @@ def generate_heatmap(dataframe0: pd.DataFrame, output0: str, cuts: int):
     return
 
 
-def describe_cutoff(df0: pd.DataFrame, cutoff: float):
-    original_length = df0['similarity'].count()
-    df1 = df0[df0['probability'] >= cutoff]
-    rel_size = df1['similarity'].count()
-    return rel_size / original_length, df1['similarity'].min(), df1['similarity'].median(), \
-        df1['similarity'].mean(), df1['similarity'].max()
+def describe_cutoff(df0: pd.DataFrame, cutoff: int) -> pd.Series:
+    threshold = df0.loc[cutoff]['probability']
+    similarities = df0.loc[cutoff:]['similarity']
+    quartiles = similarities.quantile([0, 0.25, 0.5, 0.75, 1])
+    retained = similarities.count() / df0.shape[0]
+    result = pd.concat([pd.Series(data=[threshold, retained], index=['threshold', 'retained']), quartiles])
+    return result
 
 
 def generate_cutoff_table(dataframe0: pd.DataFrame, nbr_cuts: int) -> pd.DataFrame:
-    bottom = dataframe0['probability'].min()
-    top = dataframe0['probability'].max()
-    step = (top - bottom) / nbr_cuts
-    cuts = [bottom + i * step for i in range(nbr_cuts)]
-    cutoff_array = [describe_cutoff(dataframe0, c) for c in cuts]
-    return pd.DataFrame(data=cutoff_array, index=cuts,
-                        columns=['retained', 'min_sim', 'med_sim', 'mean_sim', 'max_sim'])
+    df1 = dataframe0[['probability', 'similarity']].sort_values(by=['probability', 'similarity'],
+                                                                ascending=[True, True]).reset_index(drop=True)
+    step = df1.shape[0] / nbr_cuts
+    cuts = [math.floor(i * step) for i in range(nbr_cuts)] + [df1.shape[0] - 1]
+    cutoff_array = [describe_cutoff(df1, c) for c in cuts]
+    cutoff_df = pd.DataFrame(cutoff_array, index=cuts)
+    cutoff_df.set_index('threshold', inplace=True)
+    return cutoff_df
 
 
 def generate_cutoff_plot(dataframe0: pd.DataFrame, output0, nbr_cuts: int):
