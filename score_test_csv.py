@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 import argparse
 import os.path
-from io import BytesIO
 
-import pandas as pd
 import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
 
 # Script to read test csv output and produce
 # character error, word accuracy, and other statistics
@@ -48,6 +48,48 @@ def generate_scatter_plots(dataframe0: pd.DataFrame, output0):
     return
 
 
+def generate_heatmap(dataframe0: pd.DataFrame, output0: str, cuts: int):
+    crosstab = pd.crosstab(pd.cut(dataframe0['similarity'], cuts), pd.cut(dataframe0['probability'], cuts))
+    ax = sns.heatmap(crosstab, annot=True)
+    fig = ax.get_figure()
+    filename = f'{output0}_heatmap.png'
+    print(f'saving to {filename}')
+    plt.savefig(filename, dpi=200, format='png')
+    # https://stackoverflow.com/questions/45933886/python-plt-close-or-clear-figure-does-not-work
+    plt.close(fig)
+    return
+
+
+def describe_cutoff(df0: pd.DataFrame, cutoff: float):
+    original_length = df0['similarity'].count()
+    df1 = df0[df0['probability'] >= cutoff]
+    rel_size = df1['similarity'].count()
+    return rel_size / original_length, df1['similarity'].min(), df1['similarity'].median(), \
+        df1['similarity'].mean(), df1['similarity'].max()
+
+
+def generate_cutoff_table(dataframe0: pd.DataFrame, nbr_cuts: int) -> pd.DataFrame:
+    bottom = dataframe0['probability'].min()
+    top = dataframe0['probability'].max()
+    step = (top - bottom) / nbr_cuts
+    cuts = [bottom + i * step for i in range(nbr_cuts)]
+    cutoff_array = [describe_cutoff(dataframe0, c) for c in cuts]
+    return pd.DataFrame(data=cutoff_array, index=cuts,
+                        columns=['retained', 'min_sim', 'med_sim', 'mean_sim', 'max_sim'])
+
+
+def generate_cutoff_plot(dataframe0: pd.DataFrame, output0, nbr_cuts: int):
+    cut_table = generate_cutoff_table(dataframe0, nbr_cuts)
+    ax = cut_table.plot.line()
+    fig = ax.get_figure()
+    filename = f'{output0}_cutoffs.png'
+    print(f'saving to {filename}')
+    plt.savefig(filename, dpi=200, format='png')
+    # https://stackoverflow.com/questions/45933886/python-plt-close-or-clear-figure-does-not-work
+    plt.close(fig)
+    return
+
+
 def dump(results0, output0):
     if output0:
         print(f'saving to {output0}')
@@ -85,7 +127,7 @@ if __name__ == "__main__":
                                        os.path.splitext(os.path.basename(input_file))[0])
             dump(results, output_path + '_scores.txt')
             generate_scatter_plots(dataframe, output_path)
+            generate_heatmap(dataframe, output_path, 20)
+            generate_cutoff_plot(dataframe, output_path, 50)
         else:
             dump(results, None)
-
-
