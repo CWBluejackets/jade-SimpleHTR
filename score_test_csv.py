@@ -130,7 +130,7 @@ if __name__ == "__main__":
                                        os.path.splitext(os.path.basename(input_file))[0])
             dump(results, output_path + '_scores.txt')
             generate_scatter_plots(dataframe, output_path)
-            generate_heatmap(dataframe, output_path, 20)
-            generate_cutoff_plot(dataframe, output_path, 50)
+            generate_heatmap(dataframe, output_path, 10)
+            generate_cutoff_plot(dataframe, output_path, 100)
         else:
             dump(results, None)
