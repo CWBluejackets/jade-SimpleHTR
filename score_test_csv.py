@@ -112,8 +112,8 @@ if __name__ == "__main__":
     parser.add_argument('-o', dest='output_directory',
                         type=str,
                         default=None,
-                        metavar='FILE',
-                        help='output file')
+                        metavar='DIR',
+                        help='output directory')
 
     options = parser.parse_args()
 
