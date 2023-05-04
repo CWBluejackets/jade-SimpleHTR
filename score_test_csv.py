@@ -51,6 +51,7 @@ def generate_scatter_plots(dataframe0: pd.DataFrame, output0):
 
 def generate_heatmap(dataframe0: pd.DataFrame, output0: str, cuts: int):
     crosstab = pd.crosstab(pd.cut(dataframe0['similarity'], cuts), pd.cut(dataframe0['probability'], cuts))
+    crosstab = crosstab.iloc[::-1]
     ax = sns.heatmap(crosstab, annot=True)
     fig = ax.get_figure()
     filename = f'{output0}_heatmap.png'
