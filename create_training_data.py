@@ -132,7 +132,7 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
     dataframe.dropna(axis=0, how='any', inplace=True, subset=['x', 'y', 'width', 'height', text_column])
     logging.warning(f'Dropped NaN rectangles/text; rows left {dataframe.shape[0]}')
 
-    # if the 'ignored' column is present, delete rows that were ignored in voting
+    # if the 'wrong_column' column is present, delete rows that were ignored in voting
     if 'wrong_column' in dataframe.columns:
         dataframe = dataframe[~ dataframe['wrong_column']]
         logging.warning(f'Dropped wrong column annotations; rows left {dataframe.shape[0]}')
@@ -144,6 +144,11 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
         logging.warning(f'Dropped boxes that are too small; rows left {dataframe.shape[0]}')
     else:
         logging.warning(f'Column "too_small" not present')
+
+    # delete muster lines that could not be voted on because all annotations were filtered out
+    if 'decision_type' in dataframe.columns:
+        dataframe = dataframe[dataframe['decision_type'].str.fullmatch('empty')]
+        logging.warning(f'Dropped rows without votes; rows left {dataframe.shape[0]}')
 
     # delete rows with jpg filenames that are not available
     dataframe = dataframe[dataframe['filename'].isin(jpg_index0.keys())]
@@ -266,7 +271,7 @@ def generate_words_row(png_filename, row: Series, text_column: str):
     """
     # refer to SimpleHTR.md for the meaning of these
     text = row[text_column]
-    line = f'{png_filename} {text}\n'
+    line = f'img/{png_filename} {text}\n'
     return line
 
 
@@ -281,7 +286,7 @@ def crop_image(small_image: Image, big_image: Image, row: Series) -> Image:
     # Both PIL and Zooniverse: (0, 0) is top left; all coordinates in pixels.
     # Zooniverse box: x, y = top left corner of box; and use width and height.
     # PIL box: tuple (left, top, right, bottom) absolute locations within image.
-    # To be careful, round left and top down; right and bottom up.
+    # To be careful, round left and top down (numerically); right and bottom up (numerically).
     if big_image:
         left = math.floor(row['x'] * big_image.width / small_image.width)
         top = math.floor(row['y'] * big_image.height / small_image.height)
