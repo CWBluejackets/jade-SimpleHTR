@@ -315,7 +315,8 @@ def decide_line(muster_line: pd.DataFrame, key_triple: tuple, decision_counter: 
     :return:
     """
     # Do not count regex_ok False annotations as votes
-    muster_line['total_annotations'] = muster_line.shape[0]
+    total_annotations = muster_line.shape[0]
+    muster_line['total_annotations'] = total_annotations
     votable = muster_line[muster_line['regex_ok']]
 
     if votable.empty:
@@ -324,6 +325,8 @@ def decide_line(muster_line: pd.DataFrame, key_triple: tuple, decision_counter: 
         muster_line['decision_type'] = 'empty'
         muster_line['mode_votes'] = 0
         muster_line['total_votes'] = 0
+        muster_line['text_median'] = None
+        logging.info(f'Voting empty: {key_triple}')
     else:
         # This comes out automatically in descending order
         vote_df = votable['text_clean'].value_counts()
@@ -334,8 +337,10 @@ def decide_line(muster_line: pd.DataFrame, key_triple: tuple, decision_counter: 
         median = clean_median(Levenshtein.median(vote_df.index, wlist=vote_df.values))
         muster_line['text_median'] = median
 
-        if mode_votes == total_votes:
+        if mode_votes == total_annotations:
             decision_type = 'unanimous'
+        elif mode_votes == total_votes:
+            decision_type = 'pseudo-unanimous'
         elif mode_votes > total_votes / 2:
             decision_type = 'majority'
         elif mode_votes > vote_df.values[1]:
