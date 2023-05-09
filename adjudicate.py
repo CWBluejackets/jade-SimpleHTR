@@ -314,40 +314,48 @@ def decide_line(muster_line: pd.DataFrame, key_triple: tuple, decision_counter: 
     :param decision_counter: to keep track of decisions by type and size
     :return:
     """
+    # Do not count regex_ok False annotations as votes
+    muster_line['total_annotations'] = muster_line.shape[0]
+    votable = muster_line[muster_line['regex_ok']]
 
-    # TODO do not count regex_ok == False votes
-    # TODO add a column for number of entries (might be greater than nbr of votes)
-    # This comes out automatically in descending order
-    vote_df = muster_line['text_clean'].value_counts()
-    mode = vote_df.index[0]
-    mode_votes = vote_df.values[0]
-    total_votes = vote_df.values.sum()
-    # weighting may speed the median calculation up
-    median = clean_median(Levenshtein.median(vote_df.index, wlist=vote_df.values))
-    muster_line['text_median'] = median
-
-    if mode_votes == total_votes:
-        decision_type = 'unanimous'
-    elif mode_votes > total_votes / 2:
-        decision_type = 'majority'
-    elif mode_votes > vote_df.values[1]:
-        decision_type = 'plurality'
-    else:
-        decision_type = 'failed'
-
-    # log and apply the result
-    if decision_type != 'unanimous':
-        logging.info(f'Voting {decision_type}: {key_triple} has {vote_df.to_dict()} (median={median})')
-    decision_counter[decision_type][total_votes] += 1
-    if decision_type == 'failed':
+    if votable.empty:
         muster_line['decision'] = None
-        muster_line['decision1'] = median
+        muster_line['decision1'] = None
+        muster_line['decision_type'] = 'empty'
+        muster_line['mode_votes'] = 0
+        muster_line['total_votes'] = 0
     else:
-        muster_line['decision'] = mode
-        muster_line['decision1'] = mode
-    muster_line['decision_type'] = decision_type
-    muster_line['mode_votes'] = mode_votes
-    muster_line['total_votes'] = total_votes
+        # This comes out automatically in descending order
+        vote_df = votable['text_clean'].value_counts()
+        mode = vote_df.index[0]
+        mode_votes = vote_df.values[0]
+        total_votes = vote_df.values.sum()
+        # weighting may speed the median calculation up
+        median = clean_median(Levenshtein.median(vote_df.index, wlist=vote_df.values))
+        muster_line['text_median'] = median
+
+        if mode_votes == total_votes:
+            decision_type = 'unanimous'
+        elif mode_votes > total_votes / 2:
+            decision_type = 'majority'
+        elif mode_votes > vote_df.values[1]:
+            decision_type = 'plurality'
+        else:
+            decision_type = 'failed'
+
+        # log and apply the result
+        if decision_type != 'unanimous':
+            logging.info(f'Voting {decision_type}: {key_triple} has {vote_df.to_dict()} (median={median})')
+        decision_counter[decision_type][total_votes] += 1
+        if decision_type == 'failed':
+            muster_line['decision'] = None
+            muster_line['decision1'] = median
+        else:
+            muster_line['decision'] = mode
+            muster_line['decision1'] = mode
+        muster_line['decision_type'] = decision_type
+        muster_line['mode_votes'] = mode_votes
+        muster_line['total_votes'] = total_votes
     return muster_line
 
 
