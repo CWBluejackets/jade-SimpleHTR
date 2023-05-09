@@ -218,7 +218,8 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
     for filename in dataframe['filename'].unique():
         small_image, big_image = load_images(filename, jpg_index0)
         small_df = grouped_df.get_group(filename)
-
+        small_df['jpg'] = 'big' if big_image else 'small'
+        dataframe = dataframe.combine_first(small_df[['jpg']])
         for index, row in small_df.iterrows():
             cropped_image = crop_image(small_image, big_image, row)
             info_path = os.path.join(output_subdirectory, 'info', f'{filename_prefix}_{index:07d}.csv')
@@ -410,6 +411,7 @@ if __name__ == "__main__":
     else:
         input_filename = config['intermediate_file']
 
+    # TODO remove filters?
     filters = {}
 
     for filter_file in options.filter_files:
