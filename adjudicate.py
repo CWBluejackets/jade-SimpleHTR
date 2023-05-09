@@ -218,9 +218,10 @@ def should_exclude(row: pd.Series, exclusions0: set) -> bool:
     return key in exclusions0
 
 
-def process_big_df(dataframe: pd.DataFrame, exclusions0) -> pd.DataFrame:
+def process_big_df(dataframe: pd.DataFrame, exclusions0, filters0) -> pd.DataFrame:
     """
     Analyse the input file, number the lines, carry out voting
+    :param filters0:
     :param exclusions0:
     :param dataframe: the big CSV unpacked and repacked from Zooniverse exports
     :return: same thing with more columns
@@ -247,6 +248,10 @@ def process_big_df(dataframe: pd.DataFrame, exclusions0) -> pd.DataFrame:
         muster_sheet, rejected = detect_wrong_columns(muster_sheet)
         dataframe = dataframe.combine_first(muster_sheet[['wrong_column', 'exclude']])
 
+        # apply the regex filter for the workflow ID
+        wf_pattern = filters0.get(muster_key[1])
+        muster_sheet['regex_ok'] = muster_sheet['text_clean'].str.fullmatch(wf_pattern)
+
         # Skip line-numbering and voting if the whole sheet is rejected (two annotators
         # with different columns).
         if not rejected:
@@ -259,7 +264,7 @@ def process_big_df(dataframe: pd.DataFrame, exclusions0) -> pd.DataFrame:
                 dataframe = dataframe.combine_first(muster_sheet[['prev_top', 'prev_bottom', 'v_overlap',
                                                                   'levenshtein', 'line', 'decision_type',
                                                                   'decision', 'decision1', 'text_median',
-                                                                  'mode_votes', 'total_votes']])
+                                                                  'mode_votes', 'total_votes', 'regex_ok']])
         sheets_done += 1
         rows_done += sheet_rows
         update_progress(rows_done, total_rows, sheets_done, total_sheets, start_time)
@@ -309,6 +314,9 @@ def decide_line(muster_line: pd.DataFrame, key_triple: tuple, decision_counter: 
     :param decision_counter: to keep track of decisions by type and size
     :return:
     """
+
+    # TODO do not count regex_ok == False votes
+    # TODO add a column for number of entries (might be greater than nbr of votes)
     # This comes out automatically in descending order
     vote_df = muster_line['text_clean'].value_counts()
     mode = vote_df.index[0]
@@ -383,6 +391,12 @@ if __name__ == "__main__":
                          action='store_true',
                          help='debug')
 
+    oparser.add_argument('-f', dest='filter_files',
+                         default=[],
+                         action='append',
+                         metavar='FILTER.json',
+                         help='filter file (can be repeated)')
+
     options = oparser.parse_args()
 
     with open(options.config_file) as f:
@@ -406,13 +420,24 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.INFO,
                             format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
+    filters = {}
+
+    for filter_file in options.filter_files:
+        with open(filter_file, 'r') as f:
+            addenda = json.load(f)
+            # force keys to be int for compatibility later
+            filters.update({int(k): v for k, v in addenda.items()})
+
+    for k, v in filters.items():
+        logging.info(f'Filter: {k} {v}')
+
     input_filename = config['intermediate_file']
     output_filename = config['agreed_file']
     exclusions = get_exclusions(config)
 
     logging.info(f'Loading {input_filename}')
     big_df = pd.read_csv(input_filename)
-    big_df = process_big_df(big_df, exclusions)
+    big_df = process_big_df(big_df, exclusions, filters)
 
     # sort the output to make it easy to inspect the voting and overlaps
     logging.warning('Sorting results...')
