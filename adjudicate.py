@@ -8,6 +8,7 @@ import re
 import time
 from collections import defaultdict, Counter
 from datetime import timedelta
+from typing import Dict
 
 import Levenshtein
 import numpy as np
@@ -128,9 +129,10 @@ def detect_wrong_columns(muster_sheet: pd.DataFrame):
     return muster_sheet, rejected_all
 
 
-def basic_cleaning(dataframe: pd.DataFrame, exclusions0: set):
+def basic_cleaning(dataframe: pd.DataFrame, exclusions0: set, filters0: dict):
     """
     Delete the rows with missing rectangles, cleaned text, or required identifiers
+    :param filters0:
     :param exclusions0:
     :param dataframe:
     :return:
@@ -154,6 +156,8 @@ def basic_cleaning(dataframe: pd.DataFrame, exclusions0: set):
     # flag manual exclusions and small boxes
     dataframe.loc[:, 'exclude'] = dataframe.apply(lambda row: should_exclude(row, exclusions0), axis=1)
     dataframe.loc[:, 'too_small'] = dataframe.apply(is_too_small, axis=1)
+    # apply regex filters according to workflow
+    dataframe.loc[:, 'regex_ok'] = dataframe.apply(lambda row: regex_filter_row(row, filters0))
     return dataframe, clean_rows, start_time
 
 
@@ -189,7 +193,7 @@ def make_line_series(overlap_series: pd.Series, annotator_series: pd.Series) -> 
     return pd.Series(results, index=overlap_series.index, dtype=pd.Int64Dtype)
 
 
-def add_line_numbers(muster_sheet: pd.DataFrame) -> pd.DataFrame:
+def add_line_numbers(muster_sheet: pd.DataFrame):
     # discard wrong-column rows and manually excluded annotation sets before numbering
     muster_sheet = muster_sheet[~ (muster_sheet['wrong_column'] | muster_sheet['exclude'])]
 
@@ -221,12 +225,12 @@ def should_exclude(row: pd.Series, exclusions0: set) -> bool:
 def process_big_df(dataframe: pd.DataFrame, exclusions0, filters0) -> pd.DataFrame:
     """
     Analyse the input file, number the lines, carry out voting
-    :param filters0:
+    :param filters0: dict workflow int -> compiled regex
     :param exclusions0:
     :param dataframe: the big CSV unpacked and repacked from Zooniverse exports
     :return: same thing with more columns
     """
-    dataframe, total_rows, start_time = basic_cleaning(dataframe, exclusions0)
+    dataframe, total_rows, start_time = basic_cleaning(dataframe, exclusions0, filters0)
     # TODO detect column jumping
     # example: subject 79888343, workflow 21955, annotator greeneagle245
     # Probably in the wrong-column detection code, using h_overlap within each annotator?
@@ -248,10 +252,6 @@ def process_big_df(dataframe: pd.DataFrame, exclusions0, filters0) -> pd.DataFra
         muster_sheet, rejected = detect_wrong_columns(muster_sheet)
         dataframe = dataframe.combine_first(muster_sheet[['wrong_column', 'exclude']])
 
-        # apply the regex filter for the workflow ID
-        wf_pattern = filters0.get(muster_key[1])
-        muster_sheet['regex_ok'] = muster_sheet['text_clean'].str.fullmatch(wf_pattern)
-
         # Skip line-numbering and voting if the whole sheet is rejected (two annotators
         # with different columns).
         if not rejected:
@@ -264,13 +264,24 @@ def process_big_df(dataframe: pd.DataFrame, exclusions0, filters0) -> pd.DataFra
                 dataframe = dataframe.combine_first(muster_sheet[['prev_top', 'prev_bottom', 'v_overlap',
                                                                   'levenshtein', 'line', 'decision_type',
                                                                   'decision', 'decision1', 'text_median',
-                                                                  'mode_votes', 'total_votes', 'regex_ok']])
+                                                                  'total_annotations',
+                                                                  'mode_votes', 'total_votes']])
         sheets_done += 1
         rows_done += sheet_rows
         update_progress(rows_done, total_rows, sheets_done, total_sheets, start_time)
 
     log_decision_counts(decision_counter)
     return dataframe
+
+
+def regex_filter_row(row: pd.Series, filters0: Dict[int, re.Pattern]) -> bool:
+    text = row['text_clean']
+    workflow_id = row['workflow_id']
+    pattern = filters0.get(workflow_id)
+    if pattern:
+        return bool(pattern.fullmatch(text))
+    # pass if no filter given
+    return True
 
 
 def update_progress(rows_done: int, total_rows: int,
@@ -445,13 +456,15 @@ if __name__ == "__main__":
     for k, v in filters.items():
         logging.info(f'Filter: {k} {v}')
 
+    compiled_filters = {k: re.compile(v) for k, v in filters.items()}
+
     input_filename = config['intermediate_file']
     output_filename = config['agreed_file']
     exclusions = get_exclusions(config)
 
     logging.info(f'Loading {input_filename}')
     big_df = pd.read_csv(input_filename)
-    big_df = process_big_df(big_df, exclusions, filters)
+    big_df = process_big_df(big_df, exclusions, compiled_filters)
 
     # sort the output to make it easy to inspect the voting and overlaps
     logging.warning('Sorting results...')
