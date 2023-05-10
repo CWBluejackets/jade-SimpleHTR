@@ -15,12 +15,14 @@ DEFAULT_OUTPUT_FILENAME = os.path.join(os.environ['HOME'], 'output.csv')
 TASK_RE = re.compile(r'T(\d+)')
 TAG_PURGE = re.compile(r'[\[{][^[{]*[}\]]')
 TAG_MATCH = re.compile(r'[\[{\]}]')
+SMART_SINGLE_QUOTE = re.compile('[\u2018\u2019]')
+SMART_DOUBLE_QUOTE = re.compile('[\u201c\u201d]')
+NA_PATTERN = re.compile(r'\s*N/|\s*', flags=re.IGNORECASE)
 
 # output format CSV
 COLUMNS = ['subject_id', 'classification_id', 'workflow_id', 'annotator', 'filename',
            'finished_str', 'task', 'x', 'y', 'width', 'height', 'text', 'text_clean',
            'left', 'right', 'top', 'bottom']
-
 
 WHITESPACE = re.compile(r'\s+')
 
@@ -49,10 +51,14 @@ def add_coordinates(row0):
 
 
 def clean_string(s0: str) -> str:
+    # Genuine empty strings need to be changed to one space to prevent automatic
+    # conversion to NaN through CSV interchange and to allow HTR to work.
     if not s0:
         return ' '
-    # Empty strings need to be changed to one space to prevent automatic
-    # conversion to NaN through CSV interchange and to allow HTR to work.
+    # literal "N/A", which pandas turns into NaN
+    if NA_PATTERN.fullmatch(s0):
+        return ' '
+    # trim whitespace and check again
     s1 = WHITESPACE.sub(' ', s0.strip())
     s1 = s1 or ' '
     # Some input contains literally "N/A", which pandas turns into Nan
@@ -61,6 +67,9 @@ def clean_string(s0: str) -> str:
         s1 = clean_tags(s1)
     # If tag removal leaves an empty string, leave it empty so it will be
     # Nan and ignored later
+    # replace smart quotes
+    s1 = SMART_SINGLE_QUOTE.sub("'", s1)
+    s1 = SMART_DOUBLE_QUOTE.sub('"', s1)
     return s1
 
 
