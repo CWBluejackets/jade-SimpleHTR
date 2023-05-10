@@ -71,6 +71,8 @@ def get_vessel_page(row: pd.Series) -> pd.Series:
 
 
 def clean_text(s0: str) -> str:
+    if pd.isnull(s0):
+        return s0
     # Genuine empty strings need to be changed to one space to prevent automatic
     # conversion to NaN through CSV interchange and to allow HTR to work.
     if not s0:
