@@ -147,7 +147,7 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
 
     # delete muster lines that could not be voted on because all annotations were filtered out
     if 'decision_type' in dataframe.columns:
-        dataframe = dataframe[dataframe['decision_type'].str.fullmatch('empty')]
+        dataframe = dataframe[~ dataframe['decision_type'].str.fullmatch('empty')]
         logging.warning(f'Dropped rows without votes; rows left {dataframe.shape[0]}')
 
     # delete rows with jpg filenames that are not available

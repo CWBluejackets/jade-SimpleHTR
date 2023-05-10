@@ -302,7 +302,8 @@ def vote_line_by_line(muster_key: tuple, muster_sheet: pd.DataFrame,
         muster_line = decide_line(muster_line, key_triple, decision_counter)
         # Copy the new columns back to the output
         muster_sheet = muster_sheet.combine_first(
-            muster_line[['decision', 'decision1', 'text_median', 'decision_type', 'mode_votes', 'total_votes']])
+            muster_line[['decision', 'decision1', 'text_median', 'decision_type', 'mode_votes',
+                         'total_votes', 'total_annotations']])
     return muster_sheet
 
 
