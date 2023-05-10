@@ -196,8 +196,9 @@ def basic_cleaning(dataframe: pd.DataFrame, exclusions0: set, filters0: dict):
     dataframe.loc[:, 'subject_id'] = pd.to_numeric(dataframe['subject_id'], downcast='integer')
     dataframe.loc[:, 'vessel_page'] = pd.to_numeric(dataframe['vessel_page'], downcast='integer')
     dataframe.loc[:, 'classification_id'] = pd.to_numeric(dataframe['classification_id'], downcast='integer')
+    logging.info(f'COLUMNS {";".join(dataframe.columns)}')
     # apply regex filters according to workflow
-    dataframe.loc[:, 'regex_ok'] = dataframe.apply(lambda row: regex_filter_row(row, filters0))
+    dataframe.loc[:, 'regex_ok'] = dataframe.apply(lambda row: regex_filter_row(row, filters0), axis=1)
     # flag manual exclusions and small boxes
     dataframe.loc[:, 'exclude'] = dataframe.apply(lambda row: should_exclude(row, exclusions0), axis=1)
     dataframe.loc[:, 'too_small'] = dataframe.apply(is_too_small, axis=1)
