@@ -27,6 +27,7 @@ MORE_MIN_OVERLAP = 0.1
 WHITESPACE = re.compile(r'\s+')
 FILENAME_PATTERN = re.compile(r'\d+_(\S+)_(\d+)\.\w+')
 
+# Patterns for cleaning manual annotations
 TAG_PURGE = re.compile(r'[\[{][^[{]*[}\]]')
 TAG_MATCH = re.compile(r'[\[{\]}]')
 SMART_SINGLE_QUOTE = re.compile('[\u2018\u2019]')
@@ -35,12 +36,17 @@ NA_PATTERN = re.compile(r'\s*N/|\s*', flags=re.IGNORECASE)
 
 
 def is_too_small(row: pd.Series) -> bool:
+    """
+    Is the annotated box unreasonably small?
+    :param row:
+    :return:
+    """
     return (row['width'] < PIXEL_CUTOFF) or (row['height'] < PIXEL_CUTOFF)
 
 
 def clean_median(s0: str) -> str:
     """
-    Strip/clean whitespace for median strings but use a single space instead
+    Strip/clean whitespace for median strings but fall back to a single space instead
     of an empty string
     :param s0:
     :return:
@@ -75,12 +81,11 @@ def clean_text(s0: str) -> str:
     # trim whitespace and check again
     s1 = WHITESPACE.sub(' ', s0.strip())
     s1 = s1 or ' '
-    # Some input contains literally "N/A", which pandas turns into Nan
-    # ignoring this for now
-    if TAG_MATCH.search(s1):
-        s1 = clean_tags(s1)
-    # If tag removal leaves an empty string, leave it empty so it will be
-    # Nan and ignored later
+    # Ignore tags and let the regex filters do the work!
+    # if TAG_MATCH.search(s1):
+    #     s1 = clean_tags(s1)
+    # # If tag removal leaves an empty string, leave it empty so it will be
+    # # Nan and ignored later
     # replace smart quotes
     s1 = SMART_SINGLE_QUOTE.sub("'", s1)
     s1 = SMART_DOUBLE_QUOTE.sub('"', s1)
@@ -172,11 +177,12 @@ def basic_cleaning(dataframe: pd.DataFrame, exclusions0: set, filters0: dict):
     """
     start_time = time.time()
     logging.warning(f'Starting rows {dataframe.shape[0]}')
-    # Note: the text_clean column contains a single space where the exported text is blank
-    # but is empty (NaN here) where it ended up empty after stripping tags.
     # TODO eventually: use the muster date tasks instead of dropping them
-    # Now cleaning text here rather than in convert_classifications
+    # We Now clean text here (rather than in convert_classifications)
+    # Note: the text_clean column contains a single space where the exported text is blank
+    # (required for SimpleHTR and to stop pandas NaN)
     dataframe.loc[:, 'text_clean'] = dataframe['text'].apply(clean_text)
+    # drop inherently unusable rows
     dataframe.dropna(axis=0, how='any', inplace=True, subset=['left', 'right', 'top', 'bottom', 'text_clean',
                                                               'subject_id', 'workflow_id', 'annotator', 'task'])
     clean_rows = dataframe.shape[0]
@@ -188,11 +194,11 @@ def basic_cleaning(dataframe: pd.DataFrame, exclusions0: set, filters0: dict):
     dataframe.loc[:, 'subject_id'] = pd.to_numeric(dataframe['subject_id'], downcast='integer')
     dataframe.loc[:, 'vessel_page'] = pd.to_numeric(dataframe['vessel_page'], downcast='integer')
     dataframe.loc[:, 'classification_id'] = pd.to_numeric(dataframe['classification_id'], downcast='integer')
+    # apply regex filters according to workflow
+    dataframe.loc[:, 'regex_ok'] = dataframe.apply(lambda row: regex_filter_row(row, filters0))
     # flag manual exclusions and small boxes
     dataframe.loc[:, 'exclude'] = dataframe.apply(lambda row: should_exclude(row, exclusions0), axis=1)
     dataframe.loc[:, 'too_small'] = dataframe.apply(is_too_small, axis=1)
-    # apply regex filters according to workflow
-    dataframe.loc[:, 'regex_ok'] = dataframe.apply(lambda row: regex_filter_row(row, filters0))
     return dataframe, clean_rows, start_time
 
 
@@ -209,7 +215,7 @@ def make_levenshtein_series(text_series: pd.Series):
 
 def make_line_series(overlap_series: pd.Series, annotator_series: pd.Series) -> pd.Series:
     """
-    Generate line numbers for one muster sheet (subject-workflow combination)
+    Generate line numbers for one muster sheet (subject-workflow combination, 1 or more annotators)
     :param annotator_series: column of annotator IDs
     :param overlap_series: column of vertical overlaps
     :return: column of line numbers
@@ -315,7 +321,7 @@ def regex_filter_row(row: pd.Series, filters0: Dict[int, re.Pattern]) -> bool:
     pattern = filters0.get(workflow_id)
     if pattern:
         return bool(pattern.fullmatch(text))
-    # pass if no filter given
+    # pass if there is no filter for the given workflow
     return True
 
 
