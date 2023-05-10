@@ -27,6 +27,12 @@ MORE_MIN_OVERLAP = 0.1
 WHITESPACE = re.compile(r'\s+')
 FILENAME_PATTERN = re.compile(r'\d+_(\S+)_(\d+)\.\w+')
 
+TAG_PURGE = re.compile(r'[\[{][^[{]*[}\]]')
+TAG_MATCH = re.compile(r'[\[{\]}]')
+SMART_SINGLE_QUOTE = re.compile('[\u2018\u2019]')
+SMART_DOUBLE_QUOTE = re.compile('[\u201c\u201d]')
+NA_PATTERN = re.compile(r'\s*N/|\s*', flags=re.IGNORECASE)
+
 
 def is_too_small(row: pd.Series) -> bool:
     return (row['width'] < PIXEL_CUTOFF) or (row['height'] < PIXEL_CUTOFF)
@@ -56,6 +62,33 @@ def get_vessel_page(row: pd.Series) -> pd.Series:
     else:
         result = [None, None]
     return pd.Series(data=result, index=['vessel', 'vessel_page'])
+
+
+def clean_text(s0: str) -> str:
+    # Genuine empty strings need to be changed to one space to prevent automatic
+    # conversion to NaN through CSV interchange and to allow HTR to work.
+    if not s0:
+        return ' '
+    # literal "N/A", which pandas turns into NaN
+    if NA_PATTERN.fullmatch(s0):
+        return ' '
+    # trim whitespace and check again
+    s1 = WHITESPACE.sub(' ', s0.strip())
+    s1 = s1 or ' '
+    # Some input contains literally "N/A", which pandas turns into Nan
+    # ignoring this for now
+    if TAG_MATCH.search(s1):
+        s1 = clean_tags(s1)
+    # If tag removal leaves an empty string, leave it empty so it will be
+    # Nan and ignored later
+    # replace smart quotes
+    s1 = SMART_SINGLE_QUOTE.sub("'", s1)
+    s1 = SMART_DOUBLE_QUOTE.sub('"', s1)
+    return s1
+
+
+def clean_tags(s0: str) -> str:
+    return TAG_PURGE.sub('', s0)
 
 
 def get_exclusions(config0) -> set:
@@ -142,6 +175,8 @@ def basic_cleaning(dataframe: pd.DataFrame, exclusions0: set, filters0: dict):
     # Note: the text_clean column contains a single space where the exported text is blank
     # but is empty (NaN here) where it ended up empty after stripping tags.
     # TODO eventually: use the muster date tasks instead of dropping them
+    # Now cleaning text here rather than in convert_classifications
+    dataframe.loc[:, 'text_clean'] = dataframe['text'].apply(clean_text)
     dataframe.dropna(axis=0, how='any', inplace=True, subset=['left', 'right', 'top', 'bottom', 'text_clean',
                                                               'subject_id', 'workflow_id', 'annotator', 'task'])
     clean_rows = dataframe.shape[0]

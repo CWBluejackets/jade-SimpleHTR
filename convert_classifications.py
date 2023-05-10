@@ -13,15 +13,10 @@ import pandas as pd
 
 DEFAULT_OUTPUT_FILENAME = os.path.join(os.environ['HOME'], 'output.csv')
 TASK_RE = re.compile(r'T(\d+)')
-TAG_PURGE = re.compile(r'[\[{][^[{]*[}\]]')
-TAG_MATCH = re.compile(r'[\[{\]}]')
-SMART_SINGLE_QUOTE = re.compile('[\u2018\u2019]')
-SMART_DOUBLE_QUOTE = re.compile('[\u201c\u201d]')
-NA_PATTERN = re.compile(r'\s*N/|\s*', flags=re.IGNORECASE)
 
 # output format CSV
 COLUMNS = ['subject_id', 'classification_id', 'workflow_id', 'annotator', 'filename',
-           'finished_str', 'task', 'x', 'y', 'width', 'height', 'text', 'text_clean',
+           'finished_str', 'task', 'x', 'y', 'width', 'height', 'text',
            'left', 'right', 'top', 'bottom']
 
 WHITESPACE = re.compile(r'\s+')
@@ -48,33 +43,6 @@ def add_coordinates(row0):
     else:
         top, bottom = None, None
     return row0 + [left, right, top, bottom]
-
-
-def clean_string(s0: str) -> str:
-    # Genuine empty strings need to be changed to one space to prevent automatic
-    # conversion to NaN through CSV interchange and to allow HTR to work.
-    if not s0:
-        return ' '
-    # literal "N/A", which pandas turns into NaN
-    if NA_PATTERN.fullmatch(s0):
-        return ' '
-    # trim whitespace and check again
-    s1 = WHITESPACE.sub(' ', s0.strip())
-    s1 = s1 or ' '
-    # Some input contains literally "N/A", which pandas turns into Nan
-    # ignoring this for now
-    if TAG_MATCH.search(s1):
-        s1 = clean_tags(s1)
-    # If tag removal leaves an empty string, leave it empty so it will be
-    # Nan and ignored later
-    # replace smart quotes
-    s1 = SMART_SINGLE_QUOTE.sub("'", s1)
-    s1 = SMART_DOUBLE_QUOTE.sub('"', s1)
-    return s1
-
-
-def clean_tags(s0: str) -> str:
-    return TAG_PURGE.sub('', s0)
 
 
 def convert_t_code(task_id):
@@ -104,7 +72,7 @@ def process_row(row0: pd.Series):
     for annotation in annotations:
         partial_results = process_annotation(annotation)
         for partial in partial_results:
-            # partial = task, x, y, width, height, text, text_clean,
+            # partial = task, x, y, width, height, text,
             full_result = [subject_id, classification_id, workflow_id, annotator,
                            filename, finished_str] + partial
             results0.append(full_result)
@@ -118,11 +86,11 @@ def process_annotation(annotation):
     """
     task_str = annotation.get('task', 'MISSING0')
     value = annotation.get('value')
-    # task, x, y, width, height, text, text_clean
+    # task, x, y, width, height, text
     if value is None:
-        results1 = [[task_str, None, None, None, None, None, ' ']]
+        results1 = [[task_str, None, None, None, None, None]]
     elif isinstance(value, str):
-        results1 = [[task_str, None, None, None, None, value, clean_string(value)]]
+        results1 = [[task_str, None, None, None, None, value]]
     # otherwise, it should be a list
     else:
         results1 = []
@@ -142,7 +110,7 @@ def process_sub_value(item):
         height = item1.get('height')
         for detail in item1.get('details', []):
             value = detail.get('value')
-            result1 = [task_str, x, y, width, height, value, clean_string(value)]
+            result1 = [task_str, x, y, width, height, value]
             results1.append(result1)
     return results1
 
