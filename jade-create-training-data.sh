@@ -39,6 +39,6 @@ mkdir -vp "${training_directory}"
 echo
 
 python3 create_training_data.py \
-        -c config-jade2.json \
-        -f filters.json
-
+        -c config-jade2.json #\
+#        -f filters.json
+# filtering done in adjudicate now
