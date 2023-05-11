@@ -68,7 +68,7 @@ class DataLoaderIAM:
                 # 1 word(s)
 
                 local_filename = line_split[0]
-                file_name = data_dir / 'img' / local_filename
+                file_name = data_dir / local_filename
                 # sometimes the training data includes a correct empty string
                 if len(line_split) == 2:
                     gt_text = line_split[1]
