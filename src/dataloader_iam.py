@@ -34,13 +34,14 @@ class DataLoaderIAM:
     """
 
     def __init__(self,
-                 data_dir: Path,
+                 data_file: Path,
                  batch_size: int,
                  data_split: float = 0.95,
                  fast: bool = True) -> None:
         """Loader for dataset."""
 
-        assert data_dir.exists()
+        assert data_file.exists()
+        data_dir = data_file.dirname()
 
         self.fast = fast
         if fast:
@@ -53,7 +54,7 @@ class DataLoaderIAM:
 
         chars = set()
 
-        with open(data_dir / 'words.txt') as f:
+        with open(data_file) as f:
             for line in f:
                 # ignore empty and comment lines
                 line = line.strip()
@@ -67,7 +68,7 @@ class DataLoaderIAM:
                 # 1 word(s)
 
                 local_filename = line_split[0]
-                file_name = data_dir / 'img' / local_filename
+                file_name = data_dir / local_filename
                 # sometimes the training data includes a correct empty string
                 if len(line_split) == 2:
                     gt_text = line_split[1]
