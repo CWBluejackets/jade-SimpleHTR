@@ -27,7 +27,6 @@ HTR_DIR="${HOME}/bluejackets/jade-SimpleHTR"
 source activate simplehtr1
 echo "environment activated"
 echo
-cd "${HTR_DIR}/src" || exit 99
 
 # https://www.golinuxcloud.com/bash-getopts/
 # https://www.computerhope.com/unix/bash/getopts.htm
@@ -38,7 +37,7 @@ cd "${HTR_DIR}/src" || exit 99
 # -a -> --augment
 # -d -> --debug_dir DIR
 # required
-# -t 22014_1.00 = training data subdirectory
+# -t 22014_1.00/words.txt = training control file
 
 OPTIONS="--mode train --batch_size 500 --early_stopping 15"
 
@@ -61,7 +60,8 @@ do
       echo "Debug: ${DEBUG_DIR}"
       ;;
     t)
-      TRAINING_SUBDIR="${OPTARG}"
+      # shellcheck disable=SC2006
+      TRAINING_FILE=$(realpath "${OPTARG}")
       ;;
     *)
       echo "invalid option: ${option}"
@@ -69,15 +69,16 @@ do
   esac
 done
 
-TRAINING_DIR="${HOME}/bluejackets/training_data/${TRAINING_SUBDIR}"
 MODEL_DIR="${HOME}/bluejackets/models/${SLURM_JOB_ID}"
 mkdir -vp "${MODEL_DIR}"
 
-echo "Training: ${TRAINING_DIR}"
+echo "Training: ${TRAINING_FILE}"
 echo "Model: ${MODEL_DIR}"
 echo
 
-COMMAND="python3 main.py ${OPTIONS} --data_dir ${TRAINING_DIR} --model_dir ${MODEL_DIR}"
+cd "${HTR_DIR}/src" || exit 99
+
+COMMAND="python3 main.py ${OPTIONS} --data_file ${TRAINING_FILE} --model_dir ${MODEL_DIR}"
 echo "${COMMAND}"
 echo
 ${COMMAND}
