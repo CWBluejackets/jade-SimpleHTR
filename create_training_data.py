@@ -15,6 +15,11 @@ import pandas as pd
 from PIL import Image
 from pandas import Series, DataFrame
 
+TYPE_SPEC = {'annotator': 'string', 'decision': 'string', 'decision1': 'string',
+             'decision_type': 'string', 'filename': 'string',
+             'text': 'string', 'text_clean': 'string', 'text_median': 'string',
+             'vessel': 'string'}
+
 
 def get_jpg_filenames(small_jpg_directory: str, big_jpg_directory: str):
     """
@@ -432,6 +437,8 @@ if __name__ == "__main__":
     holdout = config.get('holdout', 0)
 
     logging.info(f'Loading {input_filename}')
-    big_df = pd.read_csv(input_filename)
+    big_df = pd.read_csv(input_filename, dtype=TYPE_SPEC)
+
+    # ,annotator,bottom,classification_id,decision,decision1,decision_type,exclude,filename,finished_str,height,left,levenshtein,line,mode_votes,prev_bottom,prev_top,regex_ok,right,subject_id,task,text,text_clean,text_median,too_small,top,total_annotations,total_votes,v_overlap,vessel,vessel_page,width,workflow_id,wrong_column,x,y
     log_image_problems(jpg_index, surplus_big_images, missing_big_images, big_df, output_directory)
     process_big_df(big_df, output_directory, jpg_index, max_size, samples, filters, holdout)

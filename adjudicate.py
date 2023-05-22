@@ -507,7 +507,8 @@ if __name__ == "__main__":
     exclusions = get_exclusions(config)
 
     logging.info(f'Loading {input_filename}')
-    big_df = pd.read_csv(input_filename)
+    big_df = pd.read_csv(input_filename, dtype={'text': 'string', 'annotator': 'string',
+                                                'filename': 'string'})
     big_df = process_big_df(big_df, exclusions, compiled_filters)
 
     # sort the output to make it easy to inspect the voting and overlaps
