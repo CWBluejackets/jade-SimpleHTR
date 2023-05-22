@@ -144,7 +144,7 @@ def parse_args() -> argparse.Namespace:
                         default='bestpath')
     parser.add_argument('--batch_size', help='Batch size.',
                         type=int, default=100)
-    parser.add_argument('--data_dir', help='Directory containing IAM dataset.',
+    parser.add_argument('--data_file', help='words file pointing to images',
                         type=Path, required=False)
     parser.add_argument('--fast', help='Load samples from LMDB.',
                         default=False, action='store_true')
@@ -187,7 +187,7 @@ def main():
 
     # train the model
     if args.mode == 'train':
-        loader = DataLoaderIAM(args.data_dir, args.batch_size, fast=args.fast)
+        loader = DataLoaderIAM(args.data_file, args.batch_size, fast=args.fast)
 
         # when in line mode, take care to have a whitespace in the char list
         char_list = loader.char_list
