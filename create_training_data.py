@@ -204,7 +204,7 @@ def generate_words_row(png_filename, row: Series, text_column: str):
     """
     # refer to SimpleHTR.md for the meaning of these
     text = row[text_column]
-    line = f'{png_filename} {text}\n'
+    line = f'img/{png_filename} {text}\n'
     return line
 
 
