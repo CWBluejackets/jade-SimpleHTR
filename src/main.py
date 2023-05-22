@@ -1,16 +1,19 @@
 import argparse
 import json
+import math
 import os
 from typing import Tuple, List
 
+import Levenshtein
 import cv2
 import editdistance
+import pandas as pd
 from path import Path
 
-from dataloader_iam import DataLoaderIAM, Batch
+import locations
+from dataloader_iam import DataLoaderIAM, Batch, convert_fractions
 from model import Model, DecoderType
 from preprocessor import Preprocessor
-import locations
 
 
 def get_img_height() -> int:
@@ -132,13 +135,65 @@ def infer(model: Model, fn_img: Path) -> None:
     recognized, probability = model.infer_batch(batch, True)
     print(f'Recognized: "{recognized[0]}"')
     print(f'Probability: {probability[0]}')
+    return
+
+
+def apply(model: Model, control_file: Path, output_file: Path) -> None:
+    results = []
+    img_dir = os.path.join(os.path.dirname(control_file), 'img')
+    with open(control_file, 'r') as f:
+        for line in f.readlines():
+            line_split = line.strip().split(' ', maxsplit=1)
+            img_filename = line_split[0]
+            # sometimes the training data includes a correct empty string
+            if len(line_split) == 2:
+                label = line_split[1]
+                if locations.get_convert_fractions():
+                    label = convert_fractions(label)
+            else:
+                label = ' '
+
+            img_path = os.path.join(img_dir, img_filename)
+            img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+            preprocessor = Preprocessor(get_img_size(), dynamic_width=True, padding=16)
+            img = preprocessor.process_img(img)
+            batch = Batch([img], None, 1)
+            recognized, probability = model.infer_batch(batch, True)
+            similarity = Levenshtein.ratio(label, recognized[0])
+            distance = Levenshtein.distance(label, recognized[0])
+            print(f'{label} -> {recognized[0]} probability {probability[0]:.3f} similarity {similarity:.3f}')
+            results.append([img_filename, label, recognized[0], probability[0], similarity,
+                            label == recognized[0], distance, len(label)])
+    df = pd.DataFrame.from_records(results, columns=['file', 'label', 'output', 'probability', 'similarity',
+                                                     'correct', 'distance', 'length'])
+    df['logprob'] = df['probability'].apply(math.log1p)
+    print()
+    print(str(df.describe()))
+    print()
+    print('PEARSON')
+    print(str(df[['probability', 'logprob', 'similarity', 'distance', 'length']].corr('pearson')))
+    print()
+    word_accuracy = df['correct'].value_counts()[True] / df['correct'].size
+    print('WORD ACCURACY')
+    print(f'{word_accuracy}')
+    print(f'{word_accuracy:.1%}')
+    print()
+    character_error = df['distance'].sum() / df['length'].sum()
+    print('CHARACTER ERROR')
+    print(f'{character_error}')
+    print(f'{character_error:.1%}')
+    print()
+    if output_file:
+        print(f'Writing to {output_file}')
+        df.to_csv(output_file)
+    return
 
 
 def parse_args() -> argparse.Namespace:
     """Parses arguments from the command line."""
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--mode', choices=['train', 'validate', 'infer'],
+    parser.add_argument('--mode', choices=['train', 'validate', 'infer', 'apply'],
                         default='infer')
     parser.add_argument('--decoder', choices=['bestpath', 'beamsearch', 'wordbeamsearch'],
                         default='bestpath')
@@ -154,6 +209,8 @@ def parse_args() -> argparse.Namespace:
                         action='store_true', default=False)
     parser.add_argument('--img_file', help='Image used for inference.',
                         type=Path, default='../data/word.png')
+    parser.add_argument('--img_list_file', help='control file for apply mode',
+                        type=Path)
     parser.add_argument('--early_stopping', help='Early stopping epochs.',
                         type=int, default=25)
     parser.add_argument('--dump', help='Dump output of NN to CSV file(s).',
@@ -166,7 +223,8 @@ def parse_args() -> argparse.Namespace:
                         type=Path, default=None)
     parser.add_argument('--high_contrast', help='normalize image matrix to maximum contrast',
                         action='store_true', default=False)
-
+    parser.add_argument('--output_file', help='output file for apply mode',
+                        type=Path, default=None)
     return parser.parse_args()
 
 
@@ -207,7 +265,7 @@ def main():
 
     # evaluate it on the validation set
     elif args.mode == 'validate':
-        loader = DataLoaderIAM(args.data_dir, args.batch_size, fast=args.fast)
+        loader = DataLoaderIAM(args.data_file, args.batch_size, fast=args.fast)
         model = Model(char_list_from_file(), decoder_type, must_restore=True)
         validate(model, loader, args.line_mode)
 
@@ -215,6 +273,10 @@ def main():
     elif args.mode == 'infer':
         model = Model(char_list_from_file(), decoder_type, must_restore=True, dump=args.dump)
         infer(model, args.img_file)
+
+    elif args.mode == 'apply':
+        model = Model(char_list_from_file(), decoder_type, must_restore=True, dump=args.dump)
+        apply(model, args.img_list_file, args.output_file)
 
 
 if __name__ == '__main__':
