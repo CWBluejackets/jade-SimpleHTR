@@ -20,11 +20,12 @@ PIXEL_CUTOFF = 5.0
 # Line separation (determined empirically from the histogram)
 VERTICAL_OVERLAP_THRESHOLD = 0.6
 
-# Wrong column detection
+# Wrong column detection: minimum overlap to keep both of two annotators
 TWOFER_MIN_OVERLAP = 0.7
+# Wrong column detection: minimum overlap for one of more than two annotators
 MORE_MIN_OVERLAP = 0.1
 
-WHITESPACE = re.compile(r'\s+')
+# used to extract vessel name and page sequence from JPG filename
 FILENAME_PATTERN = re.compile(r'\d+_(\S+)_(\d+)\.\w+')
 
 # Patterns for cleaning manual annotations
@@ -34,10 +35,12 @@ SMART_SINGLE_QUOTE = re.compile('[\u2018\u2019]')
 SMART_DOUBLE_QUOTE = re.compile('[\u201c\u201d]')
 NA_PATTERN = re.compile(r'\s*N/|\s*', flags=re.IGNORECASE)
 
+WHITESPACE = re.compile(r'\s+')
+
 
 def is_too_small(row: pd.Series) -> bool:
     """
-    Is the annotated box unreasonably small?
+    Is the annotated image box unreasonably small?
     :param row:
     :return:
     """
@@ -55,7 +58,7 @@ def clean_median(s0: str) -> str:
     return s1 or ' '
 
 
-def get_vessel_page(row: pd.Series) -> pd.Series:
+def get_vessel_and_page(row: pd.Series) -> pd.Series:
     """
     Extract the vessel name and page sequence from the image filename
     :param row: dataframe row including 'filename' column
@@ -71,6 +74,11 @@ def get_vessel_page(row: pd.Series) -> pd.Series:
 
 
 def clean_text(s0: str) -> str:
+    """
+    Clean manual annotations (before voting and generating medians)
+    :param s0: manual annotation
+    :return: cleaned form
+    """
     if pd.isnull(s0):
         return s0
     # Genuine empty strings need to be changed to one space to prevent automatic
@@ -100,7 +108,7 @@ def clean_tags(s0: str) -> str:
 
 def get_exclusions(config0) -> set:
     """
-    Load the exclusion file if present and return the known bad annotation sets
+    Load the external exclusion file if present and return the known bad annotation sets
     :param config0:
     :return: set of triples (subject_id, workflow_id, annotator)
     """
@@ -149,7 +157,7 @@ def detect_wrong_columns(muster_sheet: pd.DataFrame):
         for annotator, (left, right) in annotator_ranges.items():
             others_left = min([annotator_ranges[x][0] for x in annotator_set - {annotator}])
             others_right = max([annotator_ranges[x][1] for x in annotator_set - {annotator}])
-            overlap = get_overlap_proportion(left, right, others_left, others_right)
+            overlap = get_relative_proportion(left, right, others_left, others_right)
             lowest_overlap = min(lowest_overlap, overlap)
             if overlap < MORE_MIN_OVERLAP:
                 wrong_annotators.add(annotator)
@@ -190,7 +198,7 @@ def basic_cleaning(dataframe: pd.DataFrame, exclusions0: set, filters0: dict):
     clean_rows = dataframe.shape[0]
     logging.warning(f'Dropped NaN rectangles/text/IDs; filtered rows {clean_rows}')
     # add vessel names and page numbers extracted from image filenames
-    dataframe.loc[:, ['vessel', 'vessel_page']] = dataframe.apply(get_vessel_page, axis=1)
+    dataframe.loc[:, ['vessel', 'vessel_page']] = dataframe.apply(get_vessel_and_page, axis=1)
     # force ID numbers and page numbers to int
     dataframe.loc[:, 'workflow_id'] = pd.to_numeric(dataframe['workflow_id'], downcast='integer')
     dataframe.loc[:, 'subject_id'] = pd.to_numeric(dataframe['subject_id'], downcast='integer')
@@ -200,12 +208,12 @@ def basic_cleaning(dataframe: pd.DataFrame, exclusions0: set, filters0: dict):
     # apply regex filters according to workflow
     dataframe.loc[:, 'regex_ok'] = dataframe.apply(lambda row: regex_filter_row(row, filters0), axis=1)
     # flag manual exclusions and small boxes
-    dataframe.loc[:, 'exclude'] = dataframe.apply(lambda row: should_exclude(row, exclusions0), axis=1)
+    dataframe.loc[:, 'exclude'] = dataframe.apply(lambda row: exclude_manually(row, exclusions0), axis=1)
     dataframe.loc[:, 'too_small'] = dataframe.apply(is_too_small, axis=1)
     return dataframe, clean_rows, start_time
 
 
-def make_levenshtein_series(text_series: pd.Series):
+def make_levenshtein_similarity_series(text_series: pd.Series):
     """
     Generate a column of Levenshtein similarity ratios
     :param text_series: column of strings
@@ -216,7 +224,7 @@ def make_levenshtein_series(text_series: pd.Series):
     return pd.Series(output, index=text_series.index)
 
 
-def make_line_series(overlap_series: pd.Series, annotator_series: pd.Series) -> pd.Series:
+def make_line_number_series(overlap_series: pd.Series, annotator_series: pd.Series) -> pd.Series:
     """
     Generate line numbers for one muster sheet (subject-workflow combination, 1 or more annotators)
     :param annotator_series: column of annotator IDs
@@ -238,6 +246,11 @@ def make_line_series(overlap_series: pd.Series, annotator_series: pd.Series) -> 
 
 
 def add_line_numbers(muster_sheet: pd.DataFrame):
+    """
+    Add line numbers to one subject-workflow combination
+    :param muster_sheet:
+    :return:
+    """
     # discard wrong-column rows and manually excluded annotation sets before numbering
     muster_sheet = muster_sheet[~ (muster_sheet['wrong_column'] | muster_sheet['exclude'])]
 
@@ -249,10 +262,10 @@ def add_line_numbers(muster_sheet: pd.DataFrame):
 
         muster_sheet['prev_top'] = muster_sheet['top'].rolling(window=2).min()
         muster_sheet['prev_bottom'] = muster_sheet['bottom'].rolling(window=2).min()
-        muster_sheet['levenshtein'] = make_levenshtein_series(muster_sheet['text_clean'])
+        muster_sheet['levenshtein'] = make_levenshtein_similarity_series(muster_sheet['text_clean'])
         muster_sheet['v_overlap'] = muster_sheet.apply(
-            lambda row: get_overlap_proportion(row['top'], row['bottom'], row['prev_top'], row['prev_bottom']), axis=1)
-        muster_sheet['line'] = make_line_series(muster_sheet['v_overlap'], muster_sheet['annotator'])
+            lambda row: get_relative_proportion(row['top'], row['bottom'], row['prev_top'], row['prev_bottom']), axis=1)
+        muster_sheet['line'] = make_line_number_series(muster_sheet['v_overlap'], muster_sheet['annotator'])
         logging.warning(f'Lines 0 to {muster_sheet["line"].max()}')
         rejected = False
     else:
@@ -261,14 +274,21 @@ def add_line_numbers(muster_sheet: pd.DataFrame):
     return muster_sheet, rejected
 
 
-def should_exclude(row: pd.Series, exclusions0: set) -> bool:
+def exclude_manually(row: pd.Series, exclusions0: set) -> bool:
+    """
+    Is this subject-workflow-annotator combination in the manual exclusion list?
+    :param row:
+    :param exclusions0:
+    :return:
+    """
     key = (row['subject_id'], row['workflow_id'], row['annotator'])
     return key in exclusions0
 
 
 def process_big_df(dataframe: pd.DataFrame, exclusions0, filters0) -> pd.DataFrame:
     """
-    Analyse the input file, number the lines, carry out voting
+    Analyse the input file; split into subject-workflow combinations; number the lines and carry out voting;
+    copy everything back onto the dataframe.
     :param filters0: dict workflow int -> compiled regex
     :param exclusions0:
     :param dataframe: the big CSV unpacked and repacked from Zooniverse exports
@@ -319,6 +339,12 @@ def process_big_df(dataframe: pd.DataFrame, exclusions0, filters0) -> pd.DataFra
 
 
 def regex_filter_row(row: pd.Series, filters0: Dict[int, re.Pattern]) -> bool:
+    """
+    Does this cleaned text pass the regex filter for the workflow?
+    :param row:
+    :param filters0:
+    :return:
+    """
     text = row['text_clean']
     workflow_id = row['workflow_id']
     pattern = filters0.get(workflow_id)
@@ -330,6 +356,15 @@ def regex_filter_row(row: pd.Series, filters0: Dict[int, re.Pattern]) -> bool:
 
 def update_progress(rows_done: int, total_rows: int,
                     sheets_done: int, total_sheets: int, start_time: float):
+    """
+    Log a rough indication of progress and time left to finish.
+    :param rows_done:
+    :param total_rows:
+    :param sheets_done:
+    :param total_sheets:
+    :param start_time:
+    :return:
+    """
     sheet_ratio = sheets_done / total_sheets
     row_ratio = rows_done / total_rows
     current_time = time.time()
@@ -342,6 +377,11 @@ def update_progress(rows_done: int, total_rows: int,
 
 
 def log_decision_counts(decision_counter: dict):
+    """
+    Log a summary of the voting results over the whole thing.
+    :param decision_counter:
+    :return:
+    """
     for vote_type, stuff in decision_counter.items():
         for vote_size, nbr in stuff.most_common():
             logging.warning(f'Decision type {vote_type} from {vote_size} = {nbr}')
@@ -350,11 +390,18 @@ def log_decision_counts(decision_counter: dict):
 
 def vote_line_by_line(muster_key: tuple, muster_sheet: pd.DataFrame,
                       decision_counter: dict) -> pd.DataFrame:
+    """
+    Carry out the voting for a subject-workflow combination.
+    :param muster_key:
+    :param muster_sheet:
+    :param decision_counter:
+    :return:
+    """
     line_grouping = muster_sheet.groupby(by=['line'])
     for line in line_grouping.groups.keys():
         muster_line = line_grouping.get_group(line)
         key_triple = (muster_key[0], muster_key[1], line)
-        muster_line = decide_line(muster_line, key_triple, decision_counter)
+        muster_line = vote_one_line(muster_line, key_triple, decision_counter)
         # Copy the new columns back to the output
         muster_sheet = muster_sheet.combine_first(
             muster_line[['decision', 'decision1', 'text_median', 'decision_type', 'mode_votes',
@@ -362,15 +409,16 @@ def vote_line_by_line(muster_key: tuple, muster_sheet: pd.DataFrame,
     return muster_sheet
 
 
-def decide_line(muster_line: pd.DataFrame, key_triple: tuple, decision_counter: dict) -> pd.DataFrame:
+def vote_one_line(muster_line: pd.DataFrame, key_triple: tuple, decision_counter: dict) -> pd.DataFrame:
     """
-    Carry out the voting on one subject/workflow/line combination
+    Carry out the voting on one subject-workflow-line combination
     :param key_triple: for logging
     :param muster_line: one subject-workflow-line combination
     :param decision_counter: to keep track of decisions by type and size
     :return:
     """
-    # Do not count regex_ok False annotations as votes
+    # Do not count regex_ok==False annotations as votes --- but they can be used
+    # for JPG boxes if there are regex_ok==True annotations for the same line of the muster sheet
     total_annotations = muster_line.shape[0]
     muster_line['total_annotations'] = total_annotations
     votable = muster_line[muster_line['regex_ok']]
@@ -417,6 +465,7 @@ def decide_line(muster_line: pd.DataFrame, key_triple: tuple, decision_counter: 
         muster_line['decision_type'] = decision_type
         muster_line['mode_votes'] = mode_votes
         muster_line['total_votes'] = total_votes
+    # TODO make this more efficient by returning pd.Series and using df.apply(...) in the calling function
     return muster_line
 
 
@@ -432,7 +481,7 @@ def get_absolute_overlap(left0, right0, left1, right1):
     return max(0, min(right0, right1) - max(left0, left1))
 
 
-def get_overlap_proportion(this_left, this_right, reference_left, reference_right):
+def get_relative_proportion(this_left, this_right, reference_left, reference_right):
     """
     Calculate the proportion of "this" width covered by the "reference"
     :param this_left: left or top
