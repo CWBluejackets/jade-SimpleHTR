@@ -258,8 +258,16 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
     return
 
 
-def save_words_file(directory, suffix: str, data: list):
-    filename = os.path.join(directory, f'words_{suffix}.txt')
+def save_words_file(directory, infix: str, data: list):
+    """
+    Write the data to directory/words_INFIX.txt; assume that the
+    lines of data already have newlines.
+    :param directory: output directory
+    :param infix: filename infix
+    :param data: list of lines
+    :return:
+    """
+    filename = os.path.join(directory, f'words_{infix}.txt')
     with open(filename, 'w') as f0:
         for line in sorted(data):
             f0.write(line)
