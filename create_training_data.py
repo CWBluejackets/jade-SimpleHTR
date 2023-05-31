@@ -21,7 +21,7 @@ TYPE_SPEC = {'annotator': 'string', 'decision': 'string', 'decision1': 'string',
              'vessel': 'string'}
 
 
-def get_jpg_filenames(small_jpg_directory: str, big_jpg_directory: str, require_big: bool):
+def search_jpgs(small_jpg_directory: str, big_jpg_directory: str, require_big: bool):
     """
     Find and index all the *.jpg files in the specified directories.
     :param require_big: only use images with a usable big JPG
@@ -112,11 +112,10 @@ def log_image_problems(jpg_index0: dict, surplus_big_jpgs: list, missing_big_jpg
 
 
 def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict, max_size0: int, samples0: list,
-                   filters0: dict, holdout0: float, ignore_small_jpgs0, ignore_median0):
+                   filters0: dict, holdout0: float, ignore_median0):
     """
     Process the dataframe from our intermediate CSV format to generate training data
     :param ignore_median0:
-    :param ignore_small_jpgs0:
     :param holdout0:
     :param filters0: map of workflow -> regex
     :param samples0:
@@ -420,17 +419,15 @@ if __name__ == "__main__":
     require_big_jpgs = config.get('require_big_jpgs', False)
     ignore_median = config.get('ignore_median', False)
 
-    agreed_filename = config['agreed_file']
+    logging.info(f'Option: require big JPGs is {require_big_jpgs}')
+    logging.info(f'Option: ignore Levenshtein median is {ignore_median}')
+
+    input_filename = config['agreed_file']
     output_directory = config['training_directory']
 
-    if os.path.exists(agreed_filename):
-        input_filename = agreed_filename
-    else:
-        input_filename = config['intermediate_file']
-
-    jpg_index, surplus_big_images, missing_big_images = get_jpg_filenames(config['jpg_directory'],
-                                                                          config.get('big_jpg_directory'),
-                                                                          require_big_jpgs)
+    jpg_index, surplus_big_images, missing_big_images = search_jpgs(config['jpg_directory'],
+                                                                    config.get('big_jpg_directory'),
+                                                                    require_big_jpgs)
 
     # TODO remove filters?
     filters = {}
@@ -455,6 +452,7 @@ if __name__ == "__main__":
     logging.info(f'Loading {input_filename}')
     big_df = pd.read_csv(input_filename, dtype=TYPE_SPEC)
 
-    log_image_problems(jpg_index, surplus_big_images, missing_big_images, big_df, output_directory)
-    process_big_df(big_df, output_directory, jpg_index, max_size, samples, filters, holdout,
-                   require_big_jpgs, ignore_median)
+    log_image_problems(jpg_index, surplus_big_images, missing_big_images,
+                       big_df, output_directory)
+    process_big_df(big_df, output_directory, jpg_index, max_size, samples, filters,
+                   holdout, ignore_median)
