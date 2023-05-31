@@ -31,7 +31,7 @@ echo
 # https://www.golinuxcloud.com/bash-getopts/
 # https://www.computerhope.com/unix/bash/getopts.htm
 
-# OPTIONS passed to SimpleHTR
+# OPTIONS passed to SimpleHTR_train
 # -h -> --high_contrast
 # -c -> --convert_fractions
 # -a -> --augment

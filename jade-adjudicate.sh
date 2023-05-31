@@ -10,7 +10,7 @@
 #SBATCH --partition=small
 # time limit on big is 48h <http://docs.jade.ac.uk/en/latest/jade/scheduler/index.html#submitting-jobs-with-the-command-sbatch>
 
-#SBATCH --job-name=SimpleHTR
+#SBATCH --job-name=adjudicate
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=a.funk@sheffield.ac.uk
 
