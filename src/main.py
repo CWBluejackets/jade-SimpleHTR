@@ -140,7 +140,7 @@ def infer(model: Model, fn_img: Path) -> None:
 
 def apply(model: Model, control_file: Path, output_file: Path) -> None:
     results = []
-    img_dir = os.path.join(os.path.dirname(control_file), 'img')
+    main_dir = os.path.dirname(control_file)
     with open(control_file, 'r') as f:
         for line in f.readlines():
             line_split = line.strip().split(' ', maxsplit=1)
@@ -153,7 +153,9 @@ def apply(model: Model, control_file: Path, output_file: Path) -> None:
             else:
                 label = ' '
 
-            img_path = os.path.join(img_dir, img_filename)
+            # filename now includes "img/" subdir
+            img_path = os.path.join(main_dir, img_filename)
+            # warning: cv2 does not trap missing files
             img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
             preprocessor = Preprocessor(get_img_size(), dynamic_width=True, padding=16)
             img = preprocessor.process_img(img)
@@ -173,15 +175,16 @@ def apply(model: Model, control_file: Path, output_file: Path) -> None:
     print('PEARSON')
     print(str(df[['probability', 'logprob', 'similarity', 'distance', 'length']].corr('pearson')))
     print()
-    word_accuracy = df['correct'].value_counts()[True] / df['correct'].size
-    print('WORD ACCURACY')
-    print(f'{word_accuracy}')
-    print(f'{word_accuracy:.1%}')
-    print()
     character_error = df['distance'].sum() / df['length'].sum()
     print('CHARACTER ERROR')
     print(f'{character_error}')
     print(f'{character_error:.1%}')
+    print()
+    # TODO default to 0 if True key missing
+    word_accuracy = df['correct'].value_counts()[True] / df['correct'].size
+    print('WORD ACCURACY')
+    print(f'{word_accuracy}')
+    print(f'{word_accuracy:.1%}')
     print()
     if output_file:
         print(f'Writing to {output_file}')
@@ -225,6 +228,7 @@ def parse_args() -> argparse.Namespace:
                         action='store_true', default=False)
     parser.add_argument('--output_file', help='output file for apply mode',
                         type=Path, default=None)
+
     return parser.parse_args()
 
 
