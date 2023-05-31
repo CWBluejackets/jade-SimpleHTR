@@ -21,9 +21,10 @@ TYPE_SPEC = {'annotator': 'string', 'decision': 'string', 'decision1': 'string',
              'vessel': 'string'}
 
 
-def get_jpg_filenames(small_jpg_directory: str, big_jpg_directory: str):
+def get_jpg_filenames(small_jpg_directory: str, big_jpg_directory: str, require_big: bool):
     """
     Find and index all the *.jpg files in the specified directories.
+    :param require_big: only use images with a usable big JPG
     :param big_jpg_directory: contains the original scanned JPGs
     :param small_jpg_directory: contains the JPGs reduced below 1 MB for Zooniverse
     :return: index from basename to tuple[2] of full paths with None
@@ -45,12 +46,12 @@ def get_jpg_filenames(small_jpg_directory: str, big_jpg_directory: str):
     else:
         big_index = dict()
 
-    # filter out big JPGs with the wrong aspect ratios
-    index = {key: (small_path, big_index.get(key)) for key, small_path in small_index.items()
-             if aspect_ratios_match(small_path, big_index.get(key))}
-
     surplus_big_jpgs = sorted(big_index.keys() - small_index.keys())
     missing_big_jpgs = sorted(small_index.keys() - big_index.keys())
+
+    # filter out big JPGs with the wrong aspect ratios
+    index = {key: (small_index.get(key), big_index.get(key)) for key in small_index.keys()
+             if aspect_ratios_match(small_index.get(key), big_index.get(key), require_big)}
     return index, surplus_big_jpgs, missing_big_jpgs
 
 
@@ -110,10 +111,12 @@ def log_image_problems(jpg_index0: dict, surplus_big_jpgs: list, missing_big_jpg
     return
 
 
-def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
-                   max_size0: int, samples0: list, filters0: dict, holdout0: float):
+def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict, max_size0: int, samples0: list,
+                   filters0: dict, holdout0: float, ignore_small_jpgs0, ignore_median0):
     """
     Process the dataframe from our intermediate CSV format to generate training data
+    :param ignore_median0:
+    :param ignore_small_jpgs0:
     :param holdout0:
     :param filters0: map of workflow -> regex
     :param samples0:
@@ -126,12 +129,12 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict,
     logging.warning(f'Unfiltered rows {dataframe.shape[0]}')
 
     # Use the adjudicated data if present.
-    if 'decision1' in dataframe.columns:
-        text_column = 'decision1'
-    elif 'decision' in dataframe.columns:
+    if ignore_median0:
         text_column = 'decision'
+    elif 'decision1' in dataframe.columns:
+        text_column = 'decision1'
     else:
-        text_column = 'text_clean'
+        text_column = 'decision'
 
     # delete the rows without rectangles or text
     dataframe.dropna(axis=0, how='any', inplace=True, subset=['x', 'y', 'width', 'height', text_column])
@@ -335,7 +338,7 @@ def save_shtr_files(cropped_image: Image, row: Series, info_file_path: str, png_
     return
 
 
-def aspect_ratios_match(small_image_path, big_image_path) -> bool:
+def aspect_ratios_match(small_image_path, big_image_path, require_big) -> bool:
     """
     Check that the small (annotated) and big (raw) JPGs have the same aspect ratio.
     :param small_image_path:
@@ -344,7 +347,7 @@ def aspect_ratios_match(small_image_path, big_image_path) -> bool:
     """
     if big_image_path is None:
         # don't try to test missing big JPGs
-        return True
+        return not require_big
     small_image = Image.open(small_image_path, 'r')
     big_image = Image.open(big_image_path, 'r')
     expected_width = big_image.width * small_image.height / big_image.height
@@ -414,8 +417,9 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.INFO,
                             format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
-    jpg_index, surplus_big_images, missing_big_images = get_jpg_filenames(config['jpg_directory'],
-                                                                          config.get('big_jpg_directory'))
+    require_big_jpgs = config.get('require_big_jpgs', False)
+    ignore_median = config.get('ignore_median', False)
+
     agreed_filename = config['agreed_file']
     output_directory = config['training_directory']
 
@@ -423,6 +427,10 @@ if __name__ == "__main__":
         input_filename = agreed_filename
     else:
         input_filename = config['intermediate_file']
+
+    jpg_index, surplus_big_images, missing_big_images = get_jpg_filenames(config['jpg_directory'],
+                                                                          config.get('big_jpg_directory'),
+                                                                          require_big_jpgs)
 
     # TODO remove filters?
     filters = {}
@@ -447,6 +455,6 @@ if __name__ == "__main__":
     logging.info(f'Loading {input_filename}')
     big_df = pd.read_csv(input_filename, dtype=TYPE_SPEC)
 
-    # ,annotator,bottom,classification_id,decision,decision1,decision_type,exclude,filename,finished_str,height,left,levenshtein,line,mode_votes,prev_bottom,prev_top,regex_ok,right,subject_id,task,text,text_clean,text_median,too_small,top,total_annotations,total_votes,v_overlap,vessel,vessel_page,width,workflow_id,wrong_column,x,y
     log_image_problems(jpg_index, surplus_big_images, missing_big_images, big_df, output_directory)
-    process_big_df(big_df, output_directory, jpg_index, max_size, samples, filters, holdout)
+    process_big_df(big_df, output_directory, jpg_index, max_size, samples, filters, holdout,
+                   require_big_jpgs, ignore_median)
