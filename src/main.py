@@ -140,7 +140,7 @@ def infer(model: Model, fn_img: Path) -> None:
 
 def apply(model: Model, control_file: Path, output_file: Path) -> None:
     results = []
-    img_dir = os.path.join(os.path.dirname(control_file), 'img')
+    main_dir = os.path.dirname(control_file)
     with open(control_file, 'r') as f:
         for line in f.readlines():
             line_split = line.strip().split(' ', maxsplit=1)
@@ -153,7 +153,9 @@ def apply(model: Model, control_file: Path, output_file: Path) -> None:
             else:
                 label = ' '
 
-            img_path = os.path.join(img_dir, img_filename)
+            # filename now includes "img/" subdir
+            img_path = os.path.join(main_dir, img_filename)
+            # warning: cv2 does not trap missing files
             img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
             preprocessor = Preprocessor(get_img_size(), dynamic_width=True, padding=16)
             img = preprocessor.process_img(img)
