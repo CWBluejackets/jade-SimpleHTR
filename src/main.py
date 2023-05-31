@@ -156,6 +156,8 @@ def apply(model: Model, control_file: Path, output_file: Path) -> None:
             # filename now includes "img/" subdir
             img_path = os.path.join(main_dir, img_filename)
             # warning: cv2 does not trap missing files
+            if not os.path.exists(img_path):
+                print(f'Warning! {img_path} does not exist')
             img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
             preprocessor = Preprocessor(get_img_size(), dynamic_width=True, padding=16)
             img = preprocessor.process_img(img)
@@ -180,8 +182,7 @@ def apply(model: Model, control_file: Path, output_file: Path) -> None:
     print(f'{character_error}')
     print(f'{character_error:.1%}')
     print()
-    # TODO default to 0 if True key missing
-    word_accuracy = df['correct'].value_counts()[True] / df['correct'].size
+    word_accuracy = df['correct'].value_counts().get(True, 0) / df['correct'].size
     print('WORD ACCURACY')
     print(f'{word_accuracy}')
     print(f'{word_accuracy:.1%}')
