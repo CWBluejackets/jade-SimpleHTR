@@ -261,7 +261,7 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
 def save_words_file(directory, infix: str, data: list):
     """
     Write the data to directory/words_INFIX.txt; assume that the
-    lines of data already have newlines.
+    lines of data already have newlines. Do NOT sort the output.
     :param directory: output directory
     :param infix: filename infix
     :param data: list of lines
@@ -269,7 +269,7 @@ def save_words_file(directory, infix: str, data: list):
     """
     filename = os.path.join(directory, f'words_{infix}.txt')
     with open(filename, 'w') as f0:
-        for line in sorted(data):
+        for line in data:
             f0.write(line)
     logging.info(f'Saved words file: {filename} with {len(data)} entries')
     return
