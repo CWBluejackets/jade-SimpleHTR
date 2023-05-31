@@ -138,7 +138,7 @@ def detect_wrong_columns(muster_sheet: pd.DataFrame):
     """
     Detect annotators working in the wrong column
     :param muster_sheet: one subject-workflow combination
-    :return: same with extra columns
+    :return: same with extra columns; boolean whether all annotators have been rejected
     """
     wrong_annotators = set()
     nbr_annotators = muster_sheet['annotator'].unique().size
@@ -147,6 +147,7 @@ def detect_wrong_columns(muster_sheet: pd.DataFrame):
     # If there are two columns with poor overlap, we assume one of them is wrong
     # but can't decide which so we mark them both for exclusion.
     if nbr_annotators > 1:
+        # key annotator -> tuple (min_left, max_right)
         annotator_ranges = dict()
         annotator_grouped = muster_sheet.groupby('annotator')
         for annotator in annotator_grouped.groups.keys():
@@ -154,9 +155,11 @@ def detect_wrong_columns(muster_sheet: pd.DataFrame):
             annotator_ranges[annotator] = (anno_df['left'].min(), anno_df['right'].max())
         annotator_set = set(annotator_ranges.keys())
         lowest_overlap = 1.0
+        # TODO maybe handle edge case with more than three annotators, two of which are wrong
         for annotator, (left, right) in annotator_ranges.items():
-            others_left = min([annotator_ranges[x][0] for x in annotator_set - {annotator}])
-            others_right = max([annotator_ranges[x][1] for x in annotator_set - {annotator}])
+            other_annotators = annotator_set - {annotator}
+            others_left = min([annotator_ranges[x][0] for x in other_annotators])
+            others_right = max([annotator_ranges[x][1] for x in other_annotators])
             overlap = get_relative_proportion(left, right, others_left, others_right)
             lowest_overlap = min(lowest_overlap, overlap)
             if overlap < MORE_MIN_OVERLAP:
@@ -313,12 +316,12 @@ def process_big_df(dataframe: pd.DataFrame, exclusions0, filters0) -> pd.DataFra
         sheet_rows = muster_sheet.shape[0]
         logging.info(f'Processing {muster_key} with {sheet_rows} rows')
 
-        muster_sheet, rejected = detect_wrong_columns(muster_sheet)
-        dataframe = dataframe.combine_first(muster_sheet[['wrong_column', 'exclude']])
+        muster_sheet, all_rejected = detect_wrong_columns(muster_sheet)
+        dataframe = dataframe.combine_first(muster_sheet[['wrong_column']])
 
         # Skip line-numbering and voting if the whole sheet is rejected (two annotators
         # with different columns).
-        if not rejected:
+        if not all_rejected:
             # Add line numbers (ignoring wrong_column annotators)
             muster_sheet, rejected1 = add_line_numbers(muster_sheet)
             if not rejected1:

@@ -173,15 +173,16 @@ def apply(model: Model, control_file: Path, output_file: Path) -> None:
     print('PEARSON')
     print(str(df[['probability', 'logprob', 'similarity', 'distance', 'length']].corr('pearson')))
     print()
-    word_accuracy = df['correct'].value_counts()[True] / df['correct'].size
-    print('WORD ACCURACY')
-    print(f'{word_accuracy}')
-    print(f'{word_accuracy:.1%}')
-    print()
     character_error = df['distance'].sum() / df['length'].sum()
     print('CHARACTER ERROR')
     print(f'{character_error}')
     print(f'{character_error:.1%}')
+    print()
+    # TODO default to 0 if True key missing
+    word_accuracy = df['correct'].value_counts()[True] / df['correct'].size
+    print('WORD ACCURACY')
+    print(f'{word_accuracy}')
+    print(f'{word_accuracy:.1%}')
     print()
     if output_file:
         print(f'Writing to {output_file}')
