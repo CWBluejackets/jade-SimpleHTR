@@ -220,6 +220,8 @@ def basic_cleaning(dataframe: pd.DataFrame, exclusions0: set, filters0: dict):
     # flag manual exclusions and small boxes
     dataframe.loc[:, 'exclude'] = dataframe.apply(lambda row: exclude_manually(row, exclusions0), axis=1)
     dataframe.loc[:, 'too_small'] = dataframe.apply(is_too_small, axis=1)
+    # convert timestamp in case we need it later
+    dataframe.loc[:, 'timestamp'] = pd.to_datetime(dataframe['finished_str'], errors='coerce', utc=True)
     return dataframe, clean_rows, start_time
 
 
