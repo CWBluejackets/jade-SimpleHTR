@@ -15,10 +15,17 @@ import pandas as pd
 from PIL import Image
 from pandas import Series, DataFrame
 
+# https://pandas.pydata.org/pandas-docs/stable/user_guide/basics.html#basics-dtypes
+# These types are all nullable
 TYPE_SPEC = {'annotator': 'string', 'decision': 'string', 'decision1': 'string',
              'decision_type': 'string', 'filename': 'string',
              'text': 'string', 'text_clean': 'string', 'text_median': 'string',
-             'vessel': 'string'}
+             'vessel': 'string', 'finished_str': 'string', 'task': 'string',
+             'top': 'Int64', 'bottom': 'Int64', 'left': 'Int64', 'right': 'Int64',
+             'mode_votes': 'Int64', 'total_votes': 'Int64', 'total_annotations': 'Int64', 'line': 'Int64',
+             'workflow_id': 'Int64', 'subject_id': 'Int64', 'classification_id': 'Int64',
+             'exclude': 'boolean', 'regex_ok': 'boolean', 'too_small': 'boolean',
+             'wrong_column': 'boolean'}
 
 
 def search_jpgs(small_jpg_directory: str, big_jpg_directory: str, require_big: bool):
@@ -300,20 +307,18 @@ def crop_image(small_image: Image, big_image: Image, row: Series) -> Image:
     :return: cropped image
     """
     # Both PIL and Zooniverse: (0, 0) is top left; all coordinates in pixels.
-    # Zooniverse box: x, y = top left corner of box; and use width and height.
     # PIL box: tuple (left, top, right, bottom) absolute locations within image.
     # To be careful, round left and top down (numerically); right and bottom up (numerically).
     if big_image:
-        left = math.floor(row['x'] * big_image.width / small_image.width)
-        top = math.floor(row['y'] * big_image.height / small_image.height)
-        right = math.ceil((row['x'] + row['width']) * big_image.width / small_image.width)
-        bottom = math.ceil((row['y'] + row['height']) * big_image.height / small_image.height)
+        left = math.floor(row['left'] * big_image.width / small_image.width)
+        top = math.floor(row['top'] * big_image.height / small_image.height)
+        right = math.ceil(row['right'] * big_image.width / small_image.width)
+        bottom = math.ceil(row['bottom'] * big_image.height / small_image.height)
         cropped = big_image.crop(box=(left, top, right, bottom))
     else:
-        left = math.floor(row['x'])
-        top = math.floor(row['y'])
-        right = math.ceil(left + row['width'])
-        bottom = math.ceil(top + row['height'])
+        # values already rounded
+        left, right = row['left'], row['right']
+        top, bottom = row['top'], row['bottom']
         cropped = small_image.crop(box=(left, top, right, bottom))
     return cropped
 
@@ -330,7 +335,6 @@ def save_shtr_files(cropped_image: Image, row: Series, info_file_path: str, png_
     row['png_path'] = png_path
     row.to_csv(info_file_path)
     logging.info(f'Saved info {info_file_path}')
-    ''
 
     cropped_image.save(png_path, bits=8)
     logging.info(f'Saved image {png_path}')

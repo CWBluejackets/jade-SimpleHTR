@@ -37,6 +37,13 @@ NA_PATTERN = re.compile(r'\s*N/|\s*', flags=re.IGNORECASE)
 
 WHITESPACE = re.compile(r'\s+')
 
+# https://pandas.pydata.org/pandas-docs/stable/user_guide/basics.html#basics-dtypes
+# These types are all nullable
+TYPE_SPEC = {'text': 'string', 'annotator': 'string', 'filename': 'string',
+             'finished_str': 'string', 'task': 'string',
+             'top': 'Int64', 'bottom': 'Int64', 'left': 'Int64', 'right': 'Int64',
+             'workflow_id': 'Int64', 'subject_id': 'Int64', 'classification_id': 'Int64'}
+
 
 def is_too_small(row: pd.Series) -> bool:
     """
@@ -559,8 +566,7 @@ if __name__ == "__main__":
     exclusions = get_exclusions(config)
 
     logging.info(f'Loading {input_filename}')
-    big_df = pd.read_csv(input_filename, dtype={'text': 'string', 'annotator': 'string',
-                                                'filename': 'string'})
+    big_df = pd.read_csv(input_filename, dtype=TYPE_SPEC)
     big_df = process_big_df(big_df, exclusions, compiled_filters)
 
     # sort the output to make it easy to inspect the voting and overlaps
