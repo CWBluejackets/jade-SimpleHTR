@@ -26,6 +26,7 @@ TYPE_SPEC = {'annotator': 'string', 'decision': 'string', 'decision1': 'string',
              'workflow_id': 'Int64', 'subject_id': 'Int64', 'classification_id': 'Int64',
              'exclude': 'boolean', 'regex_ok': 'boolean', 'too_small': 'boolean',
              'wrong_column': 'boolean'}
+PARSE_DATES = ['timestamp']
 
 
 def search_jpgs(small_jpg_directory: str, big_jpg_directory: str, require_big: bool):
@@ -454,7 +455,7 @@ if __name__ == "__main__":
     holdout = config.get('holdout', 0)
 
     logging.info(f'Loading {input_filename}')
-    big_df = pd.read_csv(input_filename, dtype=TYPE_SPEC)
+    big_df = pd.read_csv(input_filename, dtype=TYPE_SPEC, parse_dates=PARSE_DATES)
 
     log_image_problems(jpg_index, surplus_big_images, missing_big_images,
                        big_df, output_directory)
