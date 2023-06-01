@@ -323,22 +323,25 @@ def process_big_df(dataframe: pd.DataFrame, exclusions0, filters0) -> pd.DataFra
         logging.info(f'Processing {muster_key} with {sheet_rows} rows')
 
         muster_sheet, all_rejected = detect_wrong_columns(muster_sheet)
-        dataframe = dataframe.combine_first(muster_sheet[['wrong_column']])
 
         # Skip line-numbering and voting if the whole sheet is rejected (two annotators
         # with different columns).
         if not all_rejected:
             # Add line numbers (ignoring wrong_column annotators)
-            muster_sheet, rejected1 = add_line_numbers(muster_sheet)
-            if not rejected1:
+            muster_sheet, all_excluded = add_line_numbers(muster_sheet)
+            if not all_excluded:
                 # Vote for agreement
                 muster_sheet = vote_line_by_line(muster_key, muster_sheet, decision_counter)
                 # Now copy the changes back to the main dataframe
                 dataframe = dataframe.combine_first(muster_sheet[['prev_top', 'prev_bottom', 'v_overlap',
                                                                   'levenshtein', 'line', 'decision_type',
                                                                   'decision', 'decision1', 'text_median',
-                                                                  'total_annotations',
-                                                                  'mode_votes', 'total_votes']])
+                                                                  'total_annotations', 'mode_votes',
+                                                                  'total_votes', 'wrong_column']])
+            else:
+                dataframe = dataframe.combine_first(muster_sheet[['wrong_column']])
+        else:
+            dataframe = dataframe.combine_first(muster_sheet[['wrong_column']])
         sheets_done += 1
         rows_done += sheet_rows
         update_progress(rows_done, total_rows, sheets_done, total_sheets, start_time)
