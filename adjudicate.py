@@ -511,6 +511,8 @@ def get_relative_proportion(this_left, this_right, reference_left, reference_rig
     :param reference_right: other right or bottom
     :return: overlap as a proportion
     """
+    if any(map(pd.isna, [this_left, this_right, reference_left, reference_right])):
+        return np.nan
     overlap = get_absolute_overlap(this_left, this_right, reference_left, reference_right)
     return overlap / (this_right - this_left)
 
