@@ -42,7 +42,8 @@ WHITESPACE = re.compile(r'\s+')
 TYPE_SPEC = {'text': 'string', 'annotator': 'string', 'filename': 'string',
              'finished_str': 'string', 'task': 'string',
              'top': 'Int64', 'bottom': 'Int64', 'left': 'Int64', 'right': 'Int64',
-             'workflow_id': 'Int64', 'subject_id': 'Int64', 'classification_id': 'Int64'}
+             'workflow_id': 'Int64', 'subject_id': 'Int64',
+             'classification_id': 'Int64', 'vessel_page': 'Int64'}
 
 
 def is_too_small(row: pd.Series) -> bool:
@@ -197,6 +198,7 @@ def basic_cleaning(dataframe: pd.DataFrame, exclusions0: set, filters0: dict):
     """
     start_time = time.time()
     logging.warning(f'Starting rows {dataframe.shape[0]}')
+    logging.info(f'Starting columns {";".join(dataframe.columns)}')
     # TODO eventually: use the muster date tasks instead of dropping them
     # We Now clean text here (rather than in convert_classifications)
     # Note: the text_clean column contains a single space where the exported text is blank
@@ -209,12 +211,6 @@ def basic_cleaning(dataframe: pd.DataFrame, exclusions0: set, filters0: dict):
     logging.warning(f'Dropped NaN rectangles/text/IDs; filtered rows {clean_rows}')
     # add vessel names and page numbers extracted from image filenames
     dataframe.loc[:, ['vessel', 'vessel_page']] = dataframe.apply(get_vessel_and_page, axis=1)
-    # force ID numbers and page numbers to int
-    dataframe.loc[:, 'workflow_id'] = pd.to_numeric(dataframe['workflow_id'], downcast='integer')
-    dataframe.loc[:, 'subject_id'] = pd.to_numeric(dataframe['subject_id'], downcast='integer')
-    dataframe.loc[:, 'vessel_page'] = pd.to_numeric(dataframe['vessel_page'], downcast='integer')
-    dataframe.loc[:, 'classification_id'] = pd.to_numeric(dataframe['classification_id'], downcast='integer')
-    logging.info(f'COLUMNS {";".join(dataframe.columns)}')
     # apply regex filters according to workflow
     dataframe.loc[:, 'regex_ok'] = dataframe.apply(lambda row: regex_filter_row(row, filters0), axis=1)
     # flag manual exclusions and small boxes
@@ -222,6 +218,7 @@ def basic_cleaning(dataframe: pd.DataFrame, exclusions0: set, filters0: dict):
     dataframe.loc[:, 'too_small'] = dataframe.apply(is_too_small, axis=1)
     # convert timestamp in case we need it later
     dataframe.loc[:, 'timestamp'] = pd.to_datetime(dataframe['finished_str'], errors='coerce', utc=True)
+    logging.info(f'Preprocessed columns {";".join(dataframe.columns)}')
     return dataframe, clean_rows, start_time
 
 
@@ -578,6 +575,8 @@ if __name__ == "__main__":
                        na_position='last',
                        inplace=True)
 
+    logging.warning(f'Final rows {big_df.shape[0]}')
+    logging.warning(f'Final columns {";".join(big_df.columns)}')
     logging.warning(f'Writing {output_filename} ...')
     big_df.to_csv(output_filename)
     logging.warning('Finished!')
