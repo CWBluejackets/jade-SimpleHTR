@@ -45,6 +45,11 @@ TYPE_SPEC = {'text': 'string', 'annotator': 'string', 'filename': 'string',
              'workflow_id': 'Int64', 'subject_id': 'Int64',
              'classification_id': 'Int64', 'vessel_page': 'Int64'}
 
+# columns to fill in with DataFrame.update from groupings
+GENERATED_COLUMNS = ['decision', 'decision1', 'decision_type', 'levenshtein',
+                     'line', 'mode_votes', 'prev_bottom', 'prev_top', 'text_median',
+                     'total_annotations', 'total_votes', 'v_overlap', 'wrong_column']
+
 
 def is_too_small(row: pd.Series) -> bool:
     """
@@ -207,8 +212,8 @@ def basic_cleaning(dataframe: pd.DataFrame, exclusions0: set, filters0: dict):
     # drop inherently unusable rows
     dataframe.dropna(axis=0, how='any', inplace=True, subset=['left', 'right', 'top', 'bottom', 'text_clean',
                                                               'subject_id', 'workflow_id', 'annotator', 'task'])
-    clean_rows = dataframe.shape[0]
-    logging.warning(f'Dropped NaN rectangles/text/IDs; filtered rows {clean_rows}')
+    nbr_clean_rows = dataframe.shape[0]
+    logging.warning(f'Dropped NaN rectangles/text/IDs; filtered rows {nbr_clean_rows}')
     # add vessel names and page numbers extracted from image filenames
     dataframe.loc[:, ['vessel', 'vessel_page']] = dataframe.apply(get_vessel_and_page, axis=1)
     # apply regex filters according to workflow
@@ -219,7 +224,10 @@ def basic_cleaning(dataframe: pd.DataFrame, exclusions0: set, filters0: dict):
     # convert timestamp in case we need it later
     dataframe.loc[:, 'timestamp'] = pd.to_datetime(dataframe['finished_str'], errors='coerce', utc=True)
     logging.info(f'Preprocessed columns {";".join(dataframe.columns)}')
-    return dataframe, clean_rows, start_time
+
+    # add empty columns to be filled in with update
+    dataframe = pd.concat([dataframe, pd.DataFrame(columns=GENERATED_COLUMNS)])
+    return dataframe, nbr_clean_rows, start_time
 
 
 def make_levenshtein_similarity_series(text_series: pd.Series):
@@ -333,15 +341,15 @@ def process_big_df(dataframe: pd.DataFrame, exclusions0, filters0) -> pd.DataFra
                 # Vote for agreement
                 muster_sheet = vote_line_by_line(muster_key, muster_sheet, decision_counter)
                 # Now copy the changes back to the main dataframe
-                dataframe = dataframe.combine_first(muster_sheet[['prev_top', 'prev_bottom', 'v_overlap',
-                                                                  'levenshtein', 'line', 'decision_type',
-                                                                  'decision', 'decision1', 'text_median',
-                                                                  'total_annotations', 'mode_votes',
-                                                                  'total_votes', 'wrong_column']])
+                dataframe.update(muster_sheet[['prev_top', 'prev_bottom', 'v_overlap',
+                                               'levenshtein', 'line', 'decision_type',
+                                               'decision', 'decision1', 'text_median',
+                                               'total_annotations', 'mode_votes',
+                                               'total_votes', 'wrong_column']])
             else:
-                dataframe = dataframe.combine_first(muster_sheet[['wrong_column']])
+                dataframe.update(muster_sheet[['wrong_column']])
         else:
-            dataframe = dataframe.combine_first(muster_sheet[['wrong_column']])
+            dataframe.update(muster_sheet[['wrong_column']])
         sheets_done += 1
         rows_done += sheet_rows
         update_progress(rows_done, total_rows, sheets_done, total_sheets, start_time)
@@ -415,9 +423,8 @@ def vote_line_by_line(muster_key: tuple, muster_sheet: pd.DataFrame,
         key_triple = (muster_key[0], muster_key[1], line)
         muster_line = vote_one_line(muster_line, key_triple, decision_counter)
         # Copy the new columns back to the output
-        muster_sheet = muster_sheet.combine_first(
-            muster_line[['decision', 'decision1', 'text_median', 'decision_type', 'mode_votes',
-                         'total_votes', 'total_annotations']])
+        muster_sheet.update(muster_line[['decision', 'decision1', 'text_median', 'decision_type',
+                                         'mode_votes', 'total_votes', 'total_annotations']])
     return muster_sheet
 
 
