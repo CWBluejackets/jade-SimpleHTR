@@ -226,7 +226,8 @@ def basic_cleaning(dataframe: pd.DataFrame, exclusions0: set, filters0: dict):
     logging.info(f'Preprocessed columns {";".join(dataframe.columns)}')
 
     # add empty columns to be filled in with update
-    dataframe = pd.concat([dataframe, pd.DataFrame(columns=GENERATED_COLUMNS)])
+    full_column_list = dataframe.columns.tolist() + GENERATED_COLUMNS
+    dataframe = dataframe.reindex(columns=full_column_list)
     return dataframe, nbr_clean_rows, start_time
 
 
@@ -281,7 +282,8 @@ def add_line_numbers(muster_sheet: pd.DataFrame):
         muster_sheet['prev_bottom'] = muster_sheet['bottom'].shift()
         muster_sheet['levenshtein'] = make_levenshtein_similarity_series(muster_sheet['text_clean'])
         muster_sheet['v_overlap'] = muster_sheet.apply(
-            lambda row: get_relative_proportion(row['top'], row['bottom'], row['prev_top'], row['prev_bottom']), axis=1)
+            lambda row: get_relative_proportion(row['top'], row['bottom'], row['prev_top'], row['prev_bottom']),
+            axis=1)
         muster_sheet['line'] = make_line_number_series(muster_sheet['v_overlap'], muster_sheet['annotator'])
         logging.warning(f'Lines 0 to {muster_sheet["line"].max()}')
         rejected = False
