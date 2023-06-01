@@ -23,9 +23,14 @@ module load cuda/10.1
 echo "modules loaded"
 
 working_directory="${HOME}/bluejackets/jade-SimpleHTR"
+training_directory="${HOME}/bluejackets/training_data"
+mkdir -vp "${training_directory}"
+echo
 
 source activate simplehtr1
 echo "environment activated"
+echo
+echo "ADJUDICATE"
 echo
 
 cd "${working_directory}" || exit 99
@@ -35,10 +40,8 @@ python3 adjudicate.py \
         -c config-jade2.json \
         -f filters.json
 
-cd "${working_directory}" || exit 99
-training_directory="${HOME}/bluejackets/training_data"
-
-mkdir -vp "${training_directory}"
+echo
+echo "CREATE TRAINING DATA"
 echo
 
 python3 create_training_data.py \
