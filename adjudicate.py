@@ -269,8 +269,8 @@ def add_line_numbers(muster_sheet: pd.DataFrame):
         # for some examples (empirically).
         muster_sheet = muster_sheet.sort_values(by=['top', 'bottom'], ascending=[True, False])
 
-        muster_sheet['prev_top'] = muster_sheet['top'].rolling(window=2).min()
-        muster_sheet['prev_bottom'] = muster_sheet['bottom'].rolling(window=2).min()
+        muster_sheet['prev_top'] = muster_sheet['top'].shift()
+        muster_sheet['prev_bottom'] = muster_sheet['bottom'].shift()
         muster_sheet['levenshtein'] = make_levenshtein_similarity_series(muster_sheet['text_clean'])
         muster_sheet['v_overlap'] = muster_sheet.apply(
             lambda row: get_relative_proportion(row['top'], row['bottom'], row['prev_top'], row['prev_bottom']), axis=1)
