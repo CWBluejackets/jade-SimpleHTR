@@ -4,11 +4,11 @@
 
 # set memory, nodes, GPUs, time limit
 #SBATCH --mem=16000
-#SBATCH --time=36:00:00
+#SBATCH --time=48:00:00
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:1
 #SBATCH --partition=small
-# time limit on big is 24h <http://docs.jade.ac.uk/en/latest/jade/scheduler/>
+# wall time limit on small is 6 days
 
 #SBATCH --job-name=SimpleHTR
 #SBATCH --mail-type=ALL
