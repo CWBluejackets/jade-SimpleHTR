@@ -173,7 +173,7 @@ def detect_wrong_columns(muster_sheet: pd.DataFrame):
             other_annotators = annotator_set - {annotator}
             others_left = min([annotator_ranges[x][0] for x in other_annotators])
             others_right = max([annotator_ranges[x][1] for x in other_annotators])
-            overlap = get_relative_proportion(left, right, others_left, others_right)
+            overlap = get_overlap_proportion(left, right, others_left, others_right)
             lowest_overlap = min(lowest_overlap, overlap)
             if overlap < MORE_MIN_OVERLAP:
                 wrong_annotators.add(annotator)
@@ -225,7 +225,8 @@ def basic_cleaning(dataframe: pd.DataFrame, exclusions0: set, filters0: dict):
     dataframe.loc[:, 'timestamp'] = pd.to_datetime(dataframe['finished_str'], errors='coerce', utc=True)
     logging.info(f'Preprocessed columns {";".join(dataframe.columns)}')
 
-    # add empty columns to be filled in with update
+    # Add empty columns --- to be filled in with update from the groups.
+    # Note: this fills them with pd.NA rather than np.nan.
     full_column_list = dataframe.columns.tolist() + GENERATED_COLUMNS
     dataframe = dataframe.reindex(columns=full_column_list)
     return dataframe, nbr_clean_rows, start_time
@@ -274,15 +275,14 @@ def add_line_numbers(muster_sheet: pd.DataFrame):
 
     # ignore sheets that have 0 valid annotations
     if muster_sheet.shape[0]:
-        # This way of sorting produces a slightly cleaner separation in the histogram
-        # for some examples (empirically).
+        # This way of sorting produces slightly cleaner separations in the histogram.
         muster_sheet = muster_sheet.sort_values(by=['top', 'bottom'], ascending=[True, False])
 
         muster_sheet['prev_top'] = muster_sheet['top'].shift()
         muster_sheet['prev_bottom'] = muster_sheet['bottom'].shift()
         muster_sheet['levenshtein'] = make_levenshtein_similarity_series(muster_sheet['text_clean'])
         muster_sheet['v_overlap'] = muster_sheet.apply(
-            lambda row: get_relative_proportion(row['top'], row['bottom'], row['prev_top'], row['prev_bottom']),
+            lambda row: get_overlap_proportion(row['top'], row['bottom'], row['prev_top'], row['prev_bottom']),
             axis=1)
         muster_sheet['line'] = make_line_number_series(muster_sheet['v_overlap'], muster_sheet['annotator'])
         logging.warning(f'Lines 0 to {muster_sheet["line"].max()}')
@@ -342,7 +342,9 @@ def process_big_df(dataframe: pd.DataFrame, exclusions0, filters0) -> pd.DataFra
             if not all_excluded:
                 # Vote for agreement
                 muster_sheet = vote_line_by_line(muster_key, muster_sheet, decision_counter)
-                # Now copy the changes back to the main dataframe
+                # Now copy the additions back to the main dataframe.
+                # DataFrame.update is faster than DataFrame.combine_first but the columns
+                # have to be created in advance.
                 dataframe.update(muster_sheet[['prev_top', 'prev_bottom', 'v_overlap',
                                                'levenshtein', 'line', 'decision_type',
                                                'decision', 'decision1', 'text_median',
@@ -502,7 +504,7 @@ def get_absolute_overlap(left0, right0, left1, right1):
     return max(0, min(right0, right1) - max(left0, left1))
 
 
-def get_relative_proportion(this_left, this_right, reference_left, reference_right):
+def get_overlap_proportion(this_left, this_right, reference_left, reference_right):
     """
     Calculate the proportion of "this" width covered by the "reference"
     :param this_left: left or top
