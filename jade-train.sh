@@ -4,13 +4,13 @@
 
 # set memory, nodes, GPUs, time limit
 #SBATCH --mem=16000
-#SBATCH --time=48:00:00
+#SBATCH --time=96:00:00
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:1
 #SBATCH --partition=small
 # wall time limit on small is 6 days
 
-#SBATCH --job-name=SimpleHTR
+#SBATCH --job-name=SimpleHTR_train
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=a.funk@sheffield.ac.uk
 
