@@ -39,6 +39,8 @@ echo
 # required
 # -t 22014_1.00/words.txt = training control file
 
+# TODO add line mode option --line_mode
+
 OPTIONS="--mode train --batch_size 500 --early_stopping 15"
 
 while getopts "ahct:d" option

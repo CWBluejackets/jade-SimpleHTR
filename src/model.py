@@ -293,6 +293,7 @@ class Model:
             feed_dict = {self.saved_ctc_input: ctc_input, self.gt_texts: sparse,
                          self.seq_len: [max_text_len] * num_batch_elements, self.is_train: False}
             try:
+                # TODO add more debugging output
                 loss_vals = self.sess.run(eval_list, feed_dict)
                 probs = np.exp(-loss_vals)
             except ValueError:

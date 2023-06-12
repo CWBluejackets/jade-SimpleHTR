@@ -33,6 +33,8 @@ HTR_DIR="${HOME}/bluejackets/jade-SimpleHTR"
 # -a data control file
 # -m model subdirectory
 
+# TODO add line mode option --line_mode
+
 OPTIONS="--mode apply "
 
 while getopts "ca:m:" option
