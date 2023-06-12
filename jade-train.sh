@@ -38,12 +38,11 @@ echo
 # -d -> --debug_dir DIR
 # required
 # -t 22014_1.00/words.txt = training control file
-
-# TODO add line mode option --line_mode
+# -l line mode
 
 OPTIONS="--mode train --batch_size 500 --early_stopping 15"
 
-while getopts "ahct:d" option
+while getopts "ahclt:d" option
 do
   case "${option}" in
     h)
@@ -51,6 +50,9 @@ do
       ;;
     c)
       OPTIONS="${OPTIONS} --convert_fractions"
+      ;;
+    l)
+      OPTIONS="${OPTIONS} --line_mode"
       ;;
     a)
       OPTIONS="${OPTIONS} --augment"

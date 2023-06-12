@@ -32,16 +32,18 @@ HTR_DIR="${HOME}/bluejackets/jade-SimpleHTR"
 # -c convert fractions
 # -a data control file
 # -m model subdirectory
-
-# TODO add line mode option --line_mode
+# -l line mode
 
 OPTIONS="--mode apply "
 
-while getopts "ca:m:" option
+while getopts "cla:m:" option
 do
   case "${option}" in
     c)
       OPTIONS="${OPTIONS} --convert_fractions"
+      ;;
+    l)
+      OPTIONS="${OPTIONS} --line_mode"
       ;;
     a)
       echo "${OPTARG}"
