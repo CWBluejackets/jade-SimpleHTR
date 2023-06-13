@@ -21,9 +21,9 @@ def get_img_height() -> int:
     return 32
 
 
-def get_img_size(line_mode: bool = False) -> Tuple[int, int]:
+def get_img_size(line_mode: bool = False, wide_mode: bool = False) -> Tuple[int, int]:
     """Height is fixed for NN, width is set according to training mode (single words or text lines)."""
-    if line_mode:
+    if line_mode or wide_mode:
         return 256, get_img_height()
     return 128, get_img_height()
 
@@ -42,13 +42,15 @@ def char_list_from_file() -> List[str]:
 def train(model: Model,
           loader: DataLoaderIAM,
           line_mode: bool,
+          wide_mode: bool,
           augmentation: bool,
           early_stopping: int = 25) -> None:
     """Trains NN."""
     epoch = 0  # number of training epochs since start
     summary_char_error_rates = []
     summary_word_accuracies = []
-    preprocessor = Preprocessor(get_img_size(line_mode), data_augmentation=augmentation, line_mode=line_mode)
+    preprocessor = Preprocessor(get_img_size(line_mode, wide_mode), data_augmentation=augmentation,
+                                line_mode=line_mode, wide_mode=wide_mode)
     best_char_error_rate = float('inf')  # best validation character error rate
     no_improvement_since = 0  # number of epochs no improvement of character error rate occurred
     # stop training after this number of epochs without improvement
@@ -67,7 +69,7 @@ def train(model: Model,
             print(f'Epoch: {epoch} Batch: {iter_info[0]}/{iter_info[1]} Loss: {loss}')
 
         # validate
-        char_error_rate, word_accuracy = validate(model, loader, line_mode)
+        char_error_rate, word_accuracy = validate(model, loader, line_mode, wide_mode)
 
         # write summary
         summary_char_error_rates.append(char_error_rate)
@@ -90,11 +92,11 @@ def train(model: Model,
             break
 
 
-def validate(model: Model, loader: DataLoaderIAM, line_mode: bool) -> Tuple[float, float]:
+def validate(model: Model, loader: DataLoaderIAM, line_mode: bool, wide_mode: bool) -> Tuple[float, float]:
     """Validates NN."""
     print('Validate NN')
     loader.validation_set()
-    preprocessor = Preprocessor(get_img_size(line_mode), line_mode=line_mode)
+    preprocessor = Preprocessor(get_img_size(line_mode), line_mode=line_mode, wide_mode=wide_mode)
     num_char_err = 0
     num_char_total = 0
     num_word_ok = 0
@@ -211,6 +213,8 @@ def parse_args() -> argparse.Namespace:
                         default=False, action='store_true')
     parser.add_argument('--line_mode', help='Train to read text lines instead of single words.',
                         action='store_true', default=False)
+    parser.add_argument('--wide_mode', help='Use wider box but one png at a time.',
+                        action='store_true', default=False)
     parser.add_argument('--img_file', help='Image used for inference.',
                         type=Path, default='../data/word.png')
     parser.add_argument('--img_list_file', help='control file for apply mode',
@@ -265,14 +269,15 @@ def main():
             f.write(' '.join(loader.train_words + loader.validation_words))
 
         model = Model(char_list, decoder_type)
-        train(model, loader, line_mode=args.line_mode, augmentation=args.augment,
+        train(model, loader, line_mode=args.line_mode, wide_mode=args.wide_mode,
+              augmentation=args.augment,
               early_stopping=args.early_stopping)
 
     # evaluate it on the validation set
     elif args.mode == 'validate':
         loader = DataLoaderIAM(args.data_file, args.batch_size, fast=args.fast)
         model = Model(char_list_from_file(), decoder_type, must_restore=True)
-        validate(model, loader, args.line_mode)
+        validate(model, loader, args.line_mode, args.wide_mode)
 
     # infer text on test image
     elif args.mode == 'infer':

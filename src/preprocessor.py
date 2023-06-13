@@ -26,7 +26,8 @@ class Preprocessor:
                  padding: int = 0,
                  dynamic_width: bool = False,
                  data_augmentation: bool = False,
-                 line_mode: bool = False) -> None:
+                 line_mode: bool = False,
+                 wide_mode: bool = False) -> None:
         # dynamic width only supported when no data augmentation happens
         assert not (dynamic_width and data_augmentation)
         # when padding is on, we need dynamic width enabled
@@ -37,6 +38,7 @@ class Preprocessor:
         self.dynamic_width = dynamic_width
         self.data_augmentation = data_augmentation
         self.line_mode = line_mode
+        self.wide_mode = wide_mode
 
     @staticmethod
     def _truncate_label(text: str, max_text_len: int) -> str:
@@ -198,6 +200,7 @@ class Preprocessor:
         return img
 
     def process_batch(self, batch: Batch) -> Batch:
+        # This is the difference between line_mode and wide_mode
         if self.line_mode:
             batch = self._simulate_text_line(batch)
 
