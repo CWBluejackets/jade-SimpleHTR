@@ -36,13 +36,13 @@ echo
 # -c -> --convert_fractions
 # -a -> --augment
 # -d -> --debug_dir DIR
+# -w wide_mode
 # required
 # -t 22014_1.00/words.txt = training control file
-# -l line mode
 
 OPTIONS="--mode train --batch_size 500 --early_stopping 15"
 
-while getopts "ahclt:d" option
+while getopts "ahcwt:d" option
 do
   case "${option}" in
     h)
@@ -51,8 +51,8 @@ do
     c)
       OPTIONS="${OPTIONS} --convert_fractions"
       ;;
-    l)
-      OPTIONS="${OPTIONS} --line_mode"
+    w)
+      OPTIONS="${OPTIONS} --wide_mode"
       ;;
     a)
       OPTIONS="${OPTIONS} --augment"
