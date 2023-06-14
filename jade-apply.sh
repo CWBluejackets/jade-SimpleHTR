@@ -36,7 +36,7 @@ HTR_DIR="${HOME}/bluejackets/jade-SimpleHTR"
 
 OPTIONS="--mode apply "
 
-while getopts "cld:m:" option
+while getopts "cwd:m:" option
 do
   case "${option}" in
     c)
