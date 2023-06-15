@@ -48,7 +48,8 @@ class Model:
         self.batches_trained = 0
         self.update_ops = tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.UPDATE_OPS)
         with tf.control_dependencies(self.update_ops):
-            self.optimizer = tf.compat.v1.train.AdamOptimizer().minimize(self.loss)
+            self.optimizer = tf.compat.v1.train.AdamOptimizer(epsilon=0.1,
+                                                              learning_rate=0.005).minimize(self.loss)
 
         # initialize TF
         self.sess, self.saver = self.setup_tf()
