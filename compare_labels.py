@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 import argparse
+import os.path
 from collections import Counter
+
+import pandas as pd
 
 
 def load_file(control_file: str) -> dict:
@@ -36,6 +39,15 @@ def sort_set_by_counter(input_set: set, input_counter: Counter) -> list:
     return result
 
 
+def generate_csv(training: Counter, holdout: Counter, filename: str, columns0: list):
+    data = {label: (training[label], holdout[label])
+            for label in training.keys() | holdout.keys()}
+    df = pd.DataFrame.from_dict(data, orient='index', columns=columns0)
+    df.sort_values(by=columns0, ascending=[False, False], inplace=True)
+    df.to_csv(filename)
+    return
+
+
 oparser = argparse.ArgumentParser(description="Compare labels in two control files",
                                   formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
@@ -43,6 +55,12 @@ oparser.add_argument(dest='filenames',
                      nargs=2,
                      metavar='TRAINING.txt HOLDOUT.txt',
                      help='control files to compare')
+
+oparser.add_argument('-c', dest='csv_file',
+                     type=str,
+                     metavar='CSV',
+                     default=None,
+                     help='output CSV file')
 
 options = oparser.parse_args()
 training_file, holdout_file = options.filenames
@@ -83,3 +101,7 @@ for label in label_counts:
     total_t += label[1]
     total_h += holdout_labels[label[0]]
 print(f'TOTALS {total_t} and {total_h} of {len(label_counts)}')
+
+if options.csv_file:
+    columns = [os.path.basename(x) for x in [training_file, holdout_file]]
+    generate_csv(training_labels, holdout_labels, options.csv_file, columns)
