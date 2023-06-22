@@ -139,10 +139,7 @@ class DataLoaderIAM:
                 img = pickle.loads(data)
         else:
             img_path = self.samples[i].file_path
-            if not os.path.exists(img_path):
-                print(f'{img_path} is missing')
-                return None
-            img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+            img = locations.imread(img_path, cv2.IMREAD_GRAYSCALE)
             if locations.get_high_contrast():
                 img = cv2.normalize(img, 0, 255, cv2.NORM_MINMAX)
             if locations.get_debug_dir():

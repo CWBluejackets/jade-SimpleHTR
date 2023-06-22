@@ -5,6 +5,8 @@ import cv2
 import lmdb
 from path import Path
 
+import locations
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--data_dir', type=Path, required=True)
 args = parser.parse_args()
@@ -20,7 +22,7 @@ fn_imgs = list((args.data_dir / 'img').walkfiles('*.png'))
 with env.begin(write=True) as txn:
     for i, fn_img in enumerate(fn_imgs):
         print(i, len(fn_imgs))
-        img = cv2.imread(fn_img, cv2.IMREAD_GRAYSCALE)
+        img = locations.imread(fn_img, cv2.IMREAD_GRAYSCALE)
         basename = fn_img.basename()
         txn.put(basename.encode("ascii"), pickle.dumps(img))
 

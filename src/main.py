@@ -127,7 +127,7 @@ def validate(model: Model, loader: DataLoaderIAM, line_mode: bool, wide_mode: bo
 
 def infer(model: Model, fn_img: Path) -> None:
     """Recognizes text in image provided by file path."""
-    img = cv2.imread(fn_img, cv2.IMREAD_GRAYSCALE)
+    img = locations.imread(fn_img, cv2.IMREAD_GRAYSCALE)
     assert img is not None
 
     preprocessor = Preprocessor(get_img_size(), dynamic_width=True, padding=16)
@@ -158,9 +158,7 @@ def apply(model: Model, control_file: Path, output_file: Path) -> None:
             # filename now includes "img/" subdir
             img_path = os.path.join(main_dir, img_filename)
             # warning: cv2 does not trap missing files
-            if not os.path.exists(img_path):
-                print(f'Warning! {img_path} does not exist')
-            img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+            img = locations.imread(img_path, cv2.IMREAD_GRAYSCALE)
             preprocessor = Preprocessor(get_img_size(), dynamic_width=True, padding=16)
             img = preprocessor.process_img(img)
             batch = Batch([img], None, 1)
