@@ -30,14 +30,45 @@ def get_label_count(control_dict: dict) -> Counter:
     return Counter(control_dict.values())
 
 
+def sort_set_by_counter(input_set: set, input_counter: Counter) -> list:
+    result = [(item, input_counter[item]) for item in input_set]
+    result.sort(key=lambda item: - item[1])
+    return result
+
+
 oparser = argparse.ArgumentParser(description="Compare labels in two control files",
                                   formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 oparser.add_argument(dest='filenames',
                      nargs=2,
-                     required=True, metavar='TRAINING HOLDOUT',
+                     metavar='TRAINING.txt HOLDOUT.txt',
                      help='control files to compare')
 
 options = oparser.parse_args()
+training_file, holdout_file = options.filenames
 
-training_data = load_file(options.filenames[0])
+training_data = load_file(training_file)
+holdout_data = load_file(holdout_file)
+
+training_labels = get_label_count(training_data)
+holdout_labels = get_label_count(holdout_data)
+
+print(f'LABELS ONLY IN {training_file}')
+label_counts = sort_set_by_counter(training_labels.keys() - holdout_labels.keys(),
+                                   training_labels)
+for label in label_counts:
+    print(f'{label[0]:35s} {label[1]:5d}')
+
+print()
+print(f'LABELS ONLY IN {holdout_file}')
+label_counts = sort_set_by_counter(holdout_labels.keys() - training_labels.keys(),
+                                   holdout_labels)
+for label in label_counts:
+    print(f'{label[0]:35s} {label[1]:5d}')
+
+print()
+print(f'LABELS IN BOTH FILES')
+label_counts = sort_set_by_counter(training_labels.keys() & holdout_labels.keys(),
+                                   training_labels)
+for label in label_counts:
+    print(f'{label[0]:35s} {label[1]:5d} {holdout_labels[label[0]]:5d}')
