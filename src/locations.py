@@ -1,5 +1,7 @@
 import os
 
+import cv2
+
 # Filenames and paths to data.
 
 # default value
@@ -59,3 +61,16 @@ def set_debug_dir(d_dir):
 
 def get_debug_dir():
     return debug_directory
+
+
+def imread(img_path, cv2_flags, exception_if_missing=False):
+    if os.path.exists(img_path):
+        result = cv2.imread(img_path, cv2_flags)
+    else:
+        result = None
+        message = f'File {img_path} is missing!'
+        if exception_if_missing:
+            raise FileNotFoundError(message)
+        else:
+            print(message)
+    return result
