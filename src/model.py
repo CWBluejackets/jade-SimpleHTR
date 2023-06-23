@@ -47,10 +47,11 @@ class Model:
         # setup optimizer to train NN
         self.batches_trained = 0
         self.update_ops = tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.UPDATE_OPS)
+        # https://www.tensorflow.org/api_docs/python/tf/compat/v1/train/AdamOptimizer
         with tf.control_dependencies(self.update_ops):
-            self.optimizer = tf.compat.v1.train.AdamOptimizer(epsilon=0.1,
-                                                              learning_rate=0.005).minimize(self.loss)
-
+            self.optimizer = tf.compat.v1.train.AdamOptimizer(epsilon=locations.get_optimizer_epsilon(),
+                                                              learning_rate=locations.get_optimizer_learning_rate()
+                                                              ).minimize(self.loss)
         # initialize TF
         self.sess, self.saver = self.setup_tf()
 

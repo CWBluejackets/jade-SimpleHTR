@@ -227,6 +227,10 @@ def parse_args() -> argparse.Namespace:
                         action='store_true', default=False)
     parser.add_argument('--debug_dir', help='directory to dump CV2',
                         type=Path, default=None)
+    parser.add_argument('--opt_lr', help='optimizer learning rate',
+                        type=float, default=None)
+    parser.add_argument('--opt_e', help='optimizer epsilon',
+                        type=float, default=None)
     parser.add_argument('--high_contrast', help='normalize image matrix to maximum contrast',
                         action='store_true', default=False)
     parser.add_argument('--output_file', help='output file for apply mode',
@@ -244,6 +248,11 @@ def main():
     locations.set_debug_dir(args.debug_dir)
     locations.set_high_contrast(args.high_contrast)
     locations.set_convert_fractions(args.convert_fractions)
+    # options for AdamOptimizer
+    if args.opt_lr:
+        locations.set_optimizer_learning_rate(args.opt_lr)
+    if args.opt_e:
+        locations.set_optimizer_epsilon(args.opt_e)
 
     decoder_mapping = {'bestpath': DecoderType.BestPath,
                        'beamsearch': DecoderType.BeamSearch,

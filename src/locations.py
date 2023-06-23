@@ -12,6 +12,30 @@ debug_directory = None
 high_contrast = False
 convert_fractions = False
 
+# defaults https://www.tensorflow.org/api_docs/python/tf/compat/v1/train/AdamOptimizer
+optimizer_learning_rate = 0.001
+optimizer_epsilon = 1e-08,
+
+
+def set_optimizer_learning_rate(learning_rate):
+    global optimizer_learning_rate
+    optimizer_learning_rate = learning_rate
+    return
+
+
+def set_optimizer_epsilon(epsilon):
+    global optimizer_epsilon
+    optimizer_epsilon = epsilon
+    return
+
+
+def get_optimizer_learning_rate():
+    return optimizer_learning_rate
+
+
+def get_optimizer_epsilon():
+    return optimizer_epsilon
+
 
 def set_convert_fractions(convert_fractions0):
     global convert_fractions
