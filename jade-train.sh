@@ -42,7 +42,7 @@ echo
 
 OPTIONS="--mode train --batch_size 500 --early_stopping 15"
 
-while getopts "ahcwt:d" option
+while getopts "ahcwt:dL:E:" option
 do
   case "${option}" in
     h)
@@ -66,6 +66,14 @@ do
     t)
       # shellcheck disable=SC2006
       TRAINING_FILE=$(realpath "${OPTARG}")
+      ;;
+    L)
+      # learning rate
+      OPTIONS="${OPTIONS} --opt_lr ${OPTARG}"
+      ;;
+    E)
+      # epsilon
+      OPTIONS="${OPTIONS} --opt_e ${OPTARG}"
       ;;
     *)
       echo "invalid option: ${option}"
