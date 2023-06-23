@@ -37,6 +37,8 @@ echo
 # -a -> --augment
 # -d -> --debug_dir DIR
 # -w wide_mode
+# -L --> --opt_lr VALUE
+# -E --> --opt_e VALUE
 # required
 # -t 22014_1.00/words.txt = training control file
 
