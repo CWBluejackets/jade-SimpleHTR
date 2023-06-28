@@ -36,7 +36,7 @@ HTR_DIR="${HOME}/bluejackets/jade-SimpleHTR"
 
 OPTIONS="--mode apply "
 
-while getopts "cwd:m:" option
+while getopts "cwd:m:L:E:" option
 do
   case "${option}" in
     c)
@@ -53,6 +53,14 @@ do
       ;;
     m)
       MODEL="${OPTARG}"
+      ;;
+    L)
+      # learning rate
+      OPTIONS="${OPTIONS} --opt_lr ${OPTARG}"
+      ;;
+    E)
+      # epsilon
+      OPTIONS="${OPTIONS} --opt_e ${OPTARG}"
       ;;
     *)
       echo "invalid option: ${option}"
