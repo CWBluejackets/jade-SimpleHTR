@@ -16,6 +16,19 @@ convert_fractions = False
 optimizer_learning_rate = 0.001
 optimizer_epsilon = 1e-08,
 
+# dropout
+dropout = 0.0
+
+
+def set_dropout(dropout1):
+    global dropout
+    dropout = dropout1
+    return
+
+
+def get_dropout():
+    return dropout
+
 
 def set_optimizer_learning_rate(learning_rate):
     global optimizer_learning_rate

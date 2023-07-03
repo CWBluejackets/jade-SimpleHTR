@@ -235,6 +235,8 @@ def parse_args() -> argparse.Namespace:
                         action='store_true', default=False)
     parser.add_argument('--output_file', help='output file for apply mode',
                         type=Path, default=None)
+    parser.add_argument('--dropout', help='dropout rate',
+                        type=float, default=None)
 
     return parser.parse_args()
 
@@ -248,11 +250,13 @@ def main():
     locations.set_debug_dir(args.debug_dir)
     locations.set_high_contrast(args.high_contrast)
     locations.set_convert_fractions(args.convert_fractions)
-    # options for AdamOptimizer
+    # options for AdamOptimizer and dropout
     if args.opt_lr:
         locations.set_optimizer_learning_rate(args.opt_lr)
     if args.opt_e:
         locations.set_optimizer_epsilon(args.opt_e)
+    if args.dropout:
+        locations.set_dropout(args.dropout)
 
     decoder_mapping = {'bestpath': DecoderType.BestPath,
                        'beamsearch': DecoderType.BeamSearch,
