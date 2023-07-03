@@ -88,6 +88,9 @@ class Model:
         cells = [tf.compat.v1.nn.rnn_cell.LSTMCell(num_units=num_hidden, state_is_tuple=True) for _ in
                  range(2)]  # 2 layers
 
+        # https://machinelearningmastery.com/how-to-reduce-overfitting-with-dropout-regularization-in-keras/
+        # insert between LSTM and RNN
+
         # stack basic cells
         stacked = tf.compat.v1.nn.rnn_cell.MultiRNNCell(cells, state_is_tuple=True)
 
