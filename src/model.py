@@ -93,8 +93,7 @@ class Model:
         # insert between LSTM and RNN
 
         if locations.get_dropout() > 0.0:
-            dropout_layer = tf.compat.v1.layers.dropout(cells, rate=locations.get_dropout(),
-                                                        noise_shape=None, seed=None)
+            dropout_layer = tf.compat.v1.layers.dropout(cells, rate=locations.get_dropout())
             stacked = tf.compat.v1.nn.rnn_cell.MultiRNNCell(dropout_layer, state_is_tuple=True)
         else:
             # stack basic cells
