@@ -39,12 +39,13 @@ echo
 # -w wide_mode
 # -L --> --opt_lr VALUE
 # -E --> --opt_e VALUE
+# -D --> --dropout VALUE
 # required
 # -t 22014_1.00/words.txt = training control file
 
 OPTIONS="--mode train --batch_size 500 --early_stopping 15"
 
-while getopts "ahcwt:dL:E:" option
+while getopts "ahcwt:dL:E:D:" option
 do
   case "${option}" in
     h)
@@ -77,6 +78,9 @@ do
       # epsilon
       OPTIONS="${OPTIONS} --opt_e ${OPTARG}"
       ;;
+    D)
+      # dropout
+      OPTIONS="${OPTIONS} --dropout ${OPTARG}"
     *)
       echo "invalid option: ${option}"
       exit 13
