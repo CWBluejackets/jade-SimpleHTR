@@ -81,6 +81,7 @@ do
     D)
       # dropout
       OPTIONS="${OPTIONS} --dropout ${OPTARG}"
+      ;;
     *)
       echo "invalid option: ${option}"
       exit 13
