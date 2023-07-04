@@ -89,10 +89,16 @@ class Model:
                  range(2)]  # 2 layers
 
         # https://machinelearningmastery.com/how-to-reduce-overfitting-with-dropout-regularization-in-keras/
+        # https://www.tensorflow.org/api_docs/python/tf/compat/v1/layers/dropout
         # insert between LSTM and RNN
 
-        # stack basic cells
-        stacked = tf.compat.v1.nn.rnn_cell.MultiRNNCell(cells, state_is_tuple=True)
+        if locations.get_dropout() > 0.0:
+            dropout_layer = tf.compat.v1.layers.dropout(cells, rate=locations.get_dropout(),
+                                                        noise_shape=None, seed=None)
+            stacked = tf.compat.v1.nn.rnn_cell.MultiRNNCell(dropout_layer, state_is_tuple=True)
+        else:
+            # stack basic cells
+            stacked = tf.compat.v1.nn.rnn_cell.MultiRNNCell(cells, state_is_tuple=True)
 
         # bidirectional RNN
         # BxTxF -> BxTx2H
