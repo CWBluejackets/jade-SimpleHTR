@@ -90,20 +90,21 @@ class Model:
 
         # https://machinelearningmastery.com/how-to-reduce-overfitting-with-dropout-regularization-in-keras/
         # https://www.tensorflow.org/api_docs/python/tf/compat/v1/layers/dropout
-        # insert between LSTM and RNN
+        # suggests innsertion between LSTM and RNN
 
+        stacked = tf.compat.v1.nn.rnn_cell.MultiRNNCell(cells, state_is_tuple=True)
+
+        # try inserting dropout between LSTM-RNN and birectional RNN
         if locations.get_dropout() > 0.0:
-            dropout_layer = tf.compat.v1.layers.dropout(cells, rate=locations.get_dropout(),
-                                                        training=self.is_train)
-            stacked = tf.compat.v1.nn.rnn_cell.MultiRNNCell(dropout_layer, state_is_tuple=True)
+            stacked_1 = tf.compat.v1.layers.dropout(stacked, rate=locations.get_dropout(),
+                                                    training=self.is_train)
         else:
-            # stack basic cells
-            stacked = tf.compat.v1.nn.rnn_cell.MultiRNNCell(cells, state_is_tuple=True)
+            stacked_1 = stacked
 
         # bidirectional RNN
         # BxTxF -> BxTx2H
-        (fw, bw), _ = tf.compat.v1.nn.bidirectional_dynamic_rnn(cell_fw=stacked, cell_bw=stacked, inputs=rnn_in3d,
-                                                                dtype=rnn_in3d.dtype)
+        (fw, bw), _ = tf.compat.v1.nn.bidirectional_dynamic_rnn(cell_fw=stacked_1, cell_bw=stacked,
+                                                                inputs=rnn_in3d, dtype=rnn_in3d.dtype)
 
         # BxTxH + BxTxH -> BxTx2H -> BxTx1X2H
         concat = tf.expand_dims(tf.concat([fw, bw], 2), 2)
