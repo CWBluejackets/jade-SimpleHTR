@@ -6,7 +6,6 @@ import cv2
 
 # default value
 model_dir = '../model'
-fn_corpus = '../data/corpus.txt'
 
 debug_directory = None
 high_contrast = False
@@ -45,6 +44,10 @@ def get_model_dir():
 
 def get_fn_char_list():
     return os.path.join(model_dir, 'charList.txt')
+
+
+def get_fn_corpus():
+    return os.path.join(model_dir, 'corpus.txt')
 
 
 def get_fn_summary():

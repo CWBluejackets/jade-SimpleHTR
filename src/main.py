@@ -263,7 +263,7 @@ def main():
         with open(locations.get_fn_char_list(), 'w') as f:
             f.write(''.join(char_list))
 
-        with open(locations.fn_corpus, 'w') as f:
+        with open(locations.get_fn_corpus(), 'w') as f:
             f.write(' '.join(loader.train_words + loader.validation_words))
 
         model = Model(char_list, decoder_type)
