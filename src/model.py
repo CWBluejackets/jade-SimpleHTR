@@ -4,11 +4,16 @@ from typing import List, Tuple
 
 import numpy as np
 import tensorflow as tf
+import tensorflow.keras.layers as layers
 
 from dataloader_iam import Batch
 import locations
+
 # Disable eager mode
 tf.compat.v1.disable_eager_execution()
+
+# x_pixels, y_pixels, greyscale
+INPUT_SHAPE = (128, 32, 1)
 
 
 class DecoderType:
@@ -19,13 +24,46 @@ class DecoderType:
 
 
 class Model:
-    """Minimalistic TF model for HTR."""
-
     def __init__(self,
                  char_list: List[str],
                  decoder_type: str = DecoderType.BestPath,
                  must_restore: bool = False,
                  dump: bool = False) -> None:
+
+        # Shi & al 2017 "#maps" = Keras filters
+        # TODO check Conv2D activation function
+        # TODO check padding "p1x1" in Shi
+        self.keras_model = tf.keras.Sequential([
+            layers.Conv2D(filters=64, kernel_size=(3, 3), activation=tf.nn.relu,
+                          strides=(1, 1), padding='same',
+                          input_shape=INPUT_SHAPE),
+            layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2)),
+            layers.Conv2D(filters=128, kernel_size=(3, 3), activation=tf.nn.relu,
+                          strides=(1, 1), padding='same'),
+            layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2)),
+            layers.Conv2D(filters=256, kernel_size=(3, 3), activation=tf.nn.relu,
+                          strides=(1, 1), padding='same'),
+            layers.BatchNormalization(),
+            layers.Conv2D(filters=256, kernel_size=(3, 3), activation=tf.nn.relu,
+                          strides=(1, 1), padding='same'),
+            layers.MaxPool2D(pool_size=(2, 2), strides=(1, 2)),
+            layers.Conv2D(filters=512, kernel_size=(3, 3), activation=tf.nn.relu,
+                          strides=(1, 1), padding='same'),
+            layers.BatchNormalization(),
+            layers.Conv2D(filters=51, kernel_size=(3, 3), activation=tf.nn.relu,
+                          strides=(1, 1), padding='same)'),
+            layers.MaxPool2D(pool_size=(2, 2), strides=(1, 2)),
+            layers.Conv2D(filters=512, kernel_size=(2, 2), activation=tf.nn.relu,
+                          strides=(1, 1), padding='valid'),
+            layers.BatchNormalization(),
+            # Map-to-Sequence
+            layers.Flatten(),
+            # 2 layers of Bidirectional LSTM hidden units = 256
+            # activation?
+            layers.Bidirectional(layers.LSTM(256)),
+            layers.Bidirectional(layers.LSTM(256))
+        ])
+
         """Init model: add CNN, RNN and CTC and initialize TF."""
         self.dump = dump
         self.char_list = char_list
@@ -40,8 +78,6 @@ class Model:
         self.input_imgs = tf.compat.v1.placeholder(tf.float32, shape=(None, None, None))
 
         # setup CNN, RNN and CTC
-        self.setup_cnn()
-        self.setup_rnn()
         self.setup_ctc()
 
         # setup optimizer to train NN
@@ -52,55 +88,6 @@ class Model:
 
         # initialize TF
         self.sess, self.saver = self.setup_tf()
-
-    def setup_cnn(self) -> None:
-        """Create CNN layers."""
-        cnn_in4d = tf.expand_dims(input=self.input_imgs, axis=3)
-
-        # list of parameters for the layers
-        kernel_vals = [5, 5, 3, 3, 3]
-        feature_vals = [1, 32, 64, 128, 128, 256]
-        stride_vals = pool_vals = [(2, 2), (2, 2), (1, 2), (1, 2), (1, 2)]
-        num_layers = len(stride_vals)
-
-        # create layers
-        pool = cnn_in4d  # input to first CNN layer
-        for i in range(num_layers):
-            kernel = tf.Variable(
-                tf.random.truncated_normal([kernel_vals[i], kernel_vals[i], feature_vals[i], feature_vals[i + 1]],
-                                           stddev=0.1))
-            conv = tf.nn.conv2d(input=pool, filters=kernel, padding='SAME', strides=(1, 1, 1, 1))
-            conv_norm = tf.compat.v1.layers.batch_normalization(conv, training=self.is_train)
-            relu = tf.nn.relu(conv_norm)
-            pool = tf.nn.max_pool2d(input=relu, ksize=(1, pool_vals[i][0], pool_vals[i][1], 1),
-                                    strides=(1, stride_vals[i][0], stride_vals[i][1], 1), padding='VALID')
-
-        self.cnn_out_4d = pool
-
-    def setup_rnn(self) -> None:
-        """Create RNN layers."""
-        rnn_in3d = tf.squeeze(self.cnn_out_4d, axis=[2])
-
-        # basic cells which is used to build RNN
-        num_hidden = 256
-        cells = [tf.compat.v1.nn.rnn_cell.LSTMCell(num_units=num_hidden, state_is_tuple=True) for _ in
-                 range(2)]  # 2 layers
-
-        # stack basic cells
-        stacked = tf.compat.v1.nn.rnn_cell.MultiRNNCell(cells, state_is_tuple=True)
-
-        # bidirectional RNN
-        # BxTxF -> BxTx2H
-        (fw, bw), _ = tf.compat.v1.nn.bidirectional_dynamic_rnn(cell_fw=stacked, cell_bw=stacked, inputs=rnn_in3d,
-                                                                dtype=rnn_in3d.dtype)
-
-        # BxTxH + BxTxH -> BxTx2H -> BxTx1X2H
-        concat = tf.expand_dims(tf.concat([fw, bw], 2), 2)
-
-        # project output to chars (including blank): BxTx1x2H -> BxTx1xC -> BxTxC
-        kernel = tf.Variable(tf.random.truncated_normal([1, 1, num_hidden * 2, len(self.char_list) + 1], stddev=0.1))
-        self.rnn_out_3d = tf.squeeze(tf.nn.atrous_conv2d(value=concat, filters=kernel, rate=1, padding='SAME'),
-                                     axis=[2])
 
     def setup_ctc(self) -> None:
         """Create CTC loss and decoder."""
