@@ -33,7 +33,7 @@ class Model:
         # Shi & al 2017 "#maps" = Keras filters
         # TODO check Conv2D activation function
         # TODO check padding "p1x1" in Shi
-        self.keras_model = tf.keras.Sequential([
+        self.model = tf.keras.Sequential([
             layers.Conv2D(filters=64, kernel_size=(3, 3), activation=tf.nn.relu,
                           strides=(1, 1), padding='same',
                           input_shape=INPUT_SHAPE),
@@ -63,6 +63,13 @@ class Model:
             layers.Bidirectional(layers.LSTM(256)),
             layers.Bidirectional(layers.LSTM(256))
         ])
+
+        # TODO CTC loss function
+
+        # C&P from RSE Keras
+        self.model.compile(optimizer='adam',
+                           loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+                           metrics=['accuracy'])
 
         """Init model: add CNN, RNN and CTC and initialize TF."""
         self.dump = dump
