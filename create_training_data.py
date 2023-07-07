@@ -120,9 +120,10 @@ def log_image_problems(jpg_index0: dict, surplus_big_jpgs: list, missing_big_jpg
 
 
 def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict, max_size0: int, samples0: list,
-                   filters0: dict, holdout0: float, ignore_median0):
+                   filters0: dict, holdout0: float, ignore_median0, png_limits: tuple):
     """
     Process the dataframe from our intermediate CSV format to generate training data
+    :param png_limits:
     :param ignore_median0:
     :param holdout0:
     :param filters0: map of workflow -> regex
@@ -201,14 +202,24 @@ def process_big_df(dataframe: DataFrame, output_directory0, jpg_index0: dict, ma
             logging.warning(f'Max size {max_size0} applied; filtered rows {sub_dataframe.shape[0]}')
 
         workflow_directory = workflow_index[wf_id]
-        process_workflow_df(sub_dataframe, workflow_directory, jpg_index0, text_column, samples0, holdout0)
+        process_workflow_df(sub_dataframe, workflow_directory, jpg_index0, text_column, samples0,
+                            holdout0, png_limits)
     return
 
 
+def is_image_size_reasonable(image: Image, png_limits: tuple) -> bool:
+    if png_limits[0] and image.width > png_limits[0]:
+        return False
+    if png_limits[1] and image.height > png_limits[1]:
+        return False
+    return True
+
+
 def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_index0: dict, text_column: str,
-                        samples0: list, holdout0: float):
+                        samples0: list, holdout0: float, png_limits: tuple):
     """
     Process the dataframe for one workflow ID, already sampled
+    :param png_limits:
     :param holdout0:
     :param samples0:
     :param text_column: use 'decision' or 'text_clean
@@ -242,7 +253,7 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
             png_path = os.path.join(img_subdirectory, png_filename)
             words_file_data.append(generate_words_row(png_filename, row, text_column))
             word_counter[row[text_column]] += 1
-            save_shtr_files(cropped_image, row, info_path, png_path)
+            save_shtr_files(cropped_image, row, info_path, png_path, png_limits)
 
     # carry out holdout and sampling on the control files so we write the images only once
     # optional: holdout
@@ -316,6 +327,10 @@ def crop_image(small_image: Image, big_image: Image, row: Series) -> Image:
         right = math.ceil(row['right'] * big_image.width / small_image.width)
         bottom = math.ceil(row['bottom'] * big_image.height / small_image.height)
         cropped = big_image.crop(box=(left, top, right, bottom))
+        row['scaled_left'] = left
+        row['scaled_right'] = right
+        row['scaled_top'] = top
+        row['scaled_bottom'] = bottom
     else:
         # values already rounded
         left, right = row['left'], row['right']
@@ -324,9 +339,11 @@ def crop_image(small_image: Image, big_image: Image, row: Series) -> Image:
     return cropped
 
 
-def save_shtr_files(cropped_image: Image, row: Series, info_file_path: str, png_path: str):
+def save_shtr_files(cropped_image: Image, row: Series, info_file_path: str,
+                    png_path: str, png_limits: tuple):
     """
     Save all the files
+    :param png_limits:
     :param png_path:
     :param info_file_path:
     :param cropped_image:
@@ -336,9 +353,11 @@ def save_shtr_files(cropped_image: Image, row: Series, info_file_path: str, png_
     row['png_path'] = png_path
     row.to_csv(info_file_path)
     logging.info(f'Saved info {info_file_path}')
-
-    cropped_image.save(png_path, bits=8)
-    logging.info(f'Saved image {png_path}')
+    if is_image_size_reasonable(cropped_image, png_limits):
+        cropped_image.save(png_path, bits=8)
+        logging.info(f'Saved image {png_path}')
+    else:
+        logging.info(f'Dropping oversized image {png_path}')
     return
 
 
@@ -454,10 +473,12 @@ if __name__ == "__main__":
     max_size = config.get('max_size')
     holdout = config.get('holdout', 0)
 
+    image_limits = (config.get['x_limit'], config.get['y_limit'])
+
     logging.info(f'Loading {input_filename}')
     big_df = pd.read_csv(input_filename, dtype=TYPE_SPEC, parse_dates=PARSE_DATES)
 
     log_image_problems(jpg_index, surplus_big_images, missing_big_images,
                        big_df, output_directory)
     process_big_df(big_df, output_directory, jpg_index, max_size, samples, filters,
-                   holdout, ignore_median)
+                   holdout, ignore_median, image_limits)
