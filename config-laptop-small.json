@@ -11,5 +11,7 @@
   "max_size": 300,
   "sampling": true,
   "exclusions": "exclusions.csv",
-  "holdout": 0.1
+  "holdout": 0.1,
+  "x_limit": 640,
+  "y_limit": 140
 }
