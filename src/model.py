@@ -31,6 +31,9 @@ class Model:
                  must_restore: bool = False,
                  dump: bool = False) -> None:
 
+        # tf keras API
+        # https://www.tensorflow.org/api_docs/python/tf/keras/Sequential
+
         input_layer = tf.keras.Input(shape=INPUT_SHAPE)
 
         # Shi & al 2017 "#maps" = Keras filters
