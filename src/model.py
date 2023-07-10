@@ -5,6 +5,7 @@ from typing import List, Tuple
 import numpy as np
 import tensorflow as tf
 import tensorflow.keras.layers as layers
+from keras_ctcmodel.CTCModel import CTCModel
 
 from dataloader_iam import Batch
 import locations
@@ -30,13 +31,15 @@ class Model:
                  must_restore: bool = False,
                  dump: bool = False) -> None:
 
+        input_layer = tf.keras.Input(shape=INPUT_SHAPE)
+
         # Shi & al 2017 "#maps" = Keras filters
         # TODO check Conv2D activation function
         # TODO check padding "p1x1" in Shi
         self.model = tf.keras.Sequential([
+            input_layer,
             layers.Conv2D(filters=64, kernel_size=(3, 3), activation=tf.nn.relu,
-                          strides=(1, 1), padding='same',
-                          input_shape=INPUT_SHAPE),
+                          strides=(1, 1), padding='same'),
             layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2)),
             layers.Conv2D(filters=128, kernel_size=(3, 3), activation=tf.nn.relu,
                           strides=(1, 1), padding='same'),
@@ -64,6 +67,9 @@ class Model:
             layers.Bidirectional(layers.LSTM(256))
         ])
 
+        output_layer = self.model.layers[-1]
+        self.ctc_model = CTCModel([input_layer], [output_layer])
+
         # C&P from RSE Keras
         self.model.compile(optimizer='adam',
                            loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
@@ -71,19 +77,10 @@ class Model:
 
         # TODO CTC loss function
 
-        # https://www.tensorflow.org/api_docs/python/tf/keras/Sequential
-        # Loss function. May be a string (name of loss function), or a tf.keras.losses.Loss instance. See
-        # tf.keras.losses. A loss function is any callable with the signature loss = fn(y_true, y_pred), where y_true
-        # are the ground truth values, and y_pred are the model's predictions. y_true should have shape
-        # (batch_size, d0, .. dN) (except in the case of sparse loss functions such as sparse categorical
-        # crossentropy which expects integer arrays of shape (batch_size, d0, .. dN-1)). y_pred should have shape
-        # (batch_size, d0, .. dN). The loss function should return a float tensor. If a custom Loss instance is used
-        # and reduction is set to None, return value has shape (batch_size, d0, .. dN-1) i.e. per-sample or
-        # per-timestep loss values; otherwise, it is a scalar. If the model has multiple outputs, you can use a
-        # different loss on each output by passing a dictionary or a list of losses. The loss value that will be
-        # minimized by the model will then be the sum of all individual losses, unless loss_weights is specified.
-
-        # metric: use levenshtein similarity wrapped in tf.keras.metrics?
+        # CTC wrapper found
+        # https://pypi.org/project/keras-ctcmodel/
+        # https://github.com/cyprienruffino/CTCModel
+        # https://arxiv.org/abs/1901.07957
 
         """Init model: add CNN, RNN and CTC and initialize TF."""
         self.dump = dump
