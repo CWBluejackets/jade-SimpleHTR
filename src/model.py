@@ -64,12 +64,26 @@ class Model:
             layers.Bidirectional(layers.LSTM(256))
         ])
 
-        # TODO CTC loss function
-
         # C&P from RSE Keras
         self.model.compile(optimizer='adam',
                            loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                            metrics=['accuracy'])
+
+        # TODO CTC loss function
+
+        # https://www.tensorflow.org/api_docs/python/tf/keras/Sequential
+        # Loss function. May be a string (name of loss function), or a tf.keras.losses.Loss instance. See
+        # tf.keras.losses. A loss function is any callable with the signature loss = fn(y_true, y_pred), where y_true
+        # are the ground truth values, and y_pred are the model's predictions. y_true should have shape
+        # (batch_size, d0, .. dN) (except in the case of sparse loss functions such as sparse categorical
+        # crossentropy which expects integer arrays of shape (batch_size, d0, .. dN-1)). y_pred should have shape
+        # (batch_size, d0, .. dN). The loss function should return a float tensor. If a custom Loss instance is used
+        # and reduction is set to None, return value has shape (batch_size, d0, .. dN-1) i.e. per-sample or
+        # per-timestep loss values; otherwise, it is a scalar. If the model has multiple outputs, you can use a
+        # different loss on each output by passing a dictionary or a list of losses. The loss value that will be
+        # minimized by the model will then be the sum of all individual losses, unless loss_weights is specified.
+
+        # metric: use levenshtein similarity wrapped in tf.keras.metrics?
 
         """Init model: add CNN, RNN and CTC and initialize TF."""
         self.dump = dump
