@@ -39,46 +39,40 @@ class Model:
         # Shi & al 2017 "#maps" = Keras filters
         # TODO check Conv2D activation function
         # TODO check padding "p1x1" in Shi
-        self.model = tf.keras.Sequential([
-            input_layer,
-            layers.Conv2D(filters=64, kernel_size=(3, 3), activation=tf.nn.relu,
-                          strides=(1, 1), padding='same'),
-            layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2)),
-            layers.Conv2D(filters=128, kernel_size=(3, 3), activation=tf.nn.relu,
-                          strides=(1, 1), padding='same'),
-            layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2)),
-            layers.Conv2D(filters=256, kernel_size=(3, 3), activation=tf.nn.relu,
-                          strides=(1, 1), padding='same'),
-            layers.BatchNormalization(),
-            layers.Conv2D(filters=256, kernel_size=(3, 3), activation=tf.nn.relu,
-                          strides=(1, 1), padding='same'),
-            layers.MaxPool2D(pool_size=(2, 2), strides=(1, 2)),
-            layers.Conv2D(filters=512, kernel_size=(3, 3), activation=tf.nn.relu,
-                          strides=(1, 1), padding='same'),
-            layers.BatchNormalization(),
-            layers.Conv2D(filters=51, kernel_size=(3, 3), activation=tf.nn.relu,
-                          strides=(1, 1), padding='same)'),
-            layers.MaxPool2D(pool_size=(2, 2), strides=(1, 2)),
-            layers.Conv2D(filters=512, kernel_size=(2, 2), activation=tf.nn.relu,
-                          strides=(1, 1), padding='valid'),
-            layers.BatchNormalization(),
-            # Map-to-Sequence
-            layers.Flatten(),
-            # 2 layers of Bidirectional LSTM hidden units = 256
-            # activation?
-            layers.Bidirectional(layers.LSTM(256)),
-            layers.Bidirectional(layers.LSTM(256))
-        ])
 
-        output_layer = self.model.layers[-1]
-        self.ctc_model = CTCModel([input_layer], [output_layer])
+        layer01 = layers.Conv2D(filters=64, kernel_size=(3, 3), activation=tf.nn.relu,
+                      strides=(1, 1), padding='same')(input_layer),
+        layer02 = layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2))(layer01),
+        layer03 = layers.Conv2D(filters=128, kernel_size=(3, 3), activation=tf.nn.relu,
+                      strides=(1, 1), padding='same')(layer02),
+        layer04 = layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2))(layer03),
+        layer05 = layers.Conv2D(filters=256, kernel_size=(3, 3), activation=tf.nn.relu,
+                      strides=(1, 1), padding='same')(layer04),
+        layer06 = layers.BatchNormalization()(layer05),
+        layer07 = layers.Conv2D(filters=256, kernel_size=(3, 3), activation=tf.nn.relu,
+                      strides=(1, 1), padding='same')(layer06),
+        layer08 = layers.MaxPool2D(pool_size=(2, 2), strides=(1, 2))(layer07),
+        layer09 = layers.Conv2D(filters=512, kernel_size=(3, 3), activation=tf.nn.relu,
+                      strides=(1, 1), padding='same')(layer08),
+        layer10 = layers.BatchNormalization()(layer09),
+        layer11 = layers.Conv2D(filters=51, kernel_size=(3, 3), activation=tf.nn.relu,
+                      strides=(1, 1), padding='same')(layer10),
+        layer12 = layers.MaxPool2D(pool_size=(2, 2), strides=(1, 2))(layer11),
+        layer13 = layers.Conv2D(filters=512, kernel_size=(2, 2), activation=tf.nn.relu,
+                      strides=(1, 1), padding='valid')(layer12),
+        layer14 = layers.BatchNormalization()(layer13),
+        # Map-to-Sequence
+        layer15 = layers.Flatten()(layer14),
+        # 2 layers of Bidirectional LSTM hidden units = 256
+        # activation?
+        layer16 = layers.Bidirectional(layers.LSTM(256))(layer15),
+        output_layer = layers.Bidirectional(layers.LSTM(256))(layer16)
+
+        self.model = CTCModel([input_layer], [output_layer])
 
         # C&P from RSE Keras
-        self.model.compile(optimizer='adam',
-                           loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-                           metrics=['accuracy'])
-
-        # TODO CTC loss function
+        self.model.compile(optimizer='adam')
+        # note: this compile method only takes optimizer
 
         # CTC wrapper found
         # https://pypi.org/project/keras-ctcmodel/
