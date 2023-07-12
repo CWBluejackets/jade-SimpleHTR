@@ -10,10 +10,10 @@ import lmdb
 import numpy as np
 from path import Path
 import locations
+import tensorflow as tf
 
 Sample = namedtuple('Sample', ['gt_text', 'file_path'])
 Batch = namedtuple('Batch', ['imgs', 'gt_texts', 'batch_size'])
-
 
 substitutions = [(re.compile(r'\b1/4\b'), '¼'),
                  (re.compile(r'\b1/2\b'), '½'),
@@ -25,6 +25,39 @@ def convert_fractions(text):
     for pattern, replacement in substitutions:
         text = pattern.sub(replacement, text)
     return text
+
+
+def get_png_and_label(workflow_dir, img_path, label):
+    """
+    part of the tf data loading
+    https://stackoverflow.com/questions/63640185/make-a-tf-dataset-from-image-filenames-and-corresponding-string-labels
+    :param workflow_dir: .../training_data/21955
+    :param img_path: img/390403.png
+    :param label: Smith Robt
+    :return:
+    """
+    img = tf.io.read_file(os.path.join(workflow_dir, img_path))
+    # TODO check channels=1
+    img = tf.image.decode_png(img, channels=1)
+    img = tf.image.convert_image_dtype(img, tf.float32)
+    # img = tf.image.resize(img, size=(100, 100)) # optional
+    label1 = tf.cast(tf.equal(label, 'class2'), tf.int32)
+    return img, label1
+
+
+def load_dataset(control_path):
+    # use:
+    locations.get_convert_fractions()
+    locations.get_high_contrast()
+    control_data = []
+    with open(control_path, 'r') as f:
+        for line in f.readlines():
+            img_path, label = line.strip('\n').split(' ', maxsplit=1)
+            control_data.append([img_path, label])
+    workflow_dir = os.path.dirname(control_path)
+    dataset = tf.data.Dataset.from_tensor_slices(control_data).map(lambda x:
+                                                                   get_png_and_label(workflow_dir, x[0], x[1]))
+    return dataset
 
 
 class DataLoaderIAM:
