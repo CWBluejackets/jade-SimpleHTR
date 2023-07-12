@@ -37,6 +37,7 @@ class Model:
         input_layer = tf.keras.Input(shape=INPUT_SHAPE)
 
         # Shi & al 2017 "#maps" = Keras filters
+        # https://arxiv.org/abs/1507.05717
         # TODO check Conv2D activation function
         # TODO check padding "p1x1" in Shi
 
@@ -65,6 +66,7 @@ class Model:
         layer15 = layers.Flatten()(layer14),
         # 2 layers of Bidirectional LSTM hidden units = 256
         # activation?
+        # TODO LSTM has dropout and recurrent_dropout options
         layer16 = layers.Bidirectional(layers.LSTM(256))(layer15),
         output_layer = layers.Bidirectional(layers.LSTM(256))(layer16)
 
