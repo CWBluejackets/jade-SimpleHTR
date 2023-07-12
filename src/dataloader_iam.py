@@ -10,6 +10,7 @@ import lmdb
 import numpy as np
 from path import Path
 import locations
+import model
 import tensorflow as tf
 
 Sample = namedtuple('Sample', ['gt_text', 'file_path'])
@@ -35,13 +36,14 @@ def get_png_and_label(workflow_dir, img_path, label):
     :param label: Smith Robt
     :return:
     """
-    img = tf.io.read_file(os.path.join(workflow_dir, img_path))
-    # TODO check channels=1
-    img = tf.image.decode_png(img, channels=1)
-    img = tf.image.convert_image_dtype(img, tf.float32)
-    # img = tf.image.resize(img, size=(100, 100)) # optional
+    raw = tf.io.read_file(os.path.join(workflow_dir, img_path))
+    # channels=1 -> grayscale
+    image = tf.image.decode_png(raw, channels=1)
+    image = tf.image.convert_image_dtype(image, tf.float32)
+    image = tf.image.resize_with_pad(image, model.INPUT_SHAPE[1], model.INPUT_SHAPE[0])
+    # resize; maintain aspect ratio; pad with zeroes
     label1 = tf.cast(tf.equal(label, 'class2'), tf.int32)
-    return img, label1
+    return image, label1
 
 
 def load_dataset(control_path):
