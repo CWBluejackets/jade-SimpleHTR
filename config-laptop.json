@@ -12,5 +12,7 @@
   "exclusions": "exclusions.csv",
   "holdout": 0.10,
   "require_big_jpgs": true,
-  "ignore_median": true
+  "ignore_median": true,
+  "x_limit": 640,
+  "y_limit": 140
 }
