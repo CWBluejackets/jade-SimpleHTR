@@ -357,7 +357,7 @@ def save_shtr_files(cropped_image: Image, row: Series, info_file_path: str,
         cropped_image.save(png_path, bits=8)
         logging.info(f'Saved image {png_path}')
     else:
-        logging.info(f'Dropping oversized image {png_path}')
+        logging.info(f'Dropped oversize image {png_path}')
     return
 
 
