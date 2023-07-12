@@ -251,9 +251,9 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
             info_path = os.path.join(output_subdirectory, 'info', f'{filename_prefix}_{index:07d}.csv')
             png_filename = f'{filename_prefix}_{index:07d}.png'
             png_path = os.path.join(img_subdirectory, png_filename)
-            words_file_data.append(generate_words_row(png_filename, row, text_column))
-            word_counter[row[text_column]] += 1
-            save_shtr_files(cropped_image, row, info_path, png_path, png_limits)
+            if save_shtr_files(cropped_image, row, info_path, png_path, png_limits):
+                words_file_data.append(generate_words_row(png_filename, row, text_column))
+                word_counter[row[text_column]] += 1
 
     # carry out holdout and sampling on the control files so we write the images only once
     # optional: holdout
@@ -340,7 +340,7 @@ def crop_image(small_image: Image, big_image: Image, row: Series) -> Image:
 
 
 def save_shtr_files(cropped_image: Image, row: Series, info_file_path: str,
-                    png_path: str, png_limits: tuple):
+                    png_path: str, png_limits: tuple) -> bool:
     """
     Save all the files
     :param png_limits:
@@ -356,9 +356,11 @@ def save_shtr_files(cropped_image: Image, row: Series, info_file_path: str,
     if is_image_size_reasonable(cropped_image, png_limits):
         cropped_image.save(png_path, bits=8)
         logging.info(f'Saved image {png_path}')
+        result = True
     else:
         logging.info(f'Dropped oversize image {png_path}')
-    return
+        result = False
+    return result
 
 
 def aspect_ratios_match(small_image_path, big_image_path, require_big) -> bool:
