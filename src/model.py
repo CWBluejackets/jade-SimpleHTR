@@ -148,6 +148,32 @@ class Model:
             # the input to the decoder must have softmax already applied
             self.wbs_input = tf.nn.softmax(self.ctc_in_3d_tbc, axis=2)
 
+    # CTC model training
+    # example
+    # model.fit(x=[x_train,y_train,x_train_len,y_train_len], y=zeros(nb_train), batch_size=64)
+    # full API
+    #     def fit(self, x=None,
+    #             y=None,
+    #             batch_size=None,
+    #             epochs=1,
+    #             verbose=1,
+    #             callbacks=None,
+    #             validation_split=0.0,
+    #             validation_data=None,
+    #             shuffle=True,
+    #             class_weight=None,
+    #             sample_weight=None,
+    #             initial_epoch=0,
+    #             steps_per_epoch=None,
+    #             validation_steps=None):
+    #         """
+    #         Model training on data.
+    #
+    #         A major modification concerns the x input of the form:
+    #           [input_sequences, label_sequences, inputs_lengths, labels_length]
+    #         (in a similar way than for using CTC in tensorflow)
+
+
     def setup_tf(self) -> Tuple[tf.compat.v1.Session, tf.compat.v1.train.Saver]:
         """Initialize TF."""
         print('Python: ' + sys.version)
