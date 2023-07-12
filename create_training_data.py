@@ -473,7 +473,7 @@ if __name__ == "__main__":
     max_size = config.get('max_size')
     holdout = config.get('holdout', 0)
 
-    image_limits = (config.get['x_limit'], config.get['y_limit'])
+    image_limits = (config.get('x_limit'), config.get('y_limit'))
 
     logging.info(f'Loading {input_filename}')
     big_df = pd.read_csv(input_filename, dtype=TYPE_SPEC, parse_dates=PARSE_DATES)
