@@ -30,7 +30,6 @@ def convert_fractions(text):
 def get_png_and_label(workflow_dir, img_path, label):
     """
     part of the tf data loading
-    https://stackoverflow.com/questions/63640185/make-a-tf-dataset-from-image-filenames-and-corresponding-string-labels
     :param workflow_dir: .../training_data/21955
     :param img_path: img/390403.png
     :param label: Smith Robt
@@ -46,13 +45,15 @@ def get_png_and_label(workflow_dir, img_path, label):
 
 
 def load_dataset(control_path):
-    # use:
-    locations.get_convert_fractions()
+    # TODO use:
     locations.get_high_contrast()
+    # https://stackoverflow.com/questions/63640185/make-a-tf-dataset-from-image-filenames-and-corresponding-string-labels
     control_data = []
     with open(control_path, 'r') as f:
         for line in f.readlines():
             img_path, label = line.strip('\n').split(' ', maxsplit=1)
+            if locations.get_convert_fractions():
+                label = convert_fractions(label)
             control_data.append([img_path, label])
     workflow_dir = os.path.dirname(control_path)
     dataset = tf.data.Dataset.from_tensor_slices(control_data).map(lambda x:

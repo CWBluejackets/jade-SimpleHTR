@@ -40,6 +40,7 @@ class Model:
         # https://arxiv.org/abs/1507.05717
         # TODO check Conv2D activation function
         # TODO check padding "p1x1" in Shi
+        # TODO image perturbation options (extra layers here)
 
         layer01 = layers.Conv2D(filters=64, kernel_size=(3, 3), activation=tf.nn.relu,
                                 strides=(1, 1), padding='same')(input_layer),
