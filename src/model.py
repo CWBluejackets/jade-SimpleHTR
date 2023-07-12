@@ -41,25 +41,25 @@ class Model:
         # TODO check padding "p1x1" in Shi
 
         layer01 = layers.Conv2D(filters=64, kernel_size=(3, 3), activation=tf.nn.relu,
-                      strides=(1, 1), padding='same')(input_layer),
+                                strides=(1, 1), padding='same')(input_layer),
         layer02 = layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2))(layer01),
         layer03 = layers.Conv2D(filters=128, kernel_size=(3, 3), activation=tf.nn.relu,
-                      strides=(1, 1), padding='same')(layer02),
+                                strides=(1, 1), padding='same')(layer02),
         layer04 = layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2))(layer03),
         layer05 = layers.Conv2D(filters=256, kernel_size=(3, 3), activation=tf.nn.relu,
-                      strides=(1, 1), padding='same')(layer04),
+                                strides=(1, 1), padding='same')(layer04),
         layer06 = layers.BatchNormalization()(layer05),
         layer07 = layers.Conv2D(filters=256, kernel_size=(3, 3), activation=tf.nn.relu,
-                      strides=(1, 1), padding='same')(layer06),
+                                strides=(1, 1), padding='same')(layer06),
         layer08 = layers.MaxPool2D(pool_size=(2, 2), strides=(1, 2))(layer07),
         layer09 = layers.Conv2D(filters=512, kernel_size=(3, 3), activation=tf.nn.relu,
-                      strides=(1, 1), padding='same')(layer08),
+                                strides=(1, 1), padding='same')(layer08),
         layer10 = layers.BatchNormalization()(layer09),
         layer11 = layers.Conv2D(filters=51, kernel_size=(3, 3), activation=tf.nn.relu,
-                      strides=(1, 1), padding='same')(layer10),
+                                strides=(1, 1), padding='same')(layer10),
         layer12 = layers.MaxPool2D(pool_size=(2, 2), strides=(1, 2))(layer11),
         layer13 = layers.Conv2D(filters=512, kernel_size=(2, 2), activation=tf.nn.relu,
-                      strides=(1, 1), padding='valid')(layer12),
+                                strides=(1, 1), padding='valid')(layer12),
         layer14 = layers.BatchNormalization()(layer13),
         # Map-to-Sequence
         layer15 = layers.Flatten()(layer14),
@@ -172,7 +172,6 @@ class Model:
     #         A major modification concerns the x input of the form:
     #           [input_sequences, label_sequences, inputs_lengths, labels_length]
     #         (in a similar way than for using CTC in tensorflow)
-
 
     def setup_tf(self) -> Tuple[tf.compat.v1.Session, tf.compat.v1.train.Saver]:
         """Initialize TF."""
