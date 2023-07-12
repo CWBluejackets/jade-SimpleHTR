@@ -13,7 +13,7 @@ import locations
 # Disable eager mode
 tf.compat.v1.disable_eager_execution()
 
-# x_pixels, y_pixels, greyscale
+# x_pixels, y_pixels, 1 for greyscale
 INPUT_SHAPE = (128, 32, 1)
 
 
@@ -68,16 +68,13 @@ class Model:
         layer16 = layers.Bidirectional(layers.LSTM(256))(layer15),
         output_layer = layers.Bidirectional(layers.LSTM(256))(layer16)
 
-        self.model = CTCModel([input_layer], [output_layer])
-
-        # C&P from RSE Keras
-        self.model.compile(optimizer='adam')
-        # note: this compile method only takes optimizer
-
-        # CTC wrapper found
         # https://pypi.org/project/keras-ctcmodel/
         # https://github.com/cyprienruffino/CTCModel
         # https://arxiv.org/abs/1901.07957
+        self.model = CTCModel([input_layer], [output_layer])
+
+        self.model.compile(optimizer='adam')
+        # note: this compile method only takes optimizer
 
         """Init model: add CNN, RNN and CTC and initialize TF."""
         self.dump = dump
@@ -92,9 +89,6 @@ class Model:
         # input image batch
         self.input_imgs = tf.compat.v1.placeholder(tf.float32, shape=(None, None, None))
 
-        # setup CNN, RNN and CTC
-        self.setup_ctc()
-
         # setup optimizer to train NN
         self.batches_trained = 0
         self.update_ops = tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.UPDATE_OPS)
@@ -103,50 +97,6 @@ class Model:
 
         # initialize TF
         self.sess, self.saver = self.setup_tf()
-
-    def setup_ctc(self) -> None:
-        """Create CTC loss and decoder."""
-        # BxTxC -> TxBxC
-        self.ctc_in_3d_tbc = tf.transpose(a=self.rnn_out_3d, perm=[1, 0, 2])
-        # ground truth text as sparse tensor
-        self.gt_texts = tf.SparseTensor(tf.compat.v1.placeholder(tf.int64, shape=[None, 2]),
-                                        tf.compat.v1.placeholder(tf.int32, [None]),
-                                        tf.compat.v1.placeholder(tf.int64, [2]))
-
-        # calc loss for batch
-        self.seq_len = tf.compat.v1.placeholder(tf.int32, [None])
-        self.loss = tf.reduce_mean(
-            input_tensor=tf.compat.v1.nn.ctc_loss(labels=self.gt_texts, inputs=self.ctc_in_3d_tbc,
-                                                  sequence_length=self.seq_len,
-                                                  ctc_merge_repeated=True))
-
-        # calc loss for each element to compute label probability
-        self.saved_ctc_input = tf.compat.v1.placeholder(tf.float32,
-                                                        shape=[None, None, len(self.char_list) + 1])
-        self.loss_per_element = tf.compat.v1.nn.ctc_loss(labels=self.gt_texts, inputs=self.saved_ctc_input,
-                                                         sequence_length=self.seq_len, ctc_merge_repeated=True)
-
-        # best path decoding or beam search decoding
-        if self.decoder_type == DecoderType.BestPath:
-            self.decoder = tf.nn.ctc_greedy_decoder(inputs=self.ctc_in_3d_tbc, sequence_length=self.seq_len)
-        elif self.decoder_type == DecoderType.BeamSearch:
-            self.decoder = tf.nn.ctc_beam_search_decoder(inputs=self.ctc_in_3d_tbc, sequence_length=self.seq_len,
-                                                         beam_width=50)
-        # word beam search decoding (see https://github.com/githubharald/CTCWordBeamSearch)
-        elif self.decoder_type == DecoderType.WordBeamSearch:
-            # prepare information about language (dictionary, characters in dataset, characters forming words)
-            chars = ''.join(self.char_list)
-            word_char_file = os.path.join(locations.get_model_dir(), 'wordCharList.txt')
-            word_chars = open(word_char_file).read().splitlines()[0]
-            corpus = open('../data/corpus.txt').read()
-
-            # decode using the "Words" mode of word beam search
-            from word_beam_search import WordBeamSearch
-            self.decoder = WordBeamSearch(50, 'Words', 0.0, corpus.encode('utf8'), chars.encode('utf8'),
-                                          word_chars.encode('utf8'))
-
-            # the input to the decoder must have softmax already applied
-            self.wbs_input = tf.nn.softmax(self.ctc_in_3d_tbc, axis=2)
 
     # CTC model training
     # example
