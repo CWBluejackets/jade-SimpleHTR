@@ -13,7 +13,7 @@ convert_fractions = False
 
 # defaults https://www.tensorflow.org/api_docs/python/tf/compat/v1/train/AdamOptimizer
 optimizer_learning_rate = 0.001
-optimizer_epsilon = 1e-08,
+optimizer_epsilon = 1e-08
 
 # dropout
 dropout = 0.0
