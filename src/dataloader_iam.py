@@ -40,7 +40,7 @@ def get_png_and_label(workflow_dir, img_path, label):
     # channels=1 -> grayscale
     image = tf.image.decode_png(raw, channels=1)
     image = tf.image.convert_image_dtype(image, tf.float32)
-    image = tf.image.resize_with_pad(image, model.INPUT_SHAPE[1], model.INPUT_SHAPE[0])
+    image = tf.image.resize_with_pad(image, model.INPUT_SHAPE[0], model.INPUT_SHAPE[1])
     # resize; maintain aspect ratio; pad with zeroes
     label1 = tf.cast(tf.equal(label, 'class2'), tf.int32)
     return image, label1

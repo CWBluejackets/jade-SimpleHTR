@@ -13,8 +13,8 @@ import locations
 # Disable eager mode
 tf.compat.v1.disable_eager_execution()
 
-# x_pixels, y_pixels, 1 for greyscale
-INPUT_SHAPE = (128, 32, 1)
+# tf.image produces a tensor shape=(height, width, 1 for grayscale)
+INPUT_SHAPE = (50, 200, 1)
 
 
 class DecoderType:
