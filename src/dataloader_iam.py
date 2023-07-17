@@ -40,14 +40,15 @@ def get_png_and_label(workflow_dir, img_path, label):
     # channels=1 -> grayscale
     image = tf.image.decode_png(raw, channels=1)
     image = tf.image.convert_image_dtype(image, tf.float32)
-    image = tf.image.resize_with_pad(image, model.INPUT_SHAPE[0], model.INPUT_SHAPE[1])
     # resize; maintain aspect ratio; pad with zeroes
-    label1 = tf.cast(tf.equal(label, 'class2'), tf.int32)
+    image = tf.image.resize_with_pad(image, model.INPUT_SHAPE[0], model.INPUT_SHAPE[1])
+    # above may not be necessary if using keras.preprocessing.sequence.pad(...)
+    label1 = tf.convert_to_tensor(label)
     return image, label1
 
 
 def load_dataset(control_path):
-    # TODO use:
+    # TODO use this option:
     locations.get_high_contrast()
     # https://stackoverflow.com/questions/63640185/make-a-tf-dataset-from-image-filenames-and-corresponding-string-labels
     control_data = []
