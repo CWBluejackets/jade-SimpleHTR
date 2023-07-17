@@ -37,13 +37,16 @@ def get_png_and_label(workflow_dir, img_path, label):
     :return:
     """
     raw = tf.io.read_file(os.path.join(workflow_dir, img_path))
-    # channels=1 -> grayscale
+    # channels = 1 -> grayscale
     image = tf.image.decode_png(raw, channels=1)
     image = tf.image.convert_image_dtype(image, tf.float32)
     # resize; maintain aspect ratio; pad with zeroes
+    # this may not be necessary? if using keras.preprocessing.sequence.pad(...) later
     image = tf.image.resize_with_pad(image, model.INPUT_SHAPE[0], model.INPUT_SHAPE[1])
-    # above may not be necessary if using keras.preprocessing.sequence.pad(...)
-    label1 = tf.convert_to_tensor(label)
+    # tensor shape is length of string
+    label1 = tf.convert_to_tensor(list(label))
+    # or is numeric better?
+    # tf.strings.unicode_decode('Smith Thos', input_encoding='utf-8')
     return image, label1
 
 
