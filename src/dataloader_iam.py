@@ -47,6 +47,8 @@ def get_png_and_label(workflow_dir, img_path, label):
     label1 = tf.convert_to_tensor(list(label))
     # or is numeric better?
     # tf.strings.unicode_decode('Smith Thos', input_encoding='utf-8')
+    # Note for later: encoding has to be done with uc UTF-8
+    # tf.strings.unicode_encode(t0, output_encoding='UTF-8')
     return image, label1
 
 
