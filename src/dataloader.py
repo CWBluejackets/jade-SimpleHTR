@@ -35,6 +35,8 @@ def get_png_and_label(workflow_dir, img_path, label):
     raw = tf.io.read_file(os.path.join(workflow_dir, img_path))
     # channels = 1 -> grayscale
     image = tf.image.decode_png(raw, channels=1)
+    if locations.get_high_contrast():
+        image = tf.image.adjust_contrast(image, 10)
     image = tf.image.convert_image_dtype(image, tf.float32)
     # resize; maintain aspect ratio; pad with zeroes
     # this may not be necessary? if using keras.preprocessing.sequence.pad(...) later
@@ -49,8 +51,6 @@ def get_png_and_label(workflow_dir, img_path, label):
 
 
 def load_dataset(control_path):
-    # TODO use this option:
-    locations.get_high_contrast()
     # https://stackoverflow.com/questions/63640185/make-a-tf-dataset-from-image-filenames-and-corresponding-string-labels
     control_data = []
     with open(control_path, 'r') as f:
