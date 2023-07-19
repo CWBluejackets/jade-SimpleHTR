@@ -44,10 +44,10 @@ def get_png_and_label(workflow_dir, img_path, label):
     # tensor shape is length of string
     # label1 = tf.convert_to_tensor(list(label))
     # or is numeric better?
-    label1 = tf.strings.unicode_decode('Smith Thos', input_encoding='utf-8')
+    label_t = tf.strings.unicode_decode(label, input_encoding='utf-8')
     # Note for later: encoding has to be done with uc UTF-8
     # tf.strings.unicode_encode(t0, output_encoding='UTF-8')
-    return image, label1
+    return image, label_t
 
 
 def load_dataset(control_path):
@@ -63,6 +63,16 @@ def load_dataset(control_path):
     dataset = tf.data.Dataset.from_tensor_slices(control_data).map(lambda x:
                                                                    get_png_and_label(workflow_dir, x[0], x[1]))
     return dataset
+
+# TODO
+# Initialization:
+# parameters: control file, train/test split
+# read the control file, set the size, store list of paths and list of labels;
+# shuffle list and do the split.
+# Also needed: list of input lengths and label lengths (for CTCModel)
+# Generator/iterator:
+#
+
 
 
 class ArrayDataset:
