@@ -55,10 +55,12 @@ def load_dataset(control_path):
     control_data = []
     with open(control_path, 'r') as f:
         for line in f.readlines():
-            img_path, label = line.strip('\n').split(' ', maxsplit=1)
-            if locations.get_convert_fractions():
-                label = convert_fractions(label)
-            control_data.append([img_path, label])
+            line = line.strip('\n')
+            if line and not line.startswith('#'):
+                img_path, label = line.split(' ', maxsplit=1)
+                if locations.get_convert_fractions():
+                    label = convert_fractions(label)
+                control_data.append([img_path, label])
     workflow_dir = os.path.dirname(control_path)
     dataset = tf.data.Dataset.from_tensor_slices(control_data).map(lambda x:
                                                                    get_png_and_label(workflow_dir, x[0], x[1]))
@@ -74,6 +76,13 @@ def load_dataset(control_path):
 #
 
 
+# usage
+# ot = (tf.float32, tf.int64)
+# os = (tf.TensorShape([tr_x.shape[1:]), tf.TensorShape([]))
+# ds = tf.data.Dataset.from_generator(dg,
+#                                     output_types = ot,
+#                                     output_shapes = os)
+# ds = ds.batch(BATCH_SIZE)
 
 class ArrayDataset:
     def __init__(self,
@@ -120,3 +129,7 @@ class ArrayDataset:
             x = self.transforms(x)
         x = self.normalize(x)
         return x
+
+# https://tensorexamples.com/2020/07/27/Using-the-tf.data.Dataset.html
+# Method 2: Using a generator
+# https://www.tensorflow.org/api_docs/python/tf/data/Dataset#from_generator
