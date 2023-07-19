@@ -88,6 +88,12 @@ def load_dataset_for_ctc(control_file_path, test_split: float) -> tuple:
     return x_train_pad, x_train_len, x_test_pad, x_test_len, y_train_pad, y_train_len, y_test_pad, y_test_len
 
 
+def tensor_to_string(tensor: tf.Tensor) -> str:
+    if tensor.dtype != tf.string:
+        raise ValueError(f'tensor content {tensor.dtype} is not string')
+    return tensor.numpy().decode('utf-8')
+
+
 # alternative ideas
 # https://medium.com/the-owl/creating-a-tf-dataset-using-a-data-generator-5e5564609e64
 

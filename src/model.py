@@ -4,7 +4,7 @@ from typing import List, Tuple
 
 import numpy as np
 import tensorflow as tf
-import tensorflow.keras.layers as layers
+from tensorflow import keras
 from keras_ctcmodel.CTCModel import CTCModel
 
 from dataloader_iam import Batch
@@ -41,36 +41,37 @@ class Model:
         # TODO check Conv2D activation function
         # TODO check padding "p1x1" in Shi
 
-        # TODO image perturbation options (insert extra layers here if option is True)
+        # TODO image perturbation option "augment"
+        # (insert extra layers here if option is True)
 
-        layer01 = layers.Conv2D(filters=64, kernel_size=(3, 3), activation=tf.nn.relu,
-                                strides=(1, 1), padding='same')(input_layer),
-        layer02 = layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2))(layer01),
-        layer03 = layers.Conv2D(filters=128, kernel_size=(3, 3), activation=tf.nn.relu,
-                                strides=(1, 1), padding='same')(layer02),
-        layer04 = layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2))(layer03),
-        layer05 = layers.Conv2D(filters=256, kernel_size=(3, 3), activation=tf.nn.relu,
-                                strides=(1, 1), padding='same')(layer04),
-        layer06 = layers.BatchNormalization()(layer05),
-        layer07 = layers.Conv2D(filters=256, kernel_size=(3, 3), activation=tf.nn.relu,
-                                strides=(1, 1), padding='same')(layer06),
-        layer08 = layers.MaxPool2D(pool_size=(2, 2), strides=(1, 2))(layer07),
-        layer09 = layers.Conv2D(filters=512, kernel_size=(3, 3), activation=tf.nn.relu,
-                                strides=(1, 1), padding='same')(layer08),
-        layer10 = layers.BatchNormalization()(layer09),
-        layer11 = layers.Conv2D(filters=51, kernel_size=(3, 3), activation=tf.nn.relu,
-                                strides=(1, 1), padding='same')(layer10),
-        layer12 = layers.MaxPool2D(pool_size=(2, 2), strides=(1, 2))(layer11),
-        layer13 = layers.Conv2D(filters=512, kernel_size=(2, 2), activation=tf.nn.relu,
-                                strides=(1, 1), padding='valid')(layer12),
-        layer14 = layers.BatchNormalization()(layer13),
+        layer01 = keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=tf.nn.relu,
+                                      strides=(1, 1), padding='same')(input_layer),
+        layer02 = keras.layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2))(layer01),
+        layer03 = keras.layers.Conv2D(filters=128, kernel_size=(3, 3), activation=tf.nn.relu,
+                                      strides=(1, 1), padding='same')(layer02),
+        layer04 = keras.layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2))(layer03),
+        layer05 = keras.layers.Conv2D(filters=256, kernel_size=(3, 3), activation=tf.nn.relu,
+                                      strides=(1, 1), padding='same')(layer04),
+        layer06 = keras.layers.BatchNormalization()(layer05),
+        layer07 = keras.layers.Conv2D(filters=256, kernel_size=(3, 3), activation=tf.nn.relu,
+                                      strides=(1, 1), padding='same')(layer06),
+        layer08 = keras.layers.MaxPool2D(pool_size=(2, 2), strides=(1, 2))(layer07),
+        layer09 = keras.layers.Conv2D(filters=512, kernel_size=(3, 3), activation=tf.nn.relu,
+                                      strides=(1, 1), padding='same')(layer08),
+        layer10 = keras.layers.BatchNormalization()(layer09),
+        layer11 = keras.layers.Conv2D(filters=51, kernel_size=(3, 3), activation=tf.nn.relu,
+                                      strides=(1, 1), padding='same')(layer10),
+        layer12 = keras.layers.MaxPool2D(pool_size=(2, 2), strides=(1, 2))(layer11),
+        layer13 = keras.layers.Conv2D(filters=512, kernel_size=(2, 2), activation=tf.nn.relu,
+                                      strides=(1, 1), padding='valid')(layer12),
+        layer14 = keras.layers.BatchNormalization()(layer13),
         # Map-to-Sequence
-        layer15 = layers.Flatten()(layer14),
+        layer15 = keras.layers.Flatten()(layer14),
         # 2 layers of Bidirectional LSTM hidden units = 256
         # activation?
         # TODO LSTM has dropout and recurrent_dropout options
-        layer16 = layers.Bidirectional(layers.LSTM(256))(layer15),
-        output_layer = layers.Bidirectional(layers.LSTM(256))(layer16)
+        layer16 = keras.layers.Bidirectional(keras.layers.LSTM(256))(layer15),
+        output_layer = keras.layers.Bidirectional(keras.layers.LSTM(256))(layer16)
 
         # https://pypi.org/project/keras-ctcmodel/
         # https://github.com/cyprienruffino/CTCModel
