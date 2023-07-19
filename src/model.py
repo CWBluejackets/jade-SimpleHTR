@@ -17,17 +17,9 @@ tf.compat.v1.disable_eager_execution()
 INPUT_SHAPE = (50, 200, 1)
 
 
-class DecoderType:
-    """CTC decoder types."""
-    BestPath = 0
-    BeamSearch = 1
-    WordBeamSearch = 2
-
-
 class Model:
     def __init__(self,
                  char_list: List[str],
-                 decoder_type: str = DecoderType.BestPath,
                  must_restore: bool = False,
                  dump: bool = False) -> None:
 
@@ -84,7 +76,6 @@ class Model:
         """Init model: add CNN, RNN and CTC and initialize TF."""
         self.dump = dump
         self.char_list = char_list
-        self.decoder_type = decoder_type
         self.must_restore = must_restore
         self.snap_ID = 0
 
@@ -127,6 +118,17 @@ class Model:
     #         A major modification concerns the x input of the form:
     #           [input_sequences, label_sequences, inputs_lengths, labels_length]
     #         (in a similar way than for using CTC in tensorflow)
+
+    def train(self):
+        checkpoint_path = os.path.join(locations.get_model_dir(), 'cp-{epoch:04d}.ckpt')
+        cp_callback = tf.keras.callbacks.ModelCheckpoint(
+            filepath=checkpoint_path,
+            verbose=1,
+            save_weights_only=True)
+        self.model.fit(
+            # ...
+            callbacks=[cp_callback]
+        )
 
     def setup_tf(self) -> Tuple[tf.compat.v1.Session, tf.compat.v1.train.Saver]:
         """Initialize TF."""
@@ -289,7 +291,8 @@ class Model:
         return texts, probs
 
     def save(self) -> None:
-        """Save model to file."""
-        self.snap_ID += 1
-        snapshot_file = os.path.join(locations.get_model_dir(), 'snapshot')
-        self.saver.save(self.sess, snapshot_file, global_step=self.snap_ID)
+        model_location = os.path.join(locations.get_model_dir(), 'model.save')
+        self.model.save_model(model_location)
+
+# saving and loading: note checkpoint callback
+# https://www.tensorflow.org/tutorials/keras/save_and_load#save_checkpoints_during_training
