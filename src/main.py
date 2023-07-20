@@ -215,8 +215,6 @@ def parse_args() -> argparse.Namespace:
                         action='store_true', default=False)
     parser.add_argument('--img_file', help='Image used for inference.',
                         type=Path, default='../data/word.png')
-    parser.add_argument('--img_list_file', help='control file for apply mode',
-                        type=Path)
     parser.add_argument('--early_stopping', help='Early stopping epochs.',
                         type=int, default=25)
     parser.add_argument('--dump', help='Dump output of NN to CSV file(s).',
@@ -244,27 +242,27 @@ def main():
     locations.set_debug_dir(args.debug_dir)
     locations.set_high_contrast(args.high_contrast)
     locations.set_convert_fractions(args.convert_fractions)
+    # create empty model
+    the_model = Model()
 
     # train the model
     if args.mode == 'train':
-        the_model = Model()
-        the_model.train(args.data_file)
+        the_model.train(args.data_file, 0.95)
         the_model.save()
 
     # evaluate it on the validation set
     elif args.mode == 'validate':
-        loader = DataLoaderIAM(args.data_file, args.batch_size, fast=args.fast)
-        model = Model(char_list_from_file(), decoder_type, must_restore=True)
-        validate(model, loader, args.line_mode, args.wide_mode)
+        the_model.load()
+        validate(the_model, loader, args.line_mode, args.wide_mode)
 
     # infer text on test image
     elif args.mode == 'infer':
-        model = Model(char_list_from_file(), decoder_type, must_restore=True, dump=args.dump)
-        infer(model, args.img_file)
+        the_model.load()
+        infer(the_model, args.img_file)
 
     elif args.mode == 'apply':
-        model = Model(char_list_from_file(), decoder_type, must_restore=True, dump=args.dump)
-        apply(model, args.img_list_file, args.output_file)
+        the_model.load()
+        apply(the_model, args.data_file, args.output_file)
 
 
 if __name__ == '__main__':
