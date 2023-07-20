@@ -245,31 +245,11 @@ def main():
     locations.set_high_contrast(args.high_contrast)
     locations.set_convert_fractions(args.convert_fractions)
 
-    decoder_mapping = {'bestpath': DecoderType.BestPath,
-                       'beamsearch': DecoderType.BeamSearch,
-                       'wordbeamsearch': DecoderType.WordBeamSearch}
-    decoder_type = decoder_mapping[args.decoder]
-
     # train the model
     if args.mode == 'train':
-        loader = DataLoaderIAM(args.data_file, args.batch_size, fast=args.fast)
-
-        # when in line mode, take care to have a whitespace in the char list
-        char_list = loader.char_list
-        if args.line_mode and ' ' not in char_list:
-            char_list = [' '] + char_list
-
-        # save characters and words
-        with open(locations.get_fn_char_list(), 'w') as f:
-            f.write(''.join(char_list))
-
-        with open(locations.get_fn_corpus(), 'w') as f:
-            f.write(' '.join(loader.train_words + loader.validation_words))
-
-        model = Model(char_list, decoder_type)
-        train(model, loader, line_mode=args.line_mode, wide_mode=args.wide_mode,
-              augmentation=args.augment,
-              early_stopping=args.early_stopping)
+        the_model = Model()
+        the_model.train(args.data_file)
+        the_model.save()
 
     # evaluate it on the validation set
     elif args.mode == 'validate':
