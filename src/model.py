@@ -17,7 +17,7 @@ INPUT_SHAPE = (50, 200, 1)
 class Model:
 
     def __init__(self) -> None:
-        self.model = None
+        self.ctc_model = None
         self.create_model()
         return
 
@@ -64,9 +64,9 @@ class Model:
         # https://pypi.org/project/keras-ctcmodel/
         # https://github.com/cyprienruffino/CTCModel
         # https://arxiv.org/abs/1901.07957
-        self.model = CTCModel([input_layer], [output_layer])
+        self.ctc_model = CTCModel([input_layer], [output_layer])
 
-        self.model.compile(optimizer='adam')
+        self.ctc_model.compile(optimizer='adam')
         # note: this compile method only takes optimizer
         return
 
@@ -81,7 +81,7 @@ class Model:
         # Note that x is weird for the CTCModel
         # x=[input_sequences, label_sequences, inputs_lengths, labels_length]
 
-        self.model.fit(
+        self.ctc_model.fit(
             x=[x_train_pad, y_train_pad, x_train_len, y_train_len],
             y=None,
             callbacks=[cp_callback],
@@ -97,12 +97,12 @@ class Model:
     def load(self):
         model_dir = locations.get_model_dir()
         latest_snapshot = tf.train.latest_checkpoint(model_dir)
-        self.model.load(latest_snapshot)
+        self.ctc_model.load(latest_snapshot)
         return
 
     def save(self) -> None:
         model_location = os.path.join(locations.get_model_dir(), 'model.save')
-        self.model.save_model(model_location)
+        self.ctc_model.save_model(model_location)
 
     # saving and loading: note checkpoint callback
     # https://www.tensorflow.org/tutorials/keras/save_and_load#save_checkpoints_during_training
@@ -110,16 +110,16 @@ class Model:
     def evaluate(self, control_path):
         x_pad, x_len, y_pad, y_len = dataloader.load_dataset_for_ctc(control_path)
         # need to include confidence scores in output
-        prediction_t = self.model.predict([x_pad, x_len],
-                                          batch_size=500)
+        prediction_t = self.ctc_model.predict([x_pad, x_len],
+                                              batch_size=500)
         prediction_s = [dataloader.tensor_to_string(t) for t in prediction_t]
-        metrics = self.model.evaluate(x_pad, y_pad, x_len, y_len)
+        metrics = self.ctc_model.evaluate(x_pad, y_pad, x_len, y_len)
         return prediction_s, metrics
 
     def apply(self, png_path):
         png_t = dataloader.get_png_tensor(png_path)
         x_pad = [png_t]
         x_len = [len(png_t)]
-        prediction_t = self.model.predict(x_pad, x_len)
+        prediction_t = self.ctc_model.predict(x_pad, x_len)
         prediction_s = dataloader.tensor_to_string(prediction_t[0])
         return prediction_s

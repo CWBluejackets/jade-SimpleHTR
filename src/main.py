@@ -236,6 +236,7 @@ def main():
     locations.set_debug_dir(args.debug_dir)
     locations.set_high_contrast(args.high_contrast)
     locations.set_convert_fractions(args.convert_fractions)
+
     # create empty model
     the_model = Model()
 

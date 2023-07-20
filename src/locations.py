@@ -3,6 +3,7 @@ import os
 import cv2
 
 # Filenames and paths to data.
+# Global state. Sue me.
 
 # default value
 model_dir = '../model'
