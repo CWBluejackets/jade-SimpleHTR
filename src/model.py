@@ -110,10 +110,18 @@ class Model:
     # https://www.tensorflow.org/tutorials/keras/save_and_load#save_checkpoints_during_training
 
     def apply(self, control_path):
+        x_pad, x_len, y_pad, y_len = dataloader.load_dataset_for_ctc(control_path)
+        # need to include confidence scores in output
+        prediction_t = self.model.predict([x_pad, x_len],
+                                          batch_size=500)
+        prediction = [dataloader.tensor_to_string(t) for t in prediction_t]
+        return prediction
+
+    def evalate(self, control_path):
+        # x_train_pad, x_train_len, y_train_pad, y_train_len
         # need to include confidence scores in output
         pass
         return
-
 
     def infer_batch(self, batch: Batch, calc_probability: bool = False, probability_of_gt: bool = False):
         """Feed a batch into the NN to recognize the texts."""
@@ -173,4 +181,3 @@ class Model:
             self.dump_nn_output(eval_res[1])
 
         return texts, probs
-
