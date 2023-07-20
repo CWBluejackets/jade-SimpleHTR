@@ -1,15 +1,13 @@
 import os
-import sys
-from typing import List, Tuple
 
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
 from keras_ctcmodel.CTCModel import CTCModel
+from tensorflow import keras
 
-from dataloader_iam import Batch
-import locations
 import dataloader
+import locations
+from dataloader_iam import Batch
 
 # Disable eager mode
 tf.compat.v1.disable_eager_execution()
@@ -19,14 +17,13 @@ INPUT_SHAPE = (50, 200, 1)
 
 
 class Model:
-    def __init__(self,
-                 char_list: List[str],
-                 must_restore: bool = False,
-                 dump: bool = False) -> None:
 
-        # tf keras API
-        # https://www.tensorflow.org/api_docs/python/tf/keras/Sequential
+    def __init__(self) -> None:
+        self.model = None
+        self.create_model()
+        return
 
+    def create_model(self):
         input_layer = tf.keras.Input(shape=INPUT_SHAPE)
 
         # Shi & al 2017 "#maps" = Keras filters
@@ -96,11 +93,25 @@ class Model:
             epochs=15,
             verbose=2
         )
+        self.save()
+        return
 
     def load(self):
         model_dir = locations.get_model_dir()
-        latest_snapshot = tf.train.latest_checkpoint(model_dir)  # is there a saved model?
-        model.load(latest_snapshot)
+        latest_snapshot = tf.train.latest_checkpoint(model_dir)
+        self.model.load(latest_snapshot)
+        return
+
+    def save(self) -> None:
+        model_location = os.path.join(locations.get_model_dir(), 'model.save')
+        self.model.save_model(model_location)
+
+    # saving and loading: note checkpoint callback
+    # https://www.tensorflow.org/tutorials/keras/save_and_load#save_checkpoints_during_training
+
+    def apply(self, control_path):
+        # need to include confidence scores in output
+        pass
         return
 
 
@@ -163,9 +174,3 @@ class Model:
 
         return texts, probs
 
-    def save(self) -> None:
-        model_location = os.path.join(locations.get_model_dir(), 'model.save')
-        self.model.save_model(model_location)
-
-# saving and loading: note checkpoint callback
-# https://www.tensorflow.org/tutorials/keras/save_and_load#save_checkpoints_during_training
