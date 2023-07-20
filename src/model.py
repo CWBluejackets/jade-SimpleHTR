@@ -1,13 +1,11 @@
 import os
 
-import numpy as np
 import tensorflow as tf
 from keras_ctcmodel.CTCModel import CTCModel
 from tensorflow import keras
 
 import dataloader
 import locations
-from dataloader_iam import Batch
 
 # Disable eager mode
 tf.compat.v1.disable_eager_execution()
@@ -109,75 +107,19 @@ class Model:
     # saving and loading: note checkpoint callback
     # https://www.tensorflow.org/tutorials/keras/save_and_load#save_checkpoints_during_training
 
-    def apply(self, control_path):
+    def evaluate(self, control_path):
         x_pad, x_len, y_pad, y_len = dataloader.load_dataset_for_ctc(control_path)
         # need to include confidence scores in output
         prediction_t = self.model.predict([x_pad, x_len],
                                           batch_size=500)
-        prediction = [dataloader.tensor_to_string(t) for t in prediction_t]
-        return prediction
+        prediction_s = [dataloader.tensor_to_string(t) for t in prediction_t]
+        metrics = self.model.evaluate(x_pad, y_pad, x_len, y_len)
+        return prediction_s, metrics
 
-    def evalate(self, control_path):
-        # x_train_pad, x_train_len, y_train_pad, y_train_len
-        # need to include confidence scores in output
-        pass
-        return
-
-    def infer_batch(self, batch: Batch, calc_probability: bool = False, probability_of_gt: bool = False):
-        """Feed a batch into the NN to recognize the texts."""
-
-        # decode, optionally save RNN output
-        num_batch_elements = len(batch.imgs)
-
-        # put tensors to be evaluated into list
-        eval_list = []
-
-        if self.decoder_type == DecoderType.WordBeamSearch:
-            eval_list.append(self.wbs_input)
-        else:
-            eval_list.append(self.decoder)
-
-        if self.dump or calc_probability:
-            eval_list.append(self.ctc_in_3d_tbc)
-
-        # sequence length depends on input image size (model downsizes width by 4)
-        max_text_len = batch.imgs[0].shape[0] // 4
-
-        # dict containing all tensor fed into the model
-        feed_dict = {self.input_imgs: batch.imgs, self.seq_len: [max_text_len] * num_batch_elements,
-                     self.is_train: False}
-
-        # evaluate model
-        eval_res = self.sess.run(eval_list, feed_dict)
-
-        # TF decoders: decoding already done in TF graph
-        if self.decoder_type != DecoderType.WordBeamSearch:
-            decoded = eval_res[0]
-        # word beam search decoder: decoding is done in C++ function compute()
-        else:
-            decoded = self.decoder.compute(eval_res[0])
-
-        # map labels (numbers) to character string
-        texts = self.decoder_output_to_text(decoded, num_batch_elements)
-
-        # feed RNN output and recognized text into CTC loss to compute labeling probability
-        probs = None
-        if calc_probability:
-            sparse = self.to_sparse(batch.gt_texts) if probability_of_gt else self.to_sparse(texts)
-            ctc_input = eval_res[1]
-            eval_list = self.loss_per_element
-            feed_dict = {self.saved_ctc_input: ctc_input, self.gt_texts: sparse,
-                         self.seq_len: [max_text_len] * num_batch_elements, self.is_train: False}
-            try:
-                loss_vals = self.sess.run(eval_list, feed_dict)
-                probs = np.exp(-loss_vals)
-            except ValueError as e:
-                texts_out = ';'.join(texts)
-                print(f'ValueError sess.run from {texts_out}')
-                print(str(e))
-                probs = [0] * batch.batch_size
-        # dump the output of the NN to CSV file(s)
-        if self.dump:
-            self.dump_nn_output(eval_res[1])
-
-        return texts, probs
+    def apply(self, png_path):
+        png_t = dataloader.get_png_tensor(png_path)
+        x_pad = [png_t]
+        x_len = [len(png_t)]
+        prediction_t = self.model.predict(x_pad, x_len)
+        prediction_s = dataloader.tensor_to_string(prediction_t[0])
+        return prediction_s

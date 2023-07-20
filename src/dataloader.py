@@ -21,15 +21,12 @@ def convert_fractions(text):
     return text
 
 
-def get_png_and_label(workflow_dir, path_and_label):
+def get_png_tensor(png_path):
     """
     part of the tf data loading
-    :param path_and_label: tuple (path, label)
-    :param workflow_dir: .../training_data/21955
     :return:
     """
-    img_full_path = os.path.join(workflow_dir, path_and_label[0])
-    raw = tf.io.read_file(img_full_path)
+    raw = tf.io.read_file(png_path)
     # channels = 1 -> grayscale
     image = tf.image.decode_png(raw, channels=1)
     if locations.get_high_contrast():
@@ -39,6 +36,18 @@ def get_png_and_label(workflow_dir, path_and_label):
     # TODO This may not be necessary? if using keras.preprocessing.sequence.pad(...) later
     image = tf.image.resize_with_pad(image, model.INPUT_SHAPE[0], model.INPUT_SHAPE[1])
     # -> tf.float32
+    return image
+
+
+def get_png_and_label(workflow_dir, path_and_label):
+    """
+    part of the tf data loading
+    :param path_and_label: tuple (path, label)
+    :param workflow_dir: .../training_data/21955
+    :return:
+    """
+    img_full_path = os.path.join(workflow_dir, path_and_label[0])
+    image = get_png_tensor(img_full_path)
     label = path_and_label[1]
     label_t = tf.strings.unicode_decode(label, input_encoding='utf-8')
     # -> tf.int32; shape is length of string
