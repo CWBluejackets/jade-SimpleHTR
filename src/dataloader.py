@@ -60,32 +60,23 @@ def load_raw_dataset(control_file_path) -> List[tuple]:
     return x_y_all
 
 
-def load_unpadded_dataset(control_file_path, test_split: float) -> tuple:
+def load_unpadded_dataset(control_file_path) -> tuple:
     x_y_all = load_raw_dataset(control_file_path)
     random.shuffle(x_y_all)
-    cutoff = max(min(1, round(len(x_y_all) * test_split)), len(x_y_all) - 1)
-    x_y_train = x_y_all[cutoff:]
-    x_y_test = x_y_all[:cutoff]
-    x_train = [pair[0] for pair in x_y_train]
-    x_test = [pair[0] for pair in x_y_test]
-    y_train = [pair[1] for pair in x_y_train]
-    y_test = [pair[1] for pair in x_y_test]
-    return x_train, x_test, y_train, y_test
+    x_train = [pair[0] for pair in x_y_all]
+    y_train = [pair[1] for pair in x_y_all]
+    return x_train, y_train
 
 
-def load_dataset_for_ctc(control_file_path, test_split: float) -> tuple:
-    x_train, x_test, y_train, y_test = load_unpadded_dataset(control_file_path, test_split)
+def load_dataset_for_ctc(control_file_path) -> tuple:
+    x_train, y_train = load_unpadded_dataset(control_file_path)
     x_train_len = [len(item) for item in x_train]
-    x_test_len = [len(item) for item in x_test]
     y_train_len = [len(item) for item in y_train]
-    y_test_len = [len(item) for item in y_test]
     # image padding done already for now
     x_train_pad = x_train
-    x_test_pad = x_test
     # string padding needed
     y_train_pad = sequence.pad_sequences(y_train, padding='post', value=0, dtype=tf.int32)
-    y_test_pad = sequence.pad_sequences(y_test, padding='post', value=0, dtype=tf.int32)
-    return x_train_pad, x_train_len, x_test_pad, x_test_len, y_train_pad, y_train_len, y_test_pad, y_test_len
+    return x_train_pad, x_train_len, y_train_pad, y_train_len
 
 
 def tensor_to_string(tensor: tf.Tensor) -> str:
