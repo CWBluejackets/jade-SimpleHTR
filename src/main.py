@@ -1,19 +1,11 @@
 import argparse
 import json
-import math
-import os
 from typing import Tuple, List
 
-import Levenshtein
-import cv2
-import editdistance
-import pandas as pd
 from path import Path
 
 import locations
-from dataloader_iam import DataLoaderIAM, Batch, convert_fractions
-from model import Model, DecoderType
-from preprocessor import Preprocessor
+from model import Model
 
 
 def get_img_height() -> int:
@@ -38,159 +30,30 @@ def char_list_from_file() -> List[str]:
     with open(locations.get_fn_char_list()) as f:
         return list(f.read())
 
-
-def train(model: Model,
-          loader: DataLoaderIAM,
-          line_mode: bool,
-          wide_mode: bool,
-          augmentation: bool,
-          early_stopping: int = 25) -> None:
-    """Trains NN."""
-    epoch = 0  # number of training epochs since start
-    summary_char_error_rates = []
-    summary_word_accuracies = []
-    preprocessor = Preprocessor(get_img_size(line_mode, wide_mode), data_augmentation=augmentation,
-                                line_mode=line_mode, wide_mode=wide_mode)
-    best_char_error_rate = float('inf')  # best validation character error rate
-    no_improvement_since = 0  # number of epochs no improvement of character error rate occurred
-    # stop training after this number of epochs without improvement
-    while True:
-        epoch += 1
-        print('Epoch:', epoch)
-
-        # train
-        print('Train NN')
-        loader.train_set()
-        while loader.has_next():
-            iter_info = loader.get_iterator_info()
-            batch = loader.get_next()
-            batch = preprocessor.process_batch(batch)
-            loss = model.train_batch(batch)
-            print(f'Epoch: {epoch} Batch: {iter_info[0]}/{iter_info[1]} Loss: {loss}')
-
-        # validate
-        char_error_rate, word_accuracy = validate(model, loader, line_mode, wide_mode)
-
-        # write summary
-        summary_char_error_rates.append(char_error_rate)
-        summary_word_accuracies.append(word_accuracy)
-        write_summary(summary_char_error_rates, summary_word_accuracies)
-
-        # if best validation accuracy so far, save model parameters
-        if char_error_rate < best_char_error_rate:
-            print('Character error rate improved, save model')
-            best_char_error_rate = char_error_rate
-            no_improvement_since = 0
-            model.save()
-        else:
-            print(f'Character error rate not improved, best so far: {char_error_rate * 100.0}%')
-            no_improvement_since += 1
-
-        # stop training if no more improvement in the last x epochs
-        if no_improvement_since >= early_stopping:
-            print(f'No more improvement since {early_stopping} epochs. Training stopped.')
-            break
-
-
-def validate(model: Model, loader: DataLoaderIAM, line_mode: bool, wide_mode: bool) -> Tuple[float, float]:
-    """Validates NN."""
-    print('Validate NN')
-    loader.validation_set()
-    preprocessor = Preprocessor(get_img_size(line_mode), line_mode=line_mode, wide_mode=wide_mode)
-    num_char_err = 0
-    num_char_total = 0
-    num_word_ok = 0
-    num_word_total = 0
-    while loader.has_next():
-        iter_info = loader.get_iterator_info()
-        print(f'Batch: {iter_info[0]} / {iter_info[1]}')
-        batch = loader.get_next()
-        batch = preprocessor.process_batch(batch)
-        recognized, _ = model.infer_batch(batch)
-
-        print('Ground truth -> Recognized')
-        for i in range(len(recognized)):
-            num_word_ok += 1 if batch.gt_texts[i] == recognized[i] else 0
-            num_word_total += 1
-            dist = editdistance.eval(recognized[i], batch.gt_texts[i])
-            num_char_err += dist
-            num_char_total += len(batch.gt_texts[i])
-            print('[OK]' if dist == 0 else '[ERR:%d]' % dist, '"' + batch.gt_texts[i] + '"', '->',
-                  '"' + recognized[i] + '"')
-
-    # print validation result
-    char_error_rate = num_char_err / num_char_total
-    word_accuracy = num_word_ok / num_word_total
-    print(f'Character error rate: {char_error_rate * 100.0}%. Word accuracy: {word_accuracy * 100.0}%.')
-    return char_error_rate, word_accuracy
-
-
-def infer(model: Model, fn_img: Path) -> None:
-    """Recognizes text in image provided by file path."""
-    img = locations.imread(fn_img, cv2.IMREAD_GRAYSCALE)
-    assert img is not None
-
-    preprocessor = Preprocessor(get_img_size(), dynamic_width=True, padding=16)
-    img = preprocessor.process_img(img)
-
-    batch = Batch([img], None, 1)
-    recognized, probability = model.infer_batch(batch, True)
-    print(f'Recognized: "{recognized[0]}"')
-    print(f'Probability: {probability[0]}')
-    return
-
-
-def apply(model: Model, control_file: Path, output_file: Path) -> None:
-    results = []
-    main_dir = os.path.dirname(control_file)
-    with open(control_file, 'r') as f:
-        for line in f.readlines():
-            line_split = line.strip().split(' ', maxsplit=1)
-            img_filename = line_split[0]
-            # sometimes the training data includes a correct empty string
-            if len(line_split) == 2:
-                label = line_split[1]
-                if locations.get_convert_fractions():
-                    label = convert_fractions(label)
-            else:
-                label = ' '
-
-            # filename now includes "img/" subdir
-            img_path = os.path.join(main_dir, img_filename)
-            # warning: cv2 does not trap missing files
-            img = locations.imread(img_path, cv2.IMREAD_GRAYSCALE)
-            preprocessor = Preprocessor(get_img_size(), dynamic_width=True, padding=16)
-            img = preprocessor.process_img(img)
-            batch = Batch([img], None, 1)
-            recognized, probability = model.infer_batch(batch, True)
-            similarity = Levenshtein.ratio(label, recognized[0])
-            distance = Levenshtein.distance(label, recognized[0])
-            print(f'{label} -> {recognized[0]} probability {probability[0]:.3f} similarity {similarity:.3f}')
-            results.append([img_filename, label, recognized[0], probability[0], similarity,
-                            label == recognized[0], distance, len(label)])
-    df = pd.DataFrame.from_records(results, columns=['file', 'label', 'output', 'probability', 'similarity',
-                                                     'correct', 'distance', 'length'])
-    df['logprob'] = df['probability'].apply(math.log1p)
-    print()
-    print(str(df.describe()))
-    print()
-    print('PEARSON')
-    print(str(df[['probability', 'logprob', 'similarity', 'distance', 'length']].corr('pearson')))
-    print()
-    character_error = df['distance'].sum() / df['length'].sum()
-    print('CHARACTER ERROR')
-    print(f'{character_error}')
-    print(f'{character_error:.1%}')
-    print()
-    word_accuracy = df['correct'].value_counts().get(True, 0) / df['correct'].size
-    print('WORD ACCURACY')
-    print(f'{word_accuracy}')
-    print(f'{word_accuracy:.1%}')
-    print()
-    if output_file:
-        print(f'Writing to {output_file}')
-        df.to_csv(output_file)
-    return
+    # TODO reuse this stuff
+    # df = pd.DataFrame.from_records(results, columns=['file', 'label', 'output', 'probability', 'similarity',
+    #                                                  'correct', 'distance', 'length'])
+    # df['logprob'] = df['probability'].apply(math.log1p)
+    # print()
+    # print(str(df.describe()))
+    # print()
+    # print('PEARSON')
+    # print(str(df[['probability', 'logprob', 'similarity', 'distance', 'length']].corr('pearson')))
+    # print()
+    # character_error = df['distance'].sum() / df['length'].sum()
+    # print('CHARACTER ERROR')
+    # print(f'{character_error}')
+    # print(f'{character_error:.1%}')
+    # print()
+    # word_accuracy = df['correct'].value_counts().get(True, 0) / df['correct'].size
+    # print('WORD ACCURACY')
+    # print(f'{word_accuracy}')
+    # print(f'{word_accuracy:.1%}')
+    # print()
+    # if output_file:
+    #     print(f'Writing to {output_file}')
+    #     df.to_csv(output_file)
+    # return
 
 
 def parse_args() -> argparse.Namespace:
@@ -248,16 +111,25 @@ def main():
     # evaluate it on the validation set
     elif args.mode == 'validate':
         the_model.load()
-        validate(the_model, loader, args.line_mode, args.wide_mode)
+        prediction_s, metrics = the_model.evaluate(args.data_file)
+        # TODO sensible output
+        print(prediction_s)
+        print(metrics)
 
-    # infer text on test image
+    # infer text from test image
     elif args.mode == 'infer':
         the_model.load()
-        infer(the_model, args.img_file)
+        prediction = the_model.apply(args.img_file)
+        print(prediction)
 
     elif args.mode == 'apply':
         the_model.load()
-        apply(the_model, args.data_file, args.output_file)
+        the_model.load()
+        prediction_s, metrics = the_model.evaluate(args.data_file)
+        # TODO sensible output
+        print(prediction_s)
+        print(metrics)
+        # apply(the_model, args.data_file, args.output_file)
 
 
 if __name__ == '__main__':
