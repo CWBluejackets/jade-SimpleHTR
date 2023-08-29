@@ -2,8 +2,6 @@
 # default shell on jade2 is also bash
 # ``echo $0` or `ps -p $$` in terminal to check
 
-# age subdirectory
-main_training_directory="/opt/data/bluejackets/training_data"
 main_model_directory="/opt/data/bluejackets/models"
 
 htr_directory="${HOME}/sandboxes/bluejackets-jade-SimpleHTR"
@@ -16,7 +14,7 @@ cd "${htr_directory}/src" || exit 99
 
 # clear out the existing model
 
-training_file="${main_training_directory}/$1"
+training_file="$1"
 model_directory="${main_model_directory}/$2"
 
 echo "Training: ${training_file}"
