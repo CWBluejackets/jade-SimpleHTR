@@ -112,7 +112,7 @@ class Model:
         prediction_t = self.keras_model.predict(x=x_test, batch_size=500)
         prediction_s = [dataloader.tensor_to_string(t) for t in prediction_t]
         metrics = self.keras_model.evaluate(x=x_test, y=y_test)
-        # TODO get confidence score
+        # metrics = list of scalars
         return prediction_s, metrics
 
     def apply(self, png_path):
