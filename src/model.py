@@ -2,7 +2,6 @@ import functools
 import os
 
 import tensorflow as tf
-from keras_ctcmodel.CTCModel import CTCModel
 from tensorflow import keras
 
 import dataloader
@@ -135,7 +134,7 @@ class Model:
         # need to include confidence scores in output
         # TODO clean out extra arguments
         prediction_t = self.keras_model.predict([x_pad, x_len],
-                                              batch_size=500)
+                                                batch_size=500)
         prediction_s = [dataloader.tensor_to_string(t) for t in prediction_t]
         # TODO clean out extra arguments
         metrics = self.keras_model.evaluate(x_pad, y_pad, x_len, y_len)
