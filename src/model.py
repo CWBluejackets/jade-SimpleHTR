@@ -6,35 +6,13 @@ from tensorflow import keras
 
 import dataloader
 import locations
+from losses import CTCLoss
 
 # Disable eager mode
 tf.compat.v1.disable_eager_execution()
 
 # tf.image produces a tensor shape=(height, width, 1 for grayscale)
 INPUT_SHAPE = (50, 200, 1)
-
-
-# https://github.com/tensorflow/tensorflow/issues/35063#issuecomment-597409054
-
-def train_step(self, data):
-    data = data_adapter.expand_1d(data)
-    x, y, sample_weight = data_adapter.unpack_x_y_sample_weight(data)
-
-    with tf.GradientTape() as tape:
-        logits = self(x, training=True)
-        logit_length = tf.fill([tf.shape(logits)[0]], tf.shape(logits)[1])
-        loss = tf.nn.ctc_loss(
-            labels=y,
-            logits=logits,
-            label_length=None,
-            logit_length=logit_length,
-            logits_time_major=False,
-            blank_index=-1)
-        loss = tf.reduce_mean(loss)
-    trainable_variables = self.trainable_variables
-    grads = tape.gradient(loss, trainable_variables)
-    self.optimizer.apply_gradients(zip(grads, trainable_variables))
-    return {'loss': loss}
 
 
 class Model:
@@ -87,8 +65,9 @@ class Model:
 
         # ctc loss function from tf 2.2 onwards
         # https://github.com/tensorflow/tensorflow/issues/35063#issuecomment-597409054
-        self.keras_model.compile(optimizer='adam')
-        self.keras_model.train_step = functools.partial(train_step, keras_model)
+        # https://github.com/FLming/CRNN.tf2/blob/main/crnn/losses.py
+
+        self.keras_model.compile(optimizer='adam', loss=CTCLoss())
         return
 
     def train(self, control_path, validation_split):
