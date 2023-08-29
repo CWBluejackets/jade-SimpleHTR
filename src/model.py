@@ -1,3 +1,4 @@
+import functools
 import os
 
 import tensorflow as tf
@@ -14,16 +15,37 @@ tf.compat.v1.disable_eager_execution()
 INPUT_SHAPE = (50, 200, 1)
 
 
+# https://github.com/tensorflow/tensorflow/issues/35063#issuecomment-597409054
+
+def train_step(self, data):
+    data = data_adapter.expand_1d(data)
+    x, y, sample_weight = data_adapter.unpack_x_y_sample_weight(data)
+
+    with tf.GradientTape() as tape:
+        logits = self(x, training=True)
+        logit_length = tf.fill([tf.shape(logits)[0]], tf.shape(logits)[1])
+        loss = tf.nn.ctc_loss(
+            labels=y,
+            logits=logits,
+            label_length=None,
+            logit_length=logit_length,
+            logits_time_major=False,
+            blank_index=-1)
+        loss = tf.reduce_mean(loss)
+    trainable_variables = self.trainable_variables
+    grads = tape.gradient(loss, trainable_variables)
+    self.optimizer.apply_gradients(zip(grads, trainable_variables))
+    return {'loss': loss}
+
+
 class Model:
 
     def __init__(self) -> None:
-        self.ctc_model = None
+        self.keras_model = None
         self.create_model()
         return
 
     def create_model(self):
-        input_layer = tf.keras.Input(shape=INPUT_SHAPE)
-
         # Shi & al 2017 "#maps" = Keras filters
         # https://arxiv.org/abs/1507.05717
         # TODO check Conv2D activation function
@@ -32,42 +54,42 @@ class Model:
         # TODO image perturbation option "augment"
         # (insert extra layers here if option is True)
 
-        layer01 = keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=tf.nn.relu,
-                                      strides=(1, 1), padding='same')(input_layer),
-        layer02 = keras.layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2))(layer01),
-        layer03 = keras.layers.Conv2D(filters=128, kernel_size=(3, 3), activation=tf.nn.relu,
-                                      strides=(1, 1), padding='same')(layer02),
-        layer04 = keras.layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2))(layer03),
-        layer05 = keras.layers.Conv2D(filters=256, kernel_size=(3, 3), activation=tf.nn.relu,
-                                      strides=(1, 1), padding='same')(layer04),
-        layer06 = keras.layers.BatchNormalization()(layer05),
-        layer07 = keras.layers.Conv2D(filters=256, kernel_size=(3, 3), activation=tf.nn.relu,
-                                      strides=(1, 1), padding='same')(layer06),
-        layer08 = keras.layers.MaxPool2D(pool_size=(2, 2), strides=(1, 2))(layer07),
-        layer09 = keras.layers.Conv2D(filters=512, kernel_size=(3, 3), activation=tf.nn.relu,
-                                      strides=(1, 1), padding='same')(layer08),
-        layer10 = keras.layers.BatchNormalization()(layer09),
-        layer11 = keras.layers.Conv2D(filters=51, kernel_size=(3, 3), activation=tf.nn.relu,
-                                      strides=(1, 1), padding='same')(layer10),
-        layer12 = keras.layers.MaxPool2D(pool_size=(2, 2), strides=(1, 2))(layer11),
-        layer13 = keras.layers.Conv2D(filters=512, kernel_size=(2, 2), activation=tf.nn.relu,
-                                      strides=(1, 1), padding='valid')(layer12),
-        layer14 = keras.layers.BatchNormalization()(layer13),
-        # Map-to-Sequence
-        layer15 = keras.layers.Flatten()(layer14),
-        # 2 layers of Bidirectional LSTM hidden units = 256
-        # activation?
-        # TODO LSTM has dropout and recurrent_dropout options
-        layer16 = keras.layers.Bidirectional(keras.layers.LSTM(256))(layer15),
-        output_layer = keras.layers.Bidirectional(keras.layers.LSTM(256))(layer16)
+        self.keras_model = tf.keras.Sequential([
+            keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=tf.nn.relu,
+                                strides=(1, 1), padding='same'),
+            keras.layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2)),
+            keras.layers.Conv2D(filters=128, kernel_size=(3, 3), activation=tf.nn.relu,
+                                strides=(1, 1), padding='same'),
+            keras.layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2)),
+            keras.layers.Conv2D(filters=256, kernel_size=(3, 3), activation=tf.nn.relu,
+                                strides=(1, 1), padding='same'),
+            keras.layers.BatchNormalization(),
+            keras.layers.Conv2D(filters=256, kernel_size=(3, 3), activation=tf.nn.relu,
+                                strides=(1, 1), padding='same'),
+            keras.layers.MaxPool2D(pool_size=(2, 2), strides=(1, 2)),
+            keras.layers.Conv2D(filters=512, kernel_size=(3, 3), activation=tf.nn.relu,
+                                strides=(1, 1), padding='same'),
+            keras.layers.BatchNormalization(),
+            keras.layers.Conv2D(filters=51, kernel_size=(3, 3), activation=tf.nn.relu,
+                                strides=(1, 1), padding='same'),
+            keras.layers.MaxPool2D(pool_size=(2, 2), strides=(1, 2)),
+            keras.layers.Conv2D(filters=512, kernel_size=(2, 2), activation=tf.nn.relu,
+                                strides=(1, 1), padding='valid'),
+            keras.layers.BatchNormalization(),
+            # Map-to-Sequence
+            keras.layers.Flatten(),
+            # 2 layers of Bidirectional LSTM hidden units = 256
+            # activation?
+            # TODO LSTM has dropout and recurrent_dropout options
+            keras.layers.Bidirectional(keras.layers.LSTM(256)),
+            keras.layers.Bidirectional(keras.layers.LSTM(256))()
 
-        # https://pypi.org/project/keras-ctcmodel/
-        # https://github.com/cyprienruffino/CTCModel
-        # https://arxiv.org/abs/1901.07957
-        self.ctc_model = CTCModel([input_layer], [output_layer])
+        ])
 
-        self.ctc_model.compile(optimizer='adam')
-        # note: this compile method only takes optimizer
+        # ctc loss function from tf 2.2 onwards
+        # https://github.com/tensorflow/tensorflow/issues/35063#issuecomment-597409054
+        self.keras_model.compile(optimizer='adam')
+        self.keras_model.train_step = functools.partial(train_step, keras_model)
         return
 
     def train(self, control_path, validation_split):
@@ -81,7 +103,7 @@ class Model:
         # Note that x is weird for the CTCModel
         # x=[input_sequences, label_sequences, inputs_lengths, labels_length]
 
-        self.ctc_model.fit(
+        self.keras_model.fit(
             x=[x_train_pad, y_train_pad, x_train_len, y_train_len],
             y=None,
             callbacks=[cp_callback],
@@ -97,29 +119,33 @@ class Model:
     def load(self):
         model_dir = locations.get_model_dir()
         latest_snapshot = tf.train.latest_checkpoint(model_dir)
-        self.ctc_model.load(latest_snapshot)
+        self.keras_model.load(latest_snapshot)
         return
 
     def save(self) -> None:
         model_location = os.path.join(locations.get_model_dir(), 'model.save')
-        self.ctc_model.save_model(model_location)
+        self.keras_model.save_model(model_location)
 
     # saving and loading: note checkpoint callback
     # https://www.tensorflow.org/tutorials/keras/save_and_load#save_checkpoints_during_training
 
     def evaluate(self, control_path):
+        # TODO clean out extra arguments
         x_pad, x_len, y_pad, y_len = dataloader.load_dataset_for_ctc(control_path)
         # need to include confidence scores in output
-        prediction_t = self.ctc_model.predict([x_pad, x_len],
+        # TODO clean out extra arguments
+        prediction_t = self.keras_model.predict([x_pad, x_len],
                                               batch_size=500)
         prediction_s = [dataloader.tensor_to_string(t) for t in prediction_t]
-        metrics = self.ctc_model.evaluate(x_pad, y_pad, x_len, y_len)
+        # TODO clean out extra arguments
+        metrics = self.keras_model.evaluate(x_pad, y_pad, x_len, y_len)
         return prediction_s, metrics
 
     def apply(self, png_path):
         png_t = dataloader.get_png_tensor(png_path)
         x_pad = [png_t]
         x_len = [len(png_t)]
-        prediction_t = self.ctc_model.predict(x_pad, x_len)
+        # TODO clean out extra arguments
+        prediction_t = self.keras_model.predict(x_pad, x_len)
         prediction_s = dataloader.tensor_to_string(prediction_t[0])
         return prediction_s
