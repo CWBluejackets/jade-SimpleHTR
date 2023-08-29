@@ -57,10 +57,9 @@ class Model:
             keras.layers.Flatten(),
             # 2 layers of Bidirectional LSTM hidden units = 256
             # activation?
-            # TODO LSTM has dropout and recurrent_dropout options
+            # TODO add LSTM dropout and recurrent_dropout options
             keras.layers.Bidirectional(keras.layers.LSTM(256)),
-            keras.layers.Bidirectional(keras.layers.LSTM(256))()
-
+            keras.layers.Bidirectional(keras.layers.LSTM(256))
         ])
 
         # ctc loss function from tf 2.2 onwards
@@ -97,7 +96,7 @@ class Model:
     def load(self):
         model_dir = locations.get_model_dir()
         latest_snapshot = tf.train.latest_checkpoint(model_dir)
-        self.keras_model.load(latest_snapshot)
+        self.keras_model = keras.models.load_model(latest_snapshot)
         return
 
     def save(self) -> None:
