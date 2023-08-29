@@ -81,15 +81,17 @@ class Model:
         # x=[input_sequences, label_sequences, inputs_lengths, labels_length]
 
         # TODO fix this
+        # AttributeError: 'list' object has no attribute 'shape'
+        #
         # When using data tensors as input to a model, you should
         # specify the `steps_per_epoch` argument.
+        # not sure about steps_per_epoch=1 but something required
         self.keras_model.fit(
             x=x_train,
             y=y_train,
             callbacks=[cp_callback],
             batch_size=500,
             validation_split=validation_split,
-            shuffle=True, # load_unpadded... already shuffles! TODO
             epochs=15,
             steps_per_epoch=1,
             verbose=2

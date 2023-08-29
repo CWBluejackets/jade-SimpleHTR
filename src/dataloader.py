@@ -68,6 +68,7 @@ def load_raw_dataset(control_file_path) -> List[tuple]:
     return x_y_all
 
 
+# TODO this needs to return two big tensors? for model.fit(...)
 def load_dataset(control_file_path) -> tuple:
     x_y_all = load_raw_dataset(control_file_path)
     random.shuffle(x_y_all)
