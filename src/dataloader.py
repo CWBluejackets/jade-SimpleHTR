@@ -4,7 +4,6 @@ import re
 from typing import List
 
 import tensorflow as tf
-from keras.preprocessing import sequence
 
 import locations
 import model
@@ -69,23 +68,12 @@ def load_raw_dataset(control_file_path) -> List[tuple]:
     return x_y_all
 
 
-def load_unpadded_dataset(control_file_path) -> tuple:
+def load_dataset(control_file_path) -> tuple:
     x_y_all = load_raw_dataset(control_file_path)
     random.shuffle(x_y_all)
     x_train = [pair[0] for pair in x_y_all]
     y_train = [pair[1] for pair in x_y_all]
     return x_train, y_train
-
-
-def load_dataset_for_ctc(control_file_path) -> tuple:
-    x_train, y_train = load_unpadded_dataset(control_file_path)
-    x_train_len = [len(item) for item in x_train]
-    y_train_len = [len(item) for item in y_train]
-    # image padding done already for now
-    x_train_pad = x_train
-    # string padding needed
-    y_train_pad = sequence.pad_sequences(y_train, padding='post', value=0, dtype=tf.int32)
-    return x_train_pad, x_train_len, y_train_pad, y_train_len
 
 
 def tensor_to_string(tensor: tf.Tensor) -> str:
