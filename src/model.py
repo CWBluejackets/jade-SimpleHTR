@@ -71,7 +71,7 @@ class Model:
         return
 
     def train(self, control_path, validation_split):
-        x_train_pad, x_train_len, y_train_pad, y_train_len = dataloader.load_dataset_for_ctc(control_path)
+        x_train, y_train = dataloader.load_unpadded_dataset(control_path)
         checkpoint_path = os.path.join(locations.get_model_dir(), 'cp-{epoch:04d}.ckpt')
         cp_callback = tf.keras.callbacks.ModelCheckpoint(
             filepath=checkpoint_path,
@@ -82,12 +82,12 @@ class Model:
         # x=[input_sequences, label_sequences, inputs_lengths, labels_length]
 
         self.keras_model.fit(
-            x=[x_train_pad, y_train_pad, x_train_len, y_train_len],
-            y=None,
+            x=x_train,
+            y=y_train,
             callbacks=[cp_callback],
             batch_size=500,
             validation_split=validation_split,
-            shuffle=True,
+            shuffle=True, # load_unpadded... already shuffles! TODO
             epochs=15,
             verbose=2
         )
@@ -108,22 +108,17 @@ class Model:
     # https://www.tensorflow.org/tutorials/keras/save_and_load#save_checkpoints_during_training
 
     def evaluate(self, control_path):
-        # TODO clean out extra arguments
-        x_pad, x_len, y_pad, y_len = dataloader.load_dataset_for_ctc(control_path)
-        # need to include confidence scores in output
-        # TODO clean out extra arguments
-        prediction_t = self.keras_model.predict([x_pad, x_len],
-                                                batch_size=500)
+        x_test, y_test = dataloader.load_unpadded_dataset(control_path)
+        prediction_t = self.keras_model.predict(x=x_test, batch_size=500)
         prediction_s = [dataloader.tensor_to_string(t) for t in prediction_t]
-        # TODO clean out extra arguments
-        metrics = self.keras_model.evaluate(x_pad, y_pad, x_len, y_len)
+        metrics = self.keras_model.evaluate(x=x_test, y=y_test)
+        # TODO get confidence score
         return prediction_s, metrics
 
     def apply(self, png_path):
         png_t = dataloader.get_png_tensor(png_path)
-        x_pad = [png_t]
-        x_len = [len(png_t)]
-        # TODO clean out extra arguments
-        prediction_t = self.keras_model.predict(x_pad, x_len)
+        x_test = [png_t]
+        prediction_t = self.keras_model.predict(x=x_test)
         prediction_s = dataloader.tensor_to_string(prediction_t[0])
+        # TODO get confidence score
         return prediction_s
