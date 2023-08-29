@@ -80,6 +80,9 @@ class Model:
         # Note that x is weird for the CTCModel
         # x=[input_sequences, label_sequences, inputs_lengths, labels_length]
 
+        # TODO fix this
+        # When using data tensors as input to a model, you should
+        # specify the `steps_per_epoch` argument.
         self.keras_model.fit(
             x=x_train,
             y=y_train,
@@ -88,6 +91,7 @@ class Model:
             validation_split=validation_split,
             shuffle=True, # load_unpadded... already shuffles! TODO
             epochs=15,
+            steps_per_epoch=1,
             verbose=2
         )
         self.save()
