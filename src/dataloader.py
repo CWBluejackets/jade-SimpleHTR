@@ -40,7 +40,7 @@ def get_png_tensor(png_path):
 
 def get_png_and_label(workflow_dir, path_and_label):
     """
-    part of the tf data loading
+    part of the tensorflow data loading
     :param path_and_label: tuple (path, label)
     :param workflow_dir: .../training_data/21955
     :return:
@@ -54,6 +54,11 @@ def get_png_and_label(workflow_dir, path_and_label):
 
 
 def load_raw_dataset(control_file_path) -> List[tuple]:
+    """
+    Load the PNG files and labels to a list of pairs of tensors
+    :param control_file_path: words file
+    :return: list of pairs of tensors (image, label)
+    """
     control_data = []
     with open(control_file_path, 'r') as f:
         for line in f.readlines():
@@ -68,12 +73,19 @@ def load_raw_dataset(control_file_path) -> List[tuple]:
     return x_y_all
 
 
-def load_dataset(control_file_path) -> tuple:
+def load_dataset(control_file_path) -> tf.data.Dataset:
+    """
+    Load the PNG files and labels as tensors and structure for ease of use
+    :param control_file_path: words file
+    :return: tensorflow Dataset
+    """
     x_y_all = load_raw_dataset(control_file_path)
     random.shuffle(x_y_all)
-    x_train = tf.stack([pair[0] for pair in x_y_all])
-    y_train = tf.stack([pair[1] for pair in x_y_all])
-    return x_train, y_train
+    x_data = tf.stack([pair[0] for pair in x_y_all])
+    y_data = tf.stack([pair[1] for pair in x_y_all])
+    # https://pyimagesearch.com/2021/06/14/a-gentle-introduction-to-tf-data-with-tensorflow/
+    # line 23
+    return tf.data.Dataset.from_tensor_slices((x_data, y_data))
 
 
 def tensor_to_string(tensor: tf.Tensor) -> str:
