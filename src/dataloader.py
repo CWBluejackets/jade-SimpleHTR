@@ -68,16 +68,16 @@ def load_raw_dataset(control_file_path) -> List[tuple]:
     return x_y_all
 
 
-# TODO this needs to return two big tensors? for model.fit(...)
 def load_dataset(control_file_path) -> tuple:
     x_y_all = load_raw_dataset(control_file_path)
     random.shuffle(x_y_all)
-    x_train = [pair[0] for pair in x_y_all]
-    y_train = [pair[1] for pair in x_y_all]
+    x_train = tf.stack([pair[0] for pair in x_y_all])
+    y_train = tf.stack([pair[1] for pair in x_y_all])
     return x_train, y_train
 
 
 def tensor_to_string(tensor: tf.Tensor) -> str:
+    # TODO change to corpus-based charset indexing
     if tensor.dtype != tf.string:
         raise ValueError(f'tensor content {tensor.dtype} is not string')
     return tensor.numpy().decode('utf-8')
