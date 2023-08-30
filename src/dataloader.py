@@ -1,9 +1,10 @@
 import os
 import random
 import re
-from typing import List
+from typing import List, Tuple, Union
 
 import tensorflow as tf
+from tensorflow.python.data.ops.dataset_ops import DatasetV1, DatasetV2
 
 import locations
 import model
@@ -73,19 +74,28 @@ def load_raw_dataset(control_file_path) -> List[tuple]:
     return x_y_all
 
 
-def load_dataset(control_file_path) -> tf.data.Dataset:
+def load_dataset(control_file_path, validation_split: float) -> tuple[
+        Union[DatasetV1, DatasetV2], Union[DatasetV1, DatasetV2]]:
     """
     Load the PNG files and labels as tensors and structure for ease of use
+    :param validation_split: proportion of data to set aside
     :param control_file_path: words file
     :return: tensorflow Dataset
     """
+    if (validation_split < 0.0) or (validation_split > 1.0):
+        raise ValueError('split out of range')
     x_y_all = load_raw_dataset(control_file_path)
     random.shuffle(x_y_all)
-    x_data = tf.stack([pair[0] for pair in x_y_all])
-    y_data = tf.stack([pair[1] for pair in x_y_all])
+    cutoff = round(len(x_y_all) * validation_split)
+    validation_x = tf.stack(pair[0] for pair in x_y_all[:cutoff])
+    validation_y = tf.stack(pair[1] for pair in x_y_all[:cutoff])
+    validation_ds = tf.data.Dataset.from_tensor_slices((validation_x, validation_y))
+    training_x = tf.stack(pair[0] for pair in x_y_all[cutoff:])
+    training_y = tf.stack(pair[1] for pair in x_y_all[cutoff:])
+    training_ds = tf.data.Dataset.from_tensor_slices((training_x, training_y))
     # https://pyimagesearch.com/2021/06/14/a-gentle-introduction-to-tf-data-with-tensorflow/
     # line 23
-    return tf.data.Dataset.from_tensor_slices((x_data, y_data))
+    return training_ds, validation_ds
 
 
 def tensor_to_string(tensor: tf.Tensor) -> str:
@@ -93,7 +103,6 @@ def tensor_to_string(tensor: tf.Tensor) -> str:
     if tensor.dtype != tf.string:
         raise ValueError(f'tensor content {tensor.dtype} is not string')
     return tensor.numpy().decode('utf-8')
-
 
 # alternative ideas
 # https://medium.com/the-owl/creating-a-tf-dataset-using-a-data-generator-5e5564609e64

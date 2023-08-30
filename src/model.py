@@ -70,30 +70,20 @@ class Model:
         return
 
     def train(self, control_path, validation_split):
-        dataset = dataloader.load_dataset(control_path)
+        training_set, validation_set = dataloader.load_dataset(control_path, validation_split)
         checkpoint_path = os.path.join(locations.get_model_dir(), 'cp-{epoch:04d}.ckpt')
         cp_callback = tf.keras.callbacks.ModelCheckpoint(
             filepath=checkpoint_path,
             verbose=1,
             save_weights_only=True)
 
-        # Note that x is weird for the CTCModel
-        # x=[input_sequences, label_sequences, inputs_lengths, labels_length]
-
-        # TODO fix this
-        # AttributeError: 'list' object has no attribute 'shape'
-        #
-        # When using data tensors as input to a model, you should
-        # specify the `steps_per_epoch` argument.
-        # not sure about steps_per_epoch=1 but something required
-        #
         # Note: x is Dataset (including y) so do not specify y;
         # do not specify batch size.
         self.keras_model.fit(
-            x=dataset,
+            x=training_set,
             callbacks=[cp_callback],
-            validation_split=validation_split,
             epochs=15,
+            validation_set=validation_set,
             steps_per_epoch=1,
             verbose=2
         )
@@ -114,7 +104,7 @@ class Model:
     # https://www.tensorflow.org/tutorials/keras/save_and_load#save_checkpoints_during_training
 
     def evaluate(self, control_path):
-        dataset = dataloader.load_dataset(control_path)
+        dataset, _ = dataloader.load_dataset(control_path, 0.0)
         prediction_t = self.keras_model.predict(x=dataset, batch_size=500)
         prediction_s = [dataloader.tensor_to_string(t) for t in prediction_t]
         # x is Dataset including y so do not specify y
