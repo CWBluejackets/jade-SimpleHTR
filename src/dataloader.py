@@ -34,6 +34,7 @@ def get_png_tensor(png_path):
     image = tf.image.convert_image_dtype(image, tf.float32)
     # resize; maintain aspect ratio; pad with zeroes
     # TODO This may not be necessary? if using keras.preprocessing.sequence.pad(...) later
+    # Maybe it is needed so tf.stack _x keeps working.
     image = tf.image.resize_with_pad(image, model.INPUT_SHAPE[0], model.INPUT_SHAPE[1])
     # -> tf.float32
     return image
@@ -88,6 +89,9 @@ def load_dataset(control_file_path, validation_split: float) -> tuple[
     random.shuffle(x_y_all)
     cutoff = round(len(x_y_all) * validation_split)
     validation_x = tf.stack([pair[0] for pair in x_y_all[:cutoff]])
+    # TODO
+    # problem: tf.stack doesn't work with mixed sizes of labels (y)
+    # x works because it has been padded to input shape already
     validation_y = tf.stack([pair[1] for pair in x_y_all[:cutoff]])
     validation_ds = tf.data.Dataset.from_tensor_slices((validation_x, validation_y))
     training_x = tf.stack([pair[0] for pair in x_y_all[cutoff:]])
