@@ -83,7 +83,7 @@ class Model:
             x=training_set,
             callbacks=[cp_callback],
             epochs=15,
-            validation_set=validation_set,
+            validation_data=validation_set,
             steps_per_epoch=1,
             verbose=2
         )
