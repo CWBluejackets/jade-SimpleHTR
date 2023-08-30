@@ -87,11 +87,11 @@ class Model:
         # specify the `steps_per_epoch` argument.
         # not sure about steps_per_epoch=1 but something required
         #
-        # x is Dataset including y so do not specify y
+        # Note: x is Dataset (including y) so do not specify y;
+        # do not specify batch size.
         self.keras_model.fit(
             x=dataset,
             callbacks=[cp_callback],
-            batch_size=500,
             validation_split=validation_split,
             epochs=15,
             steps_per_epoch=1,
