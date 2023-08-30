@@ -21,7 +21,7 @@ def convert_fractions(text):
     return text
 
 
-def get_png_tensor(png_path):
+def get_png_tensor(png_path) -> tf.Tensor:
     """
     part of the tf data loading
     :return:
@@ -40,7 +40,7 @@ def get_png_tensor(png_path):
     return image
 
 
-def get_png_and_label(workflow_dir, path_and_label):
+def get_png_and_label(workflow_dir, path_and_label) -> tuple:
     """
     part of the tensorflow data loading
     :param path_and_label: tuple (path, label)
@@ -48,11 +48,11 @@ def get_png_and_label(workflow_dir, path_and_label):
     :return:
     """
     img_full_path = os.path.join(workflow_dir, path_and_label[0])
-    image = get_png_tensor(img_full_path)
+    image_t = get_png_tensor(img_full_path)
     label = path_and_label[1]
     label_t = tf.strings.unicode_decode(label, input_encoding='utf-8')
     # -> tf.int32; shape is length of string
-    return image, label_t
+    return image_t, label_t
 
 
 def load_raw_dataset(control_file_path) -> List[tuple]:
@@ -87,18 +87,12 @@ def load_dataset(control_file_path, validation_split: float) -> tuple[
         raise ValueError('split out of range')
     x_y_all = load_raw_dataset(control_file_path)
     random.shuffle(x_y_all)
+    # we have a list of tuples of tensors (image, label)
     cutoff = round(len(x_y_all) * validation_split)
-    validation_x = tf.stack([pair[0] for pair in x_y_all[:cutoff]])
-    # TODO
-    # problem: tf.stack doesn't work with mixed sizes of labels (y)
-    # x works because it has been padded to input shape already
-    validation_y = tf.stack([pair[1] for pair in x_y_all[:cutoff]])
-    validation_ds = tf.data.Dataset.from_tensor_slices((validation_x, validation_y))
-    training_x = tf.stack([pair[0] for pair in x_y_all[cutoff:]])
-    training_y = tf.stack([pair[1] for pair in x_y_all[cutoff:]])
-    training_ds = tf.data.Dataset.from_tensor_slices((training_x, training_y))
-    # https://pyimagesearch.com/2021/06/14/a-gentle-introduction-to-tf-data-with-tensorflow/
-    # line 23
+    validation_pairs = x_y_all[:cutoff]
+    training_pairs = x_y_all[cutoff:]
+    validation_ds = tf.data.experimental.from_list(validation_pairs)
+    training_ds = tf.data.experimental.from_list(training_pairs)
     return training_ds, validation_ds
 
 
