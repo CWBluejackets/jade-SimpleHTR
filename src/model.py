@@ -79,6 +79,10 @@ class Model:
 
         # Note: x is Dataset (including y) so do not specify y;
         # do not specify batch size.
+
+        # ValueError: Input 0 of layer "conv2d" is incompatible with the layer:
+        # expected min_ndim=4, found ndim=3. Full shape received: (None, 200, 1)
+
         self.keras_model.fit(
             x=training_set,
             callbacks=[cp_callback],
