@@ -87,11 +87,11 @@ def load_dataset(control_file_path, validation_split: float) -> tuple[
     x_y_all = load_raw_dataset(control_file_path)
     random.shuffle(x_y_all)
     cutoff = round(len(x_y_all) * validation_split)
-    validation_x = tf.stack(pair[0] for pair in x_y_all[:cutoff])
-    validation_y = tf.stack(pair[1] for pair in x_y_all[:cutoff])
+    validation_x = tf.stack([pair[0] for pair in x_y_all[:cutoff]])
+    validation_y = tf.stack([pair[1] for pair in x_y_all[:cutoff]])
     validation_ds = tf.data.Dataset.from_tensor_slices((validation_x, validation_y))
-    training_x = tf.stack(pair[0] for pair in x_y_all[cutoff:])
-    training_y = tf.stack(pair[1] for pair in x_y_all[cutoff:])
+    training_x = tf.stack([pair[0] for pair in x_y_all[cutoff:]])
+    training_y = tf.stack([pair[1] for pair in x_y_all[cutoff:]])
     training_ds = tf.data.Dataset.from_tensor_slices((training_x, training_y))
     # https://pyimagesearch.com/2021/06/14/a-gentle-introduction-to-tf-data-with-tensorflow/
     # line 23
