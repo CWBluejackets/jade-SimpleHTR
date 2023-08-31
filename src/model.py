@@ -13,7 +13,6 @@ tf.compat.v1.disable_eager_execution()
 
 # tf.image produces a tensor shape=(height, width, 1 for grayscale)
 INPUT_SHAPE = (50, 200, 1)
-KERAS_INPUT_SHAPE = (None, 50, 200, 1)
 
 
 class Model:
@@ -36,9 +35,6 @@ class Model:
             keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=tf.nn.relu,
                                 strides=(1, 1), padding='same',
                                 input_shape=INPUT_SHAPE),
-            # setting input_shape bumps the error down:
-            # ValueError: Input 0 of layer "bidirectional" is incompatible with the layer:
-            # expected ndim=3, found ndim=2. Full shape received: (None, 50688)
             keras.layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2)),
             keras.layers.Conv2D(filters=128, kernel_size=(3, 3), activation=tf.nn.relu,
                                 strides=(1, 1), padding='same'),
@@ -59,12 +55,17 @@ class Model:
                                 strides=(1, 1), padding='valid'),
             keras.layers.BatchNormalization(),
             # Map-to-Sequence
-            keras.layers.Flatten(),
+            # keras.layers.Flatten(),
+
+            # ValueError: Input 0 of layer "bidirectional" is incompatible with the layer:
+            # expected ndim=3, found ndim=2. Full shape received: (None, 50688)
+
             # 2 layers of Bidirectional LSTM hidden units = 256
             # activation?
             # TODO add LSTM dropout and recurrent_dropout options
-            keras.layers.Bidirectional(keras.layers.LSTM(256)),
-            keras.layers.Bidirectional(keras.layers.LSTM(256))
+            # TODO return_sequences=True ?
+            keras.layers.Bidirectional(keras.layers.LSTM(256), name='blstm_0'),
+            keras.layers.Bidirectional(keras.layers.LSTM(256), name='blstm_1')
         ])
 
         # ctc loss function from tf 2.2 onwards
@@ -82,11 +83,8 @@ class Model:
             verbose=1,
             save_weights_only=True)
 
-        # Note: x is Dataset (including y) so do not specify y;
+        # Note: x is a tf Dataset (including y) so do not specify y;
         # do not specify batch size.
-
-        # ValueError: Input 0 of layer "conv2d" is incompatible with the layer:
-        # expected min_ndim=4, found ndim=3. Full shape received: (None, 200, 1)
 
         self.keras_model.fit(
             x=training_set,
