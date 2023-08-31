@@ -13,6 +13,7 @@ tf.compat.v1.disable_eager_execution()
 
 # tf.image produces a tensor shape=(height, width, 1 for grayscale)
 INPUT_SHAPE = (50, 200, 1)
+KERAS_INPUT_SHAPE = (None, 50, 200, 1)
 
 
 class Model:
@@ -33,7 +34,11 @@ class Model:
 
         self.keras_model = tf.keras.Sequential([
             keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=tf.nn.relu,
-                                strides=(1, 1), padding='same'),
+                                strides=(1, 1), padding='same',
+                                input_shape=INPUT_SHAPE),
+            # setting input_shape bumps the error down:
+            # ValueError: Input 0 of layer "bidirectional" is incompatible with the layer:
+            # expected ndim=3, found ndim=2. Full shape received: (None, 50688)
             keras.layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2)),
             keras.layers.Conv2D(filters=128, kernel_size=(3, 3), activation=tf.nn.relu,
                                 strides=(1, 1), padding='same'),
