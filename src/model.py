@@ -54,8 +54,12 @@ class Model:
             keras.layers.Conv2D(filters=512, kernel_size=(2, 2), activation=tf.nn.relu,
                                 strides=(1, 1), padding='valid'),
             keras.layers.BatchNormalization(),
+            # output (None, 9, 11, 512)
+
             # Map-to-Sequence
             # keras.layers.Flatten(),
+            # output (None, 50688)
+            keras.layers.Reshape((99, 512)),
 
             # ValueError: Input 0 of layer "bidirectional" is incompatible with the layer:
             # expected ndim=3, found ndim=2. Full shape received: (None, 50688)
@@ -64,7 +68,10 @@ class Model:
             # activation?
             # TODO add LSTM dropout and recurrent_dropout options
             # TODO return_sequences=True ?
+            # BiLSTM needs ndim=3
             keras.layers.Bidirectional(keras.layers.LSTM(256), name='blstm_0'),
+            # output (None, 512)
+            keras.layers.Reshape((1, 512)),
             keras.layers.Bidirectional(keras.layers.LSTM(256), name='blstm_1')
         ])
 
