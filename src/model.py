@@ -28,10 +28,8 @@ class Model:
         # TODO check Conv2D activation function
         # TODO check padding "p1x1" in Shi
 
-        # TODO image perturbation option "augment"
-        # (insert extra layers here if option is True)
-
         self.keras_model = tf.keras.Sequential([
+            # TODO image perturbation option "augment" (insert extra layers here if option is True)
             keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=tf.nn.relu,
                                 strides=(1, 1), padding='same',
                                 input_shape=INPUT_SHAPE),
@@ -57,18 +55,13 @@ class Model:
             # output (None, 9, 11, 512)
 
             # Map-to-Sequence
-            # keras.layers.Flatten(),
-            # output (None, 50688)
             keras.layers.Reshape((99, 512)),
 
-            # ValueError: Input 0 of layer "bidirectional" is incompatible with the layer:
-            # expected ndim=3, found ndim=2. Full shape received: (None, 50688)
-
             # 2 layers of Bidirectional LSTM hidden units = 256
-            # activation?
             # TODO add LSTM dropout and recurrent_dropout options
+            # TODO check activation function?
             # TODO return_sequences=True ?
-            # BiLSTM needs ndim=3
+            # Bidirectional LSTM needs ndim=3
             keras.layers.Bidirectional(keras.layers.LSTM(256), name='blstm_0'),
             # output (None, 512)
             keras.layers.Reshape((1, 512)),
