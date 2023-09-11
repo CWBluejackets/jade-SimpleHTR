@@ -72,7 +72,8 @@ class Model:
         # https://github.com/tensorflow/tensorflow/issues/35063#issuecomment-597409054
         # https://github.com/FLming/CRNN.tf2/blob/main/crnn/losses.py
 
-        self.keras_model.compile(optimizer='adam', loss=CTCLoss())
+        self.keras_model.compile(optimizer='adam',
+                                 loss=tf.keras.losses.SparseCategoricalCrossentropy())
         return
 
     def train(self, control_path, validation_split):
