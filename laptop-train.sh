@@ -10,11 +10,11 @@ cd "${htr_directory}/src" || exit 1
 
 if [ -z "$1" ]
 then
-  echo "Both arguments missing!"
+  echo "Both arguments missing!  training_file  model_subdirectory"
   exit 2
 elif [ -z "$2"  ]
 then
-  echo "One argument missing!"
+  echo "One argument missing!  training_file  model_subdirectory"
   exit 5
 fi
 
