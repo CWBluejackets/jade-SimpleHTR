@@ -11,6 +11,17 @@ model_dir = '../model'
 debug_directory = None
 high_contrast = False
 convert_fractions = False
+batch_size = 100
+
+
+def set_batch_size(batch_size0):
+    global batch_size
+    batch_size = batch_size0
+    return
+
+
+def get_batch_size():
+    return batch_size
 
 
 def set_convert_fractions(convert_fractions0):
