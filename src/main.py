@@ -99,6 +99,7 @@ def main():
     locations.set_debug_dir(args.debug_dir)
     locations.set_high_contrast(args.high_contrast)
     locations.set_convert_fractions(args.convert_fractions)
+    locations.set_batch_size(args.batch_size)
 
     # create empty model
     the_model = Model()
