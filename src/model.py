@@ -87,11 +87,6 @@ class Model:
         # Note: x is a tf Dataset (including y) so do not specify y;
         # do not specify batch size.
 
-        # TODO pick up the command line argument
-        batch_size = 250
-        training_set = training_set.batch(batch_size)
-        validation_set = validation_set.batch(batch_size)
-
         self.keras_model.fit(
             x=training_set,
             callbacks=[cp_callback],
