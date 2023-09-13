@@ -29,10 +29,14 @@ class CTCLoss(keras.losses.Loss):
         y_true = tf.cast(y_true, tf.int32)
         y_pred_shape = tf.shape(y_pred)
         logit_length = tf.fill([y_pred_shape[0]], y_pred_shape[1])
+
+        # TODO function to produce label_length tensor from labels
+
         loss = tf.nn.ctc_loss(
             labels=y_true,
             logits=y_pred,
             label_length=None,
+            # label_length cannot be None since we are not using a SparseTensor
             logit_length=logit_length,
             logits_time_major=self.logits_time_major,
             blank_index=self.blank_index,
