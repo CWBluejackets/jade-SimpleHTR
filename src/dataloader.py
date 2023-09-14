@@ -3,7 +3,6 @@ import random
 import re
 from collections import defaultdict
 from typing import List, Tuple, Union
-import logging
 
 import tensorflow as tf
 from tensorflow.python.data.ops.dataset_ops import DatasetV1, DatasetV2
@@ -34,25 +33,25 @@ def get_png_tensor(png_path) -> tf.Tensor:
     if locations.get_high_contrast():
         image = tf.image.adjust_contrast(image, 10)
     image = tf.image.convert_image_dtype(image, tf.float32)
-    # resize; maintain aspect ratio; pad with zeroes
-    # TODO This may not be necessary? if using keras.preprocessing.sequence.pad(...) later
-    # Maybe it is needed so tf.stack _x keeps working.
+    # Resizing here (not keras.preprocessing.sequence.pad(...) later) is
+    # probably necessary to keep tf.stack _x working.
     image = tf.image.resize_with_pad(image, model.INPUT_SHAPE[0], model.INPUT_SHAPE[1])
     # -> tf.float32
     return image
 
 
-def get_png_and_label(workflow_dir, path_and_label) -> tuple:
+def get_png_and_label_tensors(workflow_dir, png_path, label) -> tuple:
     """
     part of the tensorflow data loading
-    :param path_and_label: tuple (path, label)
+    :param label: string label for the image
+    :param png_path: relative path to the PNG file
     :param workflow_dir: .../training_data/21955
     :return:
     """
-    img_full_path = os.path.join(workflow_dir, path_and_label[0])
+    img_full_path = os.path.join(workflow_dir, png_path)
     image_t = get_png_tensor(img_full_path)
-    label = path_and_label[1]
     label_t = tf.strings.unicode_decode(label, input_encoding='utf-8')
+    print(label_t.shape)
     # -> tf.int32; shape is length of string
     return image_t, label_t
 
@@ -64,6 +63,7 @@ def load_raw_dataset(control_file_path) -> List[tuple]:
     :return: list of pairs of tensors (image, label)
     """
     control_data = []
+    print(f'Loading control data from {control_file_path}')
     with open(control_file_path, 'r') as f:
         for line in f.readlines():
             line = line.strip('\n')
@@ -72,8 +72,9 @@ def load_raw_dataset(control_file_path) -> List[tuple]:
                 if locations.get_convert_fractions():
                     label = convert_fractions(label)
                 control_data.append((img_path, label))
+    print(f'Loaded {len(control_data)} items')
     workflow_dir = os.path.dirname(control_file_path)
-    x_y_all = [get_png_and_label(workflow_dir, path_and_label) for path_and_label in control_data]
+    x_y_all = [get_png_and_label_tensors(workflow_dir, png_path, label) for png_path, label in control_data]
     audit_raw_dataset(x_y_all)
     return x_y_all
 
@@ -84,10 +85,10 @@ def audit_raw_dataset(x_y_all: List[Tuple[tf.Tensor, tf.Tensor]]):
     for image_t, label_t in x_y_all:
         image_shape_count[image_t.shape] += 1
         label_shape_count[label_t.shape] += 1
-    logging.warning('Dataset shape audit: images')
+    print('Dataset shape audit: images')
     for k in sorted(image_shape_count.keys()):
         print('   ', k, image_shape_count[k])
-    logging.warning('Dataset shape audit: labels')
+    print('Dataset shape audit: labels')
     for k in sorted(label_shape_count.keys()):
         print('   ', k, label_shape_count[k])
     return

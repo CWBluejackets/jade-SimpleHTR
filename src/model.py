@@ -1,4 +1,3 @@
-import functools
 import os
 
 import tensorflow as tf
@@ -6,7 +5,6 @@ from tensorflow import keras
 
 import dataloader
 import locations
-from losses import CTCLoss
 
 # Disable eager mode
 tf.compat.v1.disable_eager_execution()
