@@ -106,7 +106,7 @@ def main():
 
     # train the model
     if args.mode == 'train':
-        the_model.train(args.data_file, 0.95)
+        the_model.train(args.data_file, 0.05)
         the_model.save()
 
     # evaluate it on the validation set

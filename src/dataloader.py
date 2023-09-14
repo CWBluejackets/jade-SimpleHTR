@@ -109,8 +109,8 @@ def load_dataset(control_file_path, validation_split: float) -> tuple[
     cutoff = round(len(x_y_all) * validation_split)
     validation_pairs = x_y_all[:cutoff]
     training_pairs = x_y_all[cutoff:]
-    print(f'Training split: f{len(training_pairs)}')
-    print(f'Validation split: f{len(validation_pairs)}')
+    print(f'Training: {len(training_pairs)}')
+    print(f'Validation: {len(validation_pairs)}')
 
     # Pick up batch size from command line arguments.
     # Set tf.Dataset batch size here to avoid problems later.
