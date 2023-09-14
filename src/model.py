@@ -73,7 +73,7 @@ class Model:
         # https://github.com/FLming/CRNN.tf2/blob/main/crnn/losses.py
 
         self.keras_model.compile(optimizer='adam',
-                                 loss=tf.keras.losses.SparseCategoricalCrossentropy())
+                                 loss=tf.keras.losses.MeanAbsoluteError())
         return
 
     def train(self, control_path, validation_split):
