@@ -84,9 +84,12 @@ class Model:
             verbose=1,
             save_weights_only=True)
 
-        # Note: x is a tf Dataset (including y) so do not specify y;
-        # do not specify batch size.
+        # Connecting to invalid output 45 of source node blstm_1/forward_lstm_1_1/while which has 45 outputs.
+        # Try using:
+        tf.compat.v1.experimental.output_all_intermediates(True)
 
+        # Note: x is a Dataset (including labels y) with batch size set already,
+        # so we do not specify y or the batch size here.
         self.keras_model.fit(
             x=training_set,
             callbacks=[cp_callback],
