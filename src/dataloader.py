@@ -1,7 +1,9 @@
 import os
 import random
 import re
+from collections import defaultdict
 from typing import List, Tuple, Union
+import logging
 
 import tensorflow as tf
 from tensorflow.python.data.ops.dataset_ops import DatasetV1, DatasetV2
@@ -72,7 +74,23 @@ def load_raw_dataset(control_file_path) -> List[tuple]:
                 control_data.append((img_path, label))
     workflow_dir = os.path.dirname(control_file_path)
     x_y_all = [get_png_and_label(workflow_dir, path_and_label) for path_and_label in control_data]
+    audit_raw_dataset(x_y_all)
     return x_y_all
+
+
+def audit_raw_dataset(x_y_all: List[Tuple[tf.Tensor, tf.Tensor]]):
+    image_shape_count = defaultdict(int)
+    label_shape_count = defaultdict(int)
+    for image_t, label_t in x_y_all:
+        image_shape_count[image_t.shape] += 1
+        label_shape_count[label_t.shape] += 1
+    logging.warning('Dataset shape audit: images')
+    for k in sorted(image_shape_count.keys()):
+        print('   ', k, image_shape_count[k])
+    logging.warning('Dataset shape audit: labels')
+    for k in sorted(label_shape_count.keys()):
+        print('   ', k, label_shape_count[k])
+    return
 
 
 def load_dataset(control_file_path, validation_split: float) -> tuple[
