@@ -51,7 +51,6 @@ def get_png_and_label_tensors(workflow_dir, png_path, label) -> tuple:
     img_full_path = os.path.join(workflow_dir, png_path)
     image_t = get_png_tensor(img_full_path)
     label_t = tf.strings.unicode_decode(label, input_encoding='utf-8')
-    print(label_t.shape)
     # -> tf.int32; shape is length of string
     return image_t, label_t
 
