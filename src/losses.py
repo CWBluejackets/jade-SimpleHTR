@@ -5,6 +5,11 @@ import tensorflow as tf
 from tensorflow import keras
 
 
+def get_label_lengths(t0: tf.Tensor) -> tf.Tensor:
+    t1 = tf.math.count_nonzero(tf.math.cumprod(t0, axis=1), axis=1)
+    return t1
+
+
 class CTCLoss(keras.losses.Loss):
     """A class that wraps the function of tf.nn.ctc_loss.
 
@@ -16,7 +21,7 @@ class CTCLoss(keras.losses.Loss):
     """
 
     def __init__(
-        self, logits_time_major=False, blank_index=-1, name="ctc_loss"
+            self, logits_time_major=False, blank_index=-1, name="ctc_loss"
     ):
         super().__init__(name=name)
         self.logits_time_major = logits_time_major
@@ -32,7 +37,7 @@ class CTCLoss(keras.losses.Loss):
         loss = tf.nn.ctc_loss(
             labels=y_true,
             logits=y_pred,
-            label_length=None,
+            label_length=get_label_lengths(y_true),
             logit_length=logit_length,
             logits_time_major=self.logits_time_major,
             blank_index=self.blank_index,
