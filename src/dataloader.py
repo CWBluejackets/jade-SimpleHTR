@@ -114,8 +114,8 @@ def load_dataset(control_file_path, validation_split: float) -> tuple[
 
     # Pick up batch size from command line arguments.
     # Set tf.Dataset batch size here to avoid problems later.
-    validation_ds = tf.data.experimental.from_list(validation_pairs).padded_batch(locations.get_batch_size())
-    training_ds = tf.data.experimental.from_list(training_pairs).padded_batch(locations.get_batch_size())
+    validation_ds = tf.data.experimental.from_list(validation_pairs).batch(locations.get_batch_size())
+    training_ds = tf.data.experimental.from_list(training_pairs).batch(locations.get_batch_size())
     return training_ds, validation_ds
 
 
