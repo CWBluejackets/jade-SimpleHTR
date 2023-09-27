@@ -20,6 +20,7 @@ class Model:
     def __init__(self) -> None:
         self.keras_model = None
         self.create_model()
+        self.character_list = []
         return
 
     def create_model(self):
@@ -76,7 +77,7 @@ class Model:
         return
 
     def train(self, control_path, validation_split):
-        training_set, validation_set, character_list = dataloader.load_dataset(control_path, validation_split)
+        training_set, validation_set, self.character_list = dataloader.load_dataset(control_path, validation_split)
         checkpoint_path = os.path.join(locations.get_model_dir(), 'cp-{epoch:04d}.ckpt')
         cp_callback = tf.keras.callbacks.ModelCheckpoint(
             filepath=checkpoint_path,
@@ -101,19 +102,26 @@ class Model:
         model_dir = locations.get_model_dir()
         latest_snapshot = tf.train.latest_checkpoint(model_dir)
         self.keras_model = keras.models.load_model(latest_snapshot)
+        character_location = os.path.join(locations.get_model_dir(), 'character_list.txt')
+        with open(character_location, 'r') as f:
+            self.character_list = list(f.readline().rstrip())
         return
 
     def save(self) -> None:
         model_location = os.path.join(locations.get_model_dir(), 'model.save')
         self.keras_model.save_model(model_location)
+        character_location = os.path.join(locations.get_model_dir(), 'character_list.txt')
+        with open(character_location, 'w') as f:
+            f.write(''.join(self.character_list) + '\n')
+        return
 
     # saving and loading: note checkpoint callback
     # https://www.tensorflow.org/tutorials/keras/save_and_load#save_checkpoints_during_training
 
     def evaluate(self, control_path):
-        dataset, _, character_list = dataloader.load_dataset(control_path, 0.0)
+        dataset, _, _ = dataloader.load_dataset(control_path, 0.0)
         prediction_t = self.keras_model.predict(x=dataset, batch_size=500)
-        prediction_s = [dataloader.tensor_to_string(t) for t in prediction_t]
+        prediction_s = [dataloader.tensor_to_string(t, self.character_list) for t in prediction_t]
         # x is Dataset including y so do not specify y
         metrics = self.keras_model.evaluate(x=dataset)
         # metrics = list of scalars
@@ -123,6 +131,6 @@ class Model:
         png_t = dataloader.get_png_tensor(png_path)
         x_test = [png_t]
         prediction_t = self.keras_model.predict(x=x_test)
-        prediction_s = dataloader.tensor_to_string(prediction_t[0])
+        prediction_s = dataloader.tensor_to_string(prediction_t[0], self.character_list)
         # TODO get confidence score
         return prediction_s

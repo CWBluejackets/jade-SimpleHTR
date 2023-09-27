@@ -111,11 +111,9 @@ def load_dataset(control_file_path, validation_split: float) -> tuple[
     return training_ds, validation_ds, character_list
 
 
-def tensor_to_string(tensor: tf.Tensor) -> str:
-    # TODO change to corpus-based charset indexing
-    if tensor.dtype != tf.string:
-        raise ValueError(f'tensor content {tensor.dtype} is not string')
-    return tensor.numpy().decode('utf-8')
+def tensor_to_string(tensor: tf.Tensor, character_list: List[str]) -> str:
+    characters = [character_list[i] for i in tensor.numpy()]
+    return ''.join(characters)
 
 # alternative ideas
 # https://medium.com/the-owl/creating-a-tf-dataset-using-a-data-generator-5e5564609e64
