@@ -40,7 +40,7 @@ def get_png_tensor(png_path) -> tf.Tensor:
     return image
 
 
-def get_png_and_label(workflow_dir, path_and_label) -> tuple:
+def get_png_and_label(workflow_dir, path_and_label, max_length, character_list) -> tuple:
     """
     part of the tensorflow data loading
     :param path_and_label: tuple (path, label)
@@ -50,8 +50,10 @@ def get_png_and_label(workflow_dir, path_and_label) -> tuple:
     img_full_path = os.path.join(workflow_dir, path_and_label[0])
     image_t = get_png_tensor(img_full_path)
     label = path_and_label[1]
-    label_t = tf.strings.unicode_decode(label, input_encoding='utf-8')
-    # -> tf.int32; shape is length of string
+    padding = [0] * (max_length - len(label))
+    label_array = [character_list.index(c) for c in label] + padding
+    # label_t = tf.strings.unicode_decode(label, input_encoding='utf-8')
+    label_t = tf.convert_to_tensor(label_array, dtype=tf.int32)
     return image_t, label_t
 
 
@@ -70,9 +72,20 @@ def load_raw_dataset(control_file_path) -> List[tuple]:
                 if locations.get_convert_fractions():
                     label = convert_fractions(label)
                 control_data.append((img_path, label))
+    max_length, character_list = analyse_labels(control_data)
     workflow_dir = os.path.dirname(control_file_path)
-    x_y_all = [get_png_and_label(workflow_dir, path_and_label) for path_and_label in control_data]
+    x_y_all = [get_png_and_label(workflow_dir, path_and_label, max_length, character_list)
+               for path_and_label in control_data]
     return x_y_all
+
+
+def analyse_labels(control_data: List[Tuple[str, str]]) -> Tuple[int, List[str]]:
+    max_length = 0
+    character_set = {' '}
+    for path, label in control_data:
+        max_length = max(max_length, len(label))
+        character_set |= set(label)
+    return max_length, sorted(character_set)
 
 
 def load_dataset(control_file_path, validation_split: float) -> tuple[
