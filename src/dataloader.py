@@ -81,7 +81,8 @@ def load_raw_dataset(control_file_path) -> List[tuple]:
 
 def analyse_labels(control_data: List[Tuple[str, str]]) -> Tuple[int, List[str]]:
     max_length = 0
-    character_set = {' '}
+    # the TAB character will get sorted to 0 so not used
+    character_set = {'\t', ' '}
     for path, label in control_data:
         max_length = max(max_length, len(label))
         character_set |= set(label)
@@ -112,7 +113,8 @@ def load_dataset(control_file_path, validation_split: float) -> tuple[
 
 
 def tensor_to_string(tensor: tf.Tensor, character_list: List[str]) -> str:
-    characters = [character_list[i] for i in tensor.numpy()]
+    # ignore zeroes
+    characters = [character_list[i] for i in tensor.numpy() if i > 0]
     return ''.join(characters)
 
 # alternative ideas
