@@ -76,7 +76,7 @@ def load_raw_dataset(control_file_path) -> List[tuple]:
     workflow_dir = os.path.dirname(control_file_path)
     x_y_all = [get_png_and_label(workflow_dir, path_and_label, max_length, character_list)
                for path_and_label in control_data]
-    return x_y_all
+    return x_y_all, character_list
 
 
 def analyse_labels(control_data: List[Tuple[str, str]]) -> Tuple[int, List[str]]:
@@ -89,7 +89,7 @@ def analyse_labels(control_data: List[Tuple[str, str]]) -> Tuple[int, List[str]]
 
 
 def load_dataset(control_file_path, validation_split: float) -> tuple[
-        Union[DatasetV1, DatasetV2], Union[DatasetV1, DatasetV2]]:
+        Union[DatasetV1, DatasetV2], Union[DatasetV1, DatasetV2], List[str]]:
     """
     Load the PNG files and labels as tensors and structure for ease of use
     :param validation_split: proportion of data to set aside
@@ -98,7 +98,7 @@ def load_dataset(control_file_path, validation_split: float) -> tuple[
     """
     if (validation_split < 0.0) or (validation_split > 1.0):
         raise ValueError('split out of range')
-    x_y_all = load_raw_dataset(control_file_path)
+    x_y_all, character_list = load_raw_dataset(control_file_path)
     random.shuffle(x_y_all)
     # we have a list of tuples of tensors (image, label)
     cutoff = round(len(x_y_all) * validation_split)
@@ -108,7 +108,7 @@ def load_dataset(control_file_path, validation_split: float) -> tuple[
     # pick up batch size from command line arguments
     validation_ds = tf.data.experimental.from_list(validation_pairs).batch(locations.get_batch_size())
     training_ds = tf.data.experimental.from_list(training_pairs).batch(locations.get_batch_size())
-    return training_ds, validation_ds
+    return training_ds, validation_ds, character_list
 
 
 def tensor_to_string(tensor: tf.Tensor) -> str:

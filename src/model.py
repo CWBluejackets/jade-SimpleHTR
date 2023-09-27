@@ -76,7 +76,7 @@ class Model:
         return
 
     def train(self, control_path, validation_split):
-        training_set, validation_set = dataloader.load_dataset(control_path, validation_split)
+        training_set, validation_set, character_list = dataloader.load_dataset(control_path, validation_split)
         checkpoint_path = os.path.join(locations.get_model_dir(), 'cp-{epoch:04d}.ckpt')
         cp_callback = tf.keras.callbacks.ModelCheckpoint(
             filepath=checkpoint_path,
@@ -111,7 +111,7 @@ class Model:
     # https://www.tensorflow.org/tutorials/keras/save_and_load#save_checkpoints_during_training
 
     def evaluate(self, control_path):
-        dataset, _ = dataloader.load_dataset(control_path, 0.0)
+        dataset, _, character_list = dataloader.load_dataset(control_path, 0.0)
         prediction_t = self.keras_model.predict(x=dataset, batch_size=500)
         prediction_s = [dataloader.tensor_to_string(t) for t in prediction_t]
         # x is Dataset including y so do not specify y
