@@ -57,7 +57,7 @@ def get_png_and_label(workflow_dir, path_and_label, max_length, character_list) 
     return image_t, label_t
 
 
-def load_raw_dataset(control_file_path) -> List[tuple]:
+def load_raw_dataset(control_file_path) -> Tuple[List[tuple], List[str]]:
     """
     Load the PNG files and labels to a list of pairs of tensors
     :param control_file_path: words file
@@ -98,7 +98,7 @@ def load_dataset(control_file_path, validation_split: float) -> tuple[
     :return: tensorflow Dataset
     """
     if (validation_split < 0.0) or (validation_split > 1.0):
-        raise ValueError('split out of range')
+        raise ValueError(f'split {validation_split} out of allowed range')
     x_y_all, character_list = load_raw_dataset(control_file_path)
     random.shuffle(x_y_all)
     # we have a list of tuples of tensors (image, label)
