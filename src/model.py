@@ -66,7 +66,9 @@ class Model:
             keras.layers.Bidirectional(keras.layers.LSTM(256), name='blstm_0'),
             # output (None, 512)
             keras.layers.Reshape((1, 512)),
-            keras.layers.Bidirectional(keras.layers.LSTM(256), name='blstm_1')
+            keras.layers.Bidirectional(keras.layers.LSTM(256), name='blstm_1'),
+            # trying the following to fix dim nbr exception
+            keras.layers.Reshape((1, 512)),
         ])
 
         # ctc loss function from tf 2.2 onwards
@@ -75,10 +77,8 @@ class Model:
 
         # examples from Github
         # model.compile(loss=CTCLoss(), metrics=[SequenceAccuracy(), EditDistance()])
-        # model.compile(
-        #         optimizer=keras.optimizers.Adam(lr_schedule),
-        #         loss=CTCLoss(),
-        #         metrics=[SequenceAccuracy()],)
+        # model.compile(optimizer=keras.optimizers.Adam(lr_schedule),
+        #               loss=CTCLoss(), metrics=[SequenceAccuracy()],)
 
         self.keras_model.compile(optimizer='adam', loss=CTCLoss(), metrics=[SequenceAccuracy()])
         return
