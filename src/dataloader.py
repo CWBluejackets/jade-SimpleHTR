@@ -50,11 +50,18 @@ def get_png_and_label(workflow_dir, path_and_label, max_length, character_list) 
     img_full_path = os.path.join(workflow_dir, path_and_label[0])
     image_t = get_png_tensor(img_full_path)
     label = path_and_label[1]
-    padding = [0] * (max_length - len(label))
-    label_array = [character_list.index(c) for c in label] + padding
-    # label_t = tf.strings.unicode_decode(label, input_encoding='utf-8')
-    label_t = tf.convert_to_tensor(label_array, dtype=tf.int32)
+    # padding = [0] * (max_length - len(label))
+    # label_array = [character_list.index(c) for c in label] + padding
+    # label_t = tf.convert_to_tensor(label_array, dtype=tf.int32)
+    label_t = label2sparse_tensor(label, max_length, character_list)
     return image_t, label_t
+
+
+def label2sparse_tensor(label: str, max_length: int, character_list: List[str]) -> tf.sparse.SparseTensor:
+    label_array = [character_list.index(c) for c in label]
+    label_indices = [[0, i] for i in range(label_array)]
+    dense_shape = [max_length]
+    return tf.SparseTensor(indices=label_indices, values=label_array, dense_shape=dense_shape)
 
 
 def load_raw_dataset(control_file_path) -> Tuple[List[tuple], List[str]]:
