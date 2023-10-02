@@ -59,7 +59,7 @@ def get_png_and_label(workflow_dir, path_and_label, max_length, character_list) 
 
 def label2sparse_tensor(label: str, max_length: int, character_list: List[str]) -> tf.sparse.SparseTensor:
     label_array = [character_list.index(c) for c in label]
-    label_indices = [[0, i] for i in range(label_array)]
+    label_indices = [[0, i] for i in range(len(label_array))]
     dense_shape = [max_length]
     return tf.SparseTensor(indices=label_indices, values=label_array, dense_shape=dense_shape)
 
