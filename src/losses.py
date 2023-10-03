@@ -32,12 +32,15 @@ class CTCLoss(keras.losses.Loss):
         CPU, because y_true is a SparseTensor.
         """
         y_true = tf.cast(y_true, tf.int32)
+        # label_lengths = get_label_lengths(y_true)
+        # testing with SparseTensor labels
+        label_lengths = None
         y_pred_shape = tf.shape(y_pred)
         logit_length = tf.fill([y_pred_shape[0]], y_pred_shape[1])
         loss = tf.nn.ctc_loss(
             labels=y_true,
             logits=y_pred,
-            label_length=get_label_lengths(y_true),
+            label_length=label_lengths,
             logit_length=logit_length,
             logits_time_major=self.logits_time_major,
             blank_index=self.blank_index,
