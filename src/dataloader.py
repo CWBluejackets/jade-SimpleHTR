@@ -49,6 +49,8 @@ def get_png_and_label(workflow_dir, path_and_label, max_length, character_list) 
     """
     img_full_path = os.path.join(workflow_dir, path_and_label[0])
     image_t = get_png_tensor(img_full_path)
+    # try converting to sparse to get the metrics/losses stuff to work
+    image_t = tf.sparse.from_dense(image_t)
     label = path_and_label[1]
     # padding = [0] * (max_length - len(label))
     # label_array = [character_list.index(c) for c in label] + padding
