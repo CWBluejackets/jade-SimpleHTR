@@ -6,7 +6,7 @@ from tensorflow import keras
 import dataloader
 import locations
 from losses import CTCLoss
-from metrics import SequenceAccuracy
+import metrics
 
 # Disable eager mode
 tf.compat.v1.disable_eager_execution()
@@ -80,7 +80,8 @@ class Model:
         # model.compile(optimizer=keras.optimizers.Adam(lr_schedule),
         #               loss=CTCLoss(), metrics=[SequenceAccuracy()],)
 
-        self.keras_model.compile(optimizer='adam', loss=CTCLoss(), metrics=[SequenceAccuracy()])
+        #self.keras_model.compile(optimizer='adam', loss=CTCLoss(), metrics=[SequenceAccuracy()])
+        self.keras_model.compile(optimizer='adam', loss=CTCLoss(), metrics=[metrics.EditDistance()])
         return
 
     def train(self, control_path, validation_split):
