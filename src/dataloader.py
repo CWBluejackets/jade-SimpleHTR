@@ -59,6 +59,13 @@ def get_png_and_label(workflow_dir, path_and_label, max_length, character_list) 
     return image_t, label_t
 
 
+def png2sparse_tensor(image_path) -> tf.SparseTensor:
+    image_t = get_png_tensor(image_path)
+    # try converting to sparse to get the metrics/losses stuff to work
+    image_t = tf.sparse.from_dense(image_t)
+    return image_t
+
+
 def label2sparse_tensor(label: str, max_length: int, character_list: List[str]) -> tf.sparse.SparseTensor:
     label_array = [character_list.index(c) for c in label]
     label_indices = [[0, i] for i in range(len(label_array))]
@@ -88,6 +95,27 @@ def load_raw_dataset(control_file_path) -> Tuple[List[tuple], List[str]]:
     return x_y_all, character_list
 
 
+def load_control_data(control_file_path) -> Tuple[List[tuple], List[str], int]:
+    """
+    Load the control file and normalize the image file paths
+    :param control_file_path: path/to/words.txt
+    :return: list of pairs (path, label), list of characters in use
+    """
+    control_data = []
+    workflow_dir = os.path.dirname(control_file_path)
+    with open(control_file_path, 'r') as f:
+        for line in f.readlines():
+            line = line.strip('\n')
+            if line and not line.startswith('#'):
+                img_path, label = line.split(' ', maxsplit=1)
+                img_path = os.path.join(workflow_dir, img_path)
+                if locations.get_convert_fractions():
+                    label = convert_fractions(label)
+                control_data.append((img_path, label))
+    max_length, character_list = analyse_labels(control_data)
+    return control_data, character_list, max_length
+
+
 def analyse_labels(control_data: List[Tuple[str, str]]) -> Tuple[int, List[str]]:
     max_length = 0
     # the TAB character will get sorted to 0 so not used
@@ -99,7 +127,7 @@ def analyse_labels(control_data: List[Tuple[str, str]]) -> Tuple[int, List[str]]
 
 
 def load_dataset(control_file_path, validation_split: float) -> tuple[
-        Union[DatasetV1, DatasetV2], Union[DatasetV1, DatasetV2], List[str]]:
+    Union[DatasetV1, DatasetV2], Union[DatasetV1, DatasetV2], List[str]]:
     """
     Load the PNG files and labels as tensors and structure for ease of use
     :param validation_split: proportion of data to set aside
@@ -125,6 +153,41 @@ def load_dataset(control_file_path, validation_split: float) -> tuple[
     validation_ds = tf.data.experimental.from_list(validation_pairs).batch(locations.get_batch_size())
     training_ds = tf.data.experimental.from_list(training_pairs).batch(locations.get_batch_size())
     return training_ds, validation_ds, character_list
+
+
+def load_dataset_with_generator(control_file_path: str, validation_split: float) -> tuple[
+        Union[DatasetV1, DatasetV2], Union[DatasetV1, DatasetV2], List[str]]:
+    if (validation_split < 0.0) or (validation_split > 1.0):
+        raise ValueError(f'split {validation_split} out of allowed range')
+    control_data, character_list, max_length = load_control_data(control_file_path)
+    random.shuffle(control_data)
+    cutoff = round(len(control_data) * validation_split)
+    # list of (path, label)
+    validation_pairs = control_data[:cutoff]
+    training_pairs = control_data[cutoff:]
+
+    signature = (tf.SparseTensorSpec(shape=model.INPUT_SHAPE, dtype=tf.float32),
+                 tf.SparseTensorSpec(shape=(max_length,), dtype=tf.int32))
+
+    # pick up batch size from command line arguments
+    validation_ds = tf.data.Dataset.from_generator(dataset_generator,
+                                                   args=[validation_pairs, character_list, max_length],
+                                                   output_signature=signature)
+    validation_ds = validation_ds.batch(locations.get_batch_size())
+
+    training_ds = tf.data.Dataset.from_generator(dataset_generator,
+                                                 args=[training_pairs, character_list, max_length],
+                                                 output_signature=signature)
+    training_ds = training_ds.batch(locations.get_batch_size())
+
+    return training_ds, validation_ds, character_list
+
+
+def dataset_generator(control_data: list, characters: List[str], max_length: int):
+    for (image_path, label) in control_data:
+        image_t = png2sparse_tensor(image_path)
+        label_t = label2sparse_tensor(label, max_length, characters)
+        yield image_t, label_t
 
 
 def tensor_to_string(tensor: tf.Tensor, character_list: List[str]) -> str:

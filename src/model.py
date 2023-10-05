@@ -93,7 +93,8 @@ class Model:
         return
 
     def train(self, control_path, validation_split):
-        training_set, validation_set, self.character_list = dataloader.load_dataset(control_path, validation_split)
+        training_set, validation_set, self.character_list = dataloader.load_dataset_with_generator(control_path,
+                                                                                                   validation_split)
         checkpoint_path = os.path.join(locations.get_model_dir(), 'cp-{epoch:04d}.ckpt')
         cp_callback = tf.keras.callbacks.ModelCheckpoint(
             filepath=checkpoint_path,
@@ -135,13 +136,13 @@ class Model:
     # https://www.tensorflow.org/tutorials/keras/save_and_load#save_checkpoints_during_training
 
     def evaluate(self, control_path):
-        dataset, _, _ = dataloader.load_dataset(control_path, 0.0)
+        dataset, _, _ = dataloader.load_dataset_with_generator(control_path, 0.0)
         prediction_t = self.keras_model.predict(x=dataset, batch_size=500)
         prediction_s = [dataloader.tensor_to_string(t, self.character_list) for t in prediction_t]
         # x is Dataset including y so do not specify y
-        metrics = self.keras_model.evaluate(x=dataset)
+        metrics0 = self.keras_model.evaluate(x=dataset)
         # metrics = list of scalars
-        return prediction_s, metrics
+        return prediction_s, metrics0
 
     def apply(self, png_path):
         png_t = dataloader.get_png_tensor(png_path)
