@@ -17,14 +17,13 @@ INPUT_SHAPE = (50, 200, 1)
 
 class Model:
 
-    def __init__(self, *, control_path=None) -> None:
+    def __init__(self, control_path=None) -> None:
         self.keras_model = None
-        self.create_model()
-        self.character_list = []
         if control_path:
             self.character_list = dataloader.get_character_set(control_path)
         else:
             self.load_character_list()
+        self.create_model()
         return
 
     def create_model(self):

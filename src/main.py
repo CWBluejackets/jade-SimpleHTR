@@ -101,16 +101,15 @@ def main():
     locations.set_convert_fractions(args.convert_fractions)
     locations.set_batch_size(args.batch_size)
 
-    # create empty model
-    the_model = Model()
-
     # train the model
     if args.mode == 'train':
+        the_model = Model(args.data_file)
         the_model.train(args.data_file, 0.95)
         the_model.save()
 
     # evaluate it on the validation set
     elif args.mode == 'validate':
+        the_model = Model()
         the_model.load()
         prediction_s, metrics = the_model.evaluate(args.data_file)
         # TODO sensible output
@@ -119,12 +118,13 @@ def main():
 
     # infer text from test image
     elif args.mode == 'infer':
+        the_model = Model()
         the_model.load()
         prediction = the_model.apply(args.img_file)
         print(prediction)
 
     elif args.mode == 'apply':
-        the_model.load()
+        the_model = Model()
         the_model.load()
         prediction_s, metrics = the_model.evaluate(args.data_file)
         # TODO sensible output
