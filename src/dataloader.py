@@ -116,6 +116,12 @@ def load_dataset(control_file_path, validation_split: float) -> tuple[
     training_pairs = x_y_all[cutoff:]
 
     # pick up batch size from command line arguments
+
+    # TODO convert to tf.data.Dataset.from_generator(...) so we can use the
+    # output_signature argument
+    # https://stackoverflow.com/questions/70432316/sparsetensor-generator-for-tensorflow-keras-model-training
+    # to fix "TypeError: Input must be a SparseTensor"
+
     validation_ds = tf.data.experimental.from_list(validation_pairs).batch(locations.get_batch_size())
     training_ds = tf.data.experimental.from_list(training_pairs).batch(locations.get_batch_size())
     return training_ds, validation_ds, character_list
