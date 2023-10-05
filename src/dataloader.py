@@ -116,6 +116,24 @@ def load_control_data(control_file_path) -> Tuple[List[tuple], List[str], int]:
     return control_data, character_list, max_length
 
 
+def get_character_set(control_file_path) -> List[str]:
+    """
+    Quick hack to supply the finaL Dense for the model.
+    :param control_file_path:
+    :return:
+    """
+    character_set = {'\t', ' '}
+    with open(control_file_path, 'r') as f:
+        for line in f.readlines():
+            line = line.strip('\n')
+            if line and not line.startswith('#'):
+                img_path, label = line.split(' ', maxsplit=1)
+                if locations.get_convert_fractions():
+                    label = convert_fractions(label)
+            character_set |= set(label)
+    return sorted(character_set)
+
+
 def analyse_labels(control_data: List[Tuple[str, str]]) -> Tuple[int, List[str]]:
     max_length = 0
     # the TAB character will get sorted to 0 so not used
@@ -127,7 +145,7 @@ def analyse_labels(control_data: List[Tuple[str, str]]) -> Tuple[int, List[str]]
 
 
 def load_dataset(control_file_path, validation_split: float) -> tuple[
-    Union[DatasetV1, DatasetV2], Union[DatasetV1, DatasetV2], List[str]]:
+        Union[DatasetV1, DatasetV2], Union[DatasetV1, DatasetV2], List[str]]:
     """
     Load the PNG files and labels as tensors and structure for ease of use
     :param validation_split: proportion of data to set aside
@@ -143,13 +161,12 @@ def load_dataset(control_file_path, validation_split: float) -> tuple[
     validation_pairs = x_y_all[:cutoff]
     training_pairs = x_y_all[cutoff:]
 
-    # pick up batch size from command line arguments
-
     # TODO convert to tf.data.Dataset.from_generator(...) so we can use the
-    # output_signature argument
+    # output_signature argument to fix "TypeError: Input must be a SparseTensor"
     # https://stackoverflow.com/questions/70432316/sparsetensor-generator-for-tensorflow-keras-model-training
-    # to fix "TypeError: Input must be a SparseTensor"
+    # NOPE, that doesn't fix it.
 
+    # pick up batch size from command line arguments
     validation_ds = tf.data.experimental.from_list(validation_pairs).batch(locations.get_batch_size())
     training_ds = tf.data.experimental.from_list(training_pairs).batch(locations.get_batch_size())
     return training_ds, validation_ds, character_list

@@ -17,10 +17,14 @@ INPUT_SHAPE = (50, 200, 1)
 
 class Model:
 
-    def __init__(self) -> None:
+    def __init__(self, *, control_path=None) -> None:
         self.keras_model = None
         self.create_model()
         self.character_list = []
+        if control_path:
+            self.character_list = dataloader.get_character_set(control_path)
+        else:
+            self.load_character_list()
         return
 
     def create_model(self):
@@ -76,6 +80,8 @@ class Model:
         print('B1!', self.keras_model.output_shape)
         # trying the following to fix dim nbr exception
         # self.keras_model.add(keras.layers.Reshape((1, 512))),
+        # dense layer dimensions to include character set size (including the 0)
+        self.keras_model.add(keras.layers.Dense((len(self.character_list, 512))))
 
         print(self.keras_model.summary())
 
@@ -119,6 +125,10 @@ class Model:
         model_dir = locations.get_model_dir()
         latest_snapshot = tf.train.latest_checkpoint(model_dir)
         self.keras_model = keras.models.load_model(latest_snapshot)
+        self.load_character_list()
+        return
+
+    def load_character_list(self):
         character_location = os.path.join(locations.get_model_dir(), 'character_list.txt')
         with open(character_location, 'r') as f:
             self.character_list = list(f.readline().rstrip())
