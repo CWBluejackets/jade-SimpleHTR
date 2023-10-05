@@ -71,8 +71,10 @@ class Model:
             keras.layers.Bidirectional(keras.layers.LSTM(256, return_sequences=True),
                                        name='blstm_1'),
             # trying the following to fix dim nbr exception
-            keras.layers.Reshape((1, 512)),
+            # keras.layers.Reshape((1, 512)),
         ])
+
+        print(self.keras_model.summary())
 
         # ctc loss function from tf 2.2 onwards
         # https://github.com/tensorflow/tensorflow/issues/35063#issuecomment-597409054
@@ -83,8 +85,8 @@ class Model:
         # model.compile(optimizer=keras.optimizers.Adam(lr_schedule),
         #               loss=CTCLoss(), metrics=[SequenceAccuracy()],)
 
-        #self.keras_model.compile(optimizer='adam', loss=CTCLoss(), metrics=[SequenceAccuracy()])
-        self.keras_model.compile(optimizer='adam', loss=CTCLoss(), metrics=[metrics.EditDistance()])
+        self.keras_model.compile(optimizer='adam', loss=CTCLoss(), metrics=[metrics.SequenceAccuracy()])
+        # self.keras_model.compile(optimizer='adam', loss=CTCLoss(), metrics=[metrics.EditDistance()])
         return
 
     def train(self, control_path, validation_split):
