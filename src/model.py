@@ -56,6 +56,7 @@ class Model:
             # output (None, 9, 11, 512)
 
             # Map-to-Sequence
+            # Note: Reshape size argument does not include batch size
             keras.layers.Reshape((99, 512)),
 
             # 2 layers of Bidirectional LSTM hidden units = 256
@@ -63,10 +64,12 @@ class Model:
             # TODO check activation function?
             # TODO return_sequences=True ?
             # Bidirectional LSTM needs ndim=3
-            keras.layers.Bidirectional(keras.layers.LSTM(256), name='blstm_0'),
+            keras.layers.Bidirectional(keras.layers.LSTM(256, return_sequences=True),
+                                       name='blstm_0'),
             # output (None, 512)
             keras.layers.Reshape((1, 512)),
-            keras.layers.Bidirectional(keras.layers.LSTM(256), name='blstm_1'),
+            keras.layers.Bidirectional(keras.layers.LSTM(256, return_sequences=True),
+                                       name='blstm_1'),
             # trying the following to fix dim nbr exception
             keras.layers.Reshape((1, 512)),
         ])
