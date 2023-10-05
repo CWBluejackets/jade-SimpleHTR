@@ -80,7 +80,7 @@ class Model:
         # trying the following to fix dim nbr exception
         # self.keras_model.add(keras.layers.Reshape((1, 512))),
         # dense layer dimensions to include character set size (including the 0)
-        self.keras_model.add(keras.layers.Dense((len(self.character_list, 512))))
+        self.keras_model.add(keras.layers.Dense(units=len(self.character_list)))
 
         print(self.keras_model.summary())
 
