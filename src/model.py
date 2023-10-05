@@ -29,50 +29,53 @@ class Model:
         # TODO check Conv2D activation function
         # TODO check padding "p1x1" in Shi
 
-        self.keras_model = tf.keras.Sequential([
-            # TODO image perturbation option "augment" (insert extra layers here if option is True)
-            keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=tf.nn.relu,
-                                strides=(1, 1), padding='same',
-                                input_shape=INPUT_SHAPE),
-            keras.layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2)),
-            keras.layers.Conv2D(filters=128, kernel_size=(3, 3), activation=tf.nn.relu,
-                                strides=(1, 1), padding='same'),
-            keras.layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2)),
-            keras.layers.Conv2D(filters=256, kernel_size=(3, 3), activation=tf.nn.relu,
-                                strides=(1, 1), padding='same'),
-            keras.layers.BatchNormalization(),
-            keras.layers.Conv2D(filters=256, kernel_size=(3, 3), activation=tf.nn.relu,
-                                strides=(1, 1), padding='same'),
-            keras.layers.MaxPool2D(pool_size=(2, 2), strides=(1, 2)),
-            keras.layers.Conv2D(filters=512, kernel_size=(3, 3), activation=tf.nn.relu,
-                                strides=(1, 1), padding='same'),
-            keras.layers.BatchNormalization(),
-            keras.layers.Conv2D(filters=51, kernel_size=(3, 3), activation=tf.nn.relu,
-                                strides=(1, 1), padding='same'),
-            keras.layers.MaxPool2D(pool_size=(2, 2), strides=(1, 2)),
-            keras.layers.Conv2D(filters=512, kernel_size=(2, 2), activation=tf.nn.relu,
-                                strides=(1, 1), padding='valid'),
-            keras.layers.BatchNormalization(),
-            # output (None, 9, 11, 512)
+        self.keras_model = tf.keras.Sequential()
 
-            # Map-to-Sequence
-            # Note: Reshape size argument does not include batch size
-            keras.layers.Reshape((99, 512)),
+        # TODO image perturbation option "augment" (insert extra layers here if option is True)
+        self.keras_model.add(keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=tf.nn.relu,
+                                                 strides=(1, 1), padding='same',
+                                                 input_shape=INPUT_SHAPE)),
+        self.keras_model.add(keras.layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2))),
+        self.keras_model.add(keras.layers.Conv2D(filters=128, kernel_size=(3, 3), activation=tf.nn.relu,
+                                                 strides=(1, 1), padding='same')),
+        self.keras_model.add(keras.layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2))),
+        self.keras_model.add(keras.layers.Conv2D(filters=256, kernel_size=(3, 3), activation=tf.nn.relu,
+                                                 strides=(1, 1), padding='same')),
+        self.keras_model.add(keras.layers.BatchNormalization()),
+        self.keras_model.add(keras.layers.Conv2D(filters=256, kernel_size=(3, 3), activation=tf.nn.relu,
+                                                 strides=(1, 1), padding='same')),
+        self.keras_model.add(keras.layers.MaxPool2D(pool_size=(2, 2), strides=(1, 2))),
+        self.keras_model.add(keras.layers.Conv2D(filters=512, kernel_size=(3, 3), activation=tf.nn.relu,
+                                                 strides=(1, 1), padding='same')),
+        self.keras_model.add(keras.layers.BatchNormalization()),
+        self.keras_model.add(keras.layers.Conv2D(filters=51, kernel_size=(3, 3), activation=tf.nn.relu,
+                                                 strides=(1, 1), padding='same')),
+        self.keras_model.add(keras.layers.MaxPool2D(pool_size=(2, 2), strides=(1, 2))),
+        self.keras_model.add(keras.layers.Conv2D(filters=512, kernel_size=(2, 2), activation=tf.nn.relu,
+                                                 strides=(1, 1), padding='valid')),
+        self.keras_model.add(keras.layers.BatchNormalization()),
+        # output (None, 9, 11, 512)
 
-            # 2 layers of Bidirectional LSTM hidden units = 256
-            # TODO add LSTM dropout and recurrent_dropout options
-            # TODO check activation function?
-            # TODO return_sequences=True ?
-            # Bidirectional LSTM needs ndim=3, size=None, 1, 512
-            keras.layers.Bidirectional(keras.layers.LSTM(256, return_sequences=True),
-                                       name='blstm_0'),
-            # output (None, 512)
-            keras.layers.Reshape((1, 512)),
-            keras.layers.Bidirectional(keras.layers.LSTM(256, return_sequences=True),
-                                       name='blstm_1'),
-            # trying the following to fix dim nbr exception
-            # keras.layers.Reshape((1, 512)),
-        ])
+        # Map-to-Sequence
+        # Note: Reshape size argument does not include batch size
+        self.keras_model.add(keras.layers.Reshape((99, 512))),
+        print('R!', self.keras_model.output_shape)
+
+        # 2 layers of Bidirectional LSTM hidden units = 256
+        # TODO add LSTM dropout and recurrent_dropout options
+        # TODO check activation function?
+        # TODO return_sequences=True ?
+        # Bidirectional LSTM needs ndim=3, size=None, 1, 512
+        self.keras_model.add(keras.layers.Bidirectional(keras.layers.LSTM(256, return_sequences=True),
+                                                        name='blstm_0')),
+        print('B0!', self.keras_model.output_shape)
+        # output (None, 99, 512)
+        self.keras_model.add(keras.layers.Reshape((99, 512))),
+        self.keras_model.add(keras.layers.Bidirectional(keras.layers.LSTM(256, return_sequences=True),
+                                                        name='blstm_1')),
+        print('B1!', self.keras_model.output_shape)
+        # trying the following to fix dim nbr exception
+        # self.keras_model.add(keras.layers.Reshape((1, 512))),
 
         print(self.keras_model.summary())
 
