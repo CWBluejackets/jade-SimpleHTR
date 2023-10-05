@@ -63,7 +63,7 @@ class Model:
             # TODO add LSTM dropout and recurrent_dropout options
             # TODO check activation function?
             # TODO return_sequences=True ?
-            # Bidirectional LSTM needs ndim=3
+            # Bidirectional LSTM needs ndim=3, size=None, 1, 512
             keras.layers.Bidirectional(keras.layers.LSTM(256, return_sequences=True),
                                        name='blstm_0'),
             # output (None, 512)
