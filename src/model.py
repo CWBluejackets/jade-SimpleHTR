@@ -63,7 +63,6 @@ class Model:
         # Map-to-Sequence
         # Note: Reshape size argument does not include batch size
         self.keras_model.add(keras.layers.Reshape((99, 512))),
-        print('R!', self.keras_model.output_shape)
 
         # 2 layers of Bidirectional LSTM hidden units = 256
         # TODO add LSTM dropout and recurrent_dropout options
@@ -72,12 +71,10 @@ class Model:
         # Bidirectional LSTM needs ndim=3, size=None, 1, 512
         self.keras_model.add(keras.layers.Bidirectional(keras.layers.LSTM(256, return_sequences=True),
                                                         name='blstm_0')),
-        print('B0!', self.keras_model.output_shape)
         # output (None, 99, 512)
         self.keras_model.add(keras.layers.Reshape((99, 512))),
         self.keras_model.add(keras.layers.Bidirectional(keras.layers.LSTM(256, return_sequences=True),
                                                         name='blstm_1')),
-        print('B1!', self.keras_model.output_shape)
         # trying the following to fix dim nbr exception
         # self.keras_model.add(keras.layers.Reshape((1, 512))),
         # dense layer dimensions to include character set size (including the 0)
