@@ -67,6 +67,16 @@ class Model:
 
         # create layers
         pool = cnn_in4d  # input to first CNN layer
+
+        # TODO
+        # imitate Shi & al's network using this TF stuff
+
+        x = tf.Variable(tf.random.truncated_normal(3, 3, 1, 64, stddev=0.1))
+        x = tf.nn.conv2d(input=cnn_in4d, filters=x, padding='SAME', strides=(1, 1, 1, 1))
+        x = tf.nn.max_pool2d(input=x, ksize=(1, 2, 2, 1), strides=(1, 2, 2, 1), padding='VALID')
+        x = tf.nn.relu(x)
+        # x = tf.nn.conv2d
+
         for i in range(num_layers):
             kernel = tf.Variable(
                 tf.random.truncated_normal([kernel_vals[i], kernel_vals[i], feature_vals[i], feature_vals[i + 1]],
