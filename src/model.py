@@ -1,6 +1,7 @@
 import os
 
 import tensorflow as tf
+from keras.metrics import MeanAbsoluteError
 from tensorflow import keras
 
 import dataloader
@@ -93,8 +94,13 @@ class Model:
         # model.compile(optimizer=keras.optimizers.Adam(lr_schedule),
         #               loss=CTCLoss(), metrics=[SequenceAccuracy()],)
 
-        self.keras_model.compile(optimizer='adam', loss=CTCLoss(), metrics=[metrics.SequenceAccuracy()])
         # self.keras_model.compile(optimizer='adam', loss=CTCLoss(), metrics=[metrics.EditDistance()])
+        # self.keras_model.compile(optimizer='adam', loss=CTCLoss(), metrics=[metrics.EditDistance()])
+        # self.keras_model.compile(optimizer='adam', loss=CTCLoss(), metrics=[keras.metrics.MeanAbsoluteError()])
+        # self.keras_model.compile(optimizer='adam', loss=MeanAbsoluteError(),
+        #                          metrics=[keras.metrics.MeanAbsoluteError()])
+        self.keras_model.compile(optimizer='adam',
+                                 loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True))
         return
 
     def train(self, control_path, validation_split):
