@@ -103,9 +103,11 @@ class Model:
         # Convolution k2x2 p0x0=VALID, BN
         y = tf.Variable(tf.random.truncated_normal([2, 2, 512, 512], stddev=0.1))
         x = tf.nn.conv2d(input=x, filters=y, padding='VALID', strides=(1, 1, 1, 1))
+        print("!!!", x.shape)
         x = tf.compat.v1.layers.batch_normalization(x, training=self.is_train)
+        print("!!!", x.shape)
         x = tf.nn.relu(x)
-
+        print("!!!", x.shape)
         # for i in range(num_layers):
         #     kernel = tf.Variable(
         #         tf.random.truncated_normal([kernel_vals[i], kernel_vals[i], feature_vals[i], feature_vals[i + 1]],
