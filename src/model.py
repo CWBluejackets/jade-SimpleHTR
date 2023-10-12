@@ -105,6 +105,8 @@ class Model:
         x = tf.nn.conv2d(input=x, filters=y, padding='SAME', strides=(1, 1, 1, 1))
         x = tf.compat.v1.layers.batch_normalization(x, training=self.is_train)
         x = tf.nn.relu(x)
+        # This is needed for tf.squeeze to work in the next part
+        x = tf.nn.max_pool2d(input=x, ksize=(1, 2, 2, 1), strides=(1, 2, 2, 1), padding='VALID')
 
         # for i in range(num_layers):
         #     kernel = tf.Variable(
