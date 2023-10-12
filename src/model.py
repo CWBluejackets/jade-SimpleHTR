@@ -68,26 +68,53 @@ class Model:
         # create layers
         pool = cnn_in4d  # input to first CNN layer
 
-        # TODO
-        # imitate Shi & al's network using this TF stuff
+        # Now imitating the network from Shi & al (2017)
 
-        x = tf.Variable(tf.random.truncated_normal(3, 3, 1, 64, stddev=0.1))
-        x = tf.nn.conv2d(input=cnn_in4d, filters=x, padding='SAME', strides=(1, 1, 1, 1))
-        x = tf.nn.max_pool2d(input=x, ksize=(1, 2, 2, 1), strides=(1, 2, 2, 1), padding='VALID')
+        # Convolution, MaxPooling
+        y = tf.Variable(tf.random.truncated_normal(3, 3, 1, 64, stddev=0.1))
+        x = tf.nn.conv2d(input=cnn_in4d, filters=y, padding='SAME', strides=(1, 1, 1, 1))
         x = tf.nn.relu(x)
-        # x = tf.nn.conv2d
+        x = tf.nn.max_pool2d(input=x, ksize=(1, 2, 2, 1), strides=(1, 2, 2, 1), padding='VALID')
+        # Convolution, MaxPooling
+        y = tf.Variable(tf.random.truncated_normal(3, 3, 64, 128, stddev=0.1))
+        x = tf.nn.conv2d(input=x, filters=y, padding='SAME', strides=(1, 1, 1, 1))
+        x = tf.nn.relu(x)
+        x = tf.nn.max_pool2d(input=x, ksize=(1, 2, 2, 1), strides=(1, 2, 2, 1), padding='VALID')
+        # Convolution, BN
+        y = tf.Variable(tf.random.truncated_normal(3, 3, 128, 256, stddev=0.1))
+        x = tf.nn.conv2d(input=x, filters=y, padding='SAME', strides=(1, 1, 1, 1))
+        x = tf.compat.v1.layers.batch_normalization(x, training=self.is_train)
+        x = tf.nn.relu(x)
+        # Convolution, MaxPooling
+        y = tf.Variable(tf.random.truncated_normal(3, 3, 256, 256, stddev=0.1))
+        x = tf.nn.conv2d(input=x, filters=y, padding='SAME', strides=(1, 1, 1, 1))
+        x = tf.nn.relu(x)
+        x = tf.nn.max_pool2d(input=x, ksize=(1, 2, 2, 1), strides=(1, 2, 2, 1), padding='VALID')
+        # Convolution, BN
+        y = tf.Variable(tf.random.truncated_normal(3, 3, 256, 512, stddev=0.1))
+        x = tf.nn.conv2d(input=x, filters=y, padding='SAME', strides=(1, 1, 1, 1))
+        x = tf.compat.v1.layers.batch_normalization(x, training=self.is_train)
+        x = tf.nn.relu(x)
+        # Convolution, MaxPooling
+        y = tf.Variable(tf.random.truncated_normal(3, 3, 512, 512, stddev=0.1))
+        x = tf.nn.conv2d(input=x, filters=y, padding='SAME', strides=(1, 1, 1, 1))
+        x = tf.nn.relu(x)
+        x = tf.nn.max_pool2d(input=x, ksize=(1, 2, 2, 1), strides=(1, 2, 2, 1), padding='VALID')
+        # Convolution
+        y = tf.Variable(tf.random.truncated_normal(3, 3, 512, 512, stddev=0.1))
+        x = tf.nn.conv2d(input=x, filters=y, padding='SAME', strides=(1, 1, 1, 1))
+        x = tf.nn.relu(x)
 
-        for i in range(num_layers):
-            kernel = tf.Variable(
-                tf.random.truncated_normal([kernel_vals[i], kernel_vals[i], feature_vals[i], feature_vals[i + 1]],
-                                           stddev=0.1))
-            conv = tf.nn.conv2d(input=pool, filters=kernel, padding='SAME', strides=(1, 1, 1, 1))
-            conv_norm = tf.compat.v1.layers.batch_normalization(conv, training=self.is_train)
-            relu = tf.nn.relu(conv_norm)
-            pool = tf.nn.max_pool2d(input=relu, ksize=(1, pool_vals[i][0], pool_vals[i][1], 1),
-                                    strides=(1, stride_vals[i][0], stride_vals[i][1], 1), padding='VALID')
-
-        self.cnn_out_4d = pool
+        # for i in range(num_layers):
+        #     kernel = tf.Variable(
+        #         tf.random.truncated_normal([kernel_vals[i], kernel_vals[i], feature_vals[i], feature_vals[i + 1]],
+        #                                    stddev=0.1))
+        #     conv = tf.nn.conv2d(input=pool, filters=kernel, padding='SAME', strides=(1, 1, 1, 1))
+        #     conv_norm = tf.compat.v1.layers.batch_normalization(conv, training=self.is_train)
+        #     relu = tf.nn.relu(conv_norm)
+        #     pool = tf.nn.max_pool2d(input=relu, ksize=(1, pool_vals[i][0], pool_vals[i][1], 1),
+        #                             strides=(1, stride_vals[i][0], stride_vals[i][1], 1), padding='VALID')
+        self.cnn_out_4d = x
 
     def setup_rnn(self) -> None:
         """Create RNN layers."""
