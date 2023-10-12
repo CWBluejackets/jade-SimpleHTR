@@ -100,9 +100,10 @@ class Model:
         x = tf.nn.conv2d(input=x, filters=y, padding='SAME', strides=(1, 1, 1, 1))
         x = tf.nn.relu(x)
         x = tf.nn.max_pool2d(input=x, ksize=(1, 2, 2, 1), strides=(1, 2, 2, 1), padding='VALID')
-        # Convolution
+        # Convolution, BN
         y = tf.Variable(tf.random.truncated_normal([3, 3, 512, 512], stddev=0.1))
         x = tf.nn.conv2d(input=x, filters=y, padding='SAME', strides=(1, 1, 1, 1))
+        x = tf.compat.v1.layers.batch_normalization(x, training=self.is_train)
         x = tf.nn.relu(x)
 
         # for i in range(num_layers):
