@@ -66,47 +66,47 @@ class Model:
         num_layers = len(stride_vals)
 
         # create layers
-        pool = cnn_in4d  # input to first CNN layer
+        # pool = cnn_in4d  # input to first CNN layer
 
         # Now imitating the network from Shi & al (2017)
 
-        # Convolution, MaxPooling
+        # Convolution k3x3, MaxPooling k2x2, s2x2
         y = tf.Variable(tf.random.truncated_normal([3, 3, 1, 64], stddev=0.1))
         x = tf.nn.conv2d(input=cnn_in4d, filters=y, padding='SAME', strides=(1, 1, 1, 1))
         x = tf.nn.relu(x)
         x = tf.nn.max_pool2d(input=x, ksize=(1, 2, 2, 1), strides=(1, 2, 2, 1), padding='VALID')
-        # Convolution, MaxPooling
+        # Convolution k3x3, MaxPooling k2x2, s2,2
         y = tf.Variable(tf.random.truncated_normal([3, 3, 64, 128], stddev=0.1))
-        x = tf.nn.conv2d(input=x, filters=y, padding='SAME', strides=(1, 1, 1, 1))
+        x = tf.nn.conv2d(input=x, filters=y, padding='SAME', strides=(1, 2, 2, 1))
         x = tf.nn.relu(x)
         x = tf.nn.max_pool2d(input=x, ksize=(1, 2, 2, 1), strides=(1, 2, 2, 1), padding='VALID')
-        # Convolution, BN
+        # Convolution k3x3, BN
         y = tf.Variable(tf.random.truncated_normal([3, 3, 128, 256], stddev=0.1))
         x = tf.nn.conv2d(input=x, filters=y, padding='SAME', strides=(1, 1, 1, 1))
         x = tf.compat.v1.layers.batch_normalization(x, training=self.is_train)
         x = tf.nn.relu(x)
-        # Convolution, MaxPooling
+        # Convolution k3x3, MaxPooling k2x2, s1x2
         y = tf.Variable(tf.random.truncated_normal([3, 3, 256, 256], stddev=0.1))
         x = tf.nn.conv2d(input=x, filters=y, padding='SAME', strides=(1, 1, 1, 1))
         x = tf.nn.relu(x)
-        x = tf.nn.max_pool2d(input=x, ksize=(1, 2, 2, 1), strides=(1, 2, 2, 1), padding='VALID')
-        # Convolution, BN
+        x = tf.nn.max_pool2d(input=x, ksize=(1, 2, 2, 1), strides=(1, 1, 2, 1), padding='VALID')
+        # Convolution k3x3, BN
         y = tf.Variable(tf.random.truncated_normal([3, 3, 256, 512], stddev=0.1))
         x = tf.nn.conv2d(input=x, filters=y, padding='SAME', strides=(1, 1, 1, 1))
         x = tf.compat.v1.layers.batch_normalization(x, training=self.is_train)
         x = tf.nn.relu(x)
-        # Convolution, MaxPooling
+        # Convolution k3x3, MaxPooling k2x2, s1x2
         y = tf.Variable(tf.random.truncated_normal([3, 3, 512, 512], stddev=0.1))
         x = tf.nn.conv2d(input=x, filters=y, padding='SAME', strides=(1, 1, 1, 1))
         x = tf.nn.relu(x)
-        x = tf.nn.max_pool2d(input=x, ksize=(1, 2, 2, 1), strides=(1, 2, 2, 1), padding='VALID')
-        # Convolution, BN
-        y = tf.Variable(tf.random.truncated_normal([3, 3, 512, 512], stddev=0.1))
+        x = tf.nn.max_pool2d(input=x, ksize=(1, 2, 2, 1), strides=(1, 1, 2, 1), padding='VALID')
+        # Convolution k2x2, BN
+        y = tf.Variable(tf.random.truncated_normal([2, 2, 512, 512], stddev=0.1))
         x = tf.nn.conv2d(input=x, filters=y, padding='SAME', strides=(1, 1, 1, 1))
         x = tf.compat.v1.layers.batch_normalization(x, training=self.is_train)
         x = tf.nn.relu(x)
-        # This is needed for tf.squeeze to work in the next part
-        x = tf.nn.max_pool2d(input=x, ksize=(1, 2, 2, 1), strides=(1, 2, 2, 1), padding='VALID')
+        # The following lets tf.squeeze to work in the next part
+        x = tf.nn.max_pool2d(input=x, ksize=(1, 2, 2, 1), strides=(1, 1, 2, 1), padding='VALID')
 
         # for i in range(num_layers):
         #     kernel = tf.Variable(
