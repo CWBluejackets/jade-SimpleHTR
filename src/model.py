@@ -71,37 +71,37 @@ class Model:
         # Now imitating the network from Shi & al (2017)
 
         # Convolution, MaxPooling
-        y = tf.Variable(tf.random.truncated_normal(3, 3, 1, 64, stddev=0.1))
+        y = tf.Variable(tf.random.truncated_normal([3, 3, 1, 64], stddev=0.1))
         x = tf.nn.conv2d(input=cnn_in4d, filters=y, padding='SAME', strides=(1, 1, 1, 1))
         x = tf.nn.relu(x)
         x = tf.nn.max_pool2d(input=x, ksize=(1, 2, 2, 1), strides=(1, 2, 2, 1), padding='VALID')
         # Convolution, MaxPooling
-        y = tf.Variable(tf.random.truncated_normal(3, 3, 64, 128, stddev=0.1))
+        y = tf.Variable(tf.random.truncated_normal([3, 3, 64, 128], stddev=0.1))
         x = tf.nn.conv2d(input=x, filters=y, padding='SAME', strides=(1, 1, 1, 1))
         x = tf.nn.relu(x)
         x = tf.nn.max_pool2d(input=x, ksize=(1, 2, 2, 1), strides=(1, 2, 2, 1), padding='VALID')
         # Convolution, BN
-        y = tf.Variable(tf.random.truncated_normal(3, 3, 128, 256, stddev=0.1))
+        y = tf.Variable(tf.random.truncated_normal([3, 3, 128, 256], stddev=0.1))
         x = tf.nn.conv2d(input=x, filters=y, padding='SAME', strides=(1, 1, 1, 1))
         x = tf.compat.v1.layers.batch_normalization(x, training=self.is_train)
         x = tf.nn.relu(x)
         # Convolution, MaxPooling
-        y = tf.Variable(tf.random.truncated_normal(3, 3, 256, 256, stddev=0.1))
+        y = tf.Variable(tf.random.truncated_normal([3, 3, 256, 256], stddev=0.1))
         x = tf.nn.conv2d(input=x, filters=y, padding='SAME', strides=(1, 1, 1, 1))
         x = tf.nn.relu(x)
         x = tf.nn.max_pool2d(input=x, ksize=(1, 2, 2, 1), strides=(1, 2, 2, 1), padding='VALID')
         # Convolution, BN
-        y = tf.Variable(tf.random.truncated_normal(3, 3, 256, 512, stddev=0.1))
+        y = tf.Variable(tf.random.truncated_normal([3, 3, 256, 512], stddev=0.1))
         x = tf.nn.conv2d(input=x, filters=y, padding='SAME', strides=(1, 1, 1, 1))
         x = tf.compat.v1.layers.batch_normalization(x, training=self.is_train)
         x = tf.nn.relu(x)
         # Convolution, MaxPooling
-        y = tf.Variable(tf.random.truncated_normal(3, 3, 512, 512, stddev=0.1))
+        y = tf.Variable(tf.random.truncated_normal([3, 3, 512, 512], stddev=0.1))
         x = tf.nn.conv2d(input=x, filters=y, padding='SAME', strides=(1, 1, 1, 1))
         x = tf.nn.relu(x)
         x = tf.nn.max_pool2d(input=x, ksize=(1, 2, 2, 1), strides=(1, 2, 2, 1), padding='VALID')
         # Convolution
-        y = tf.Variable(tf.random.truncated_normal(3, 3, 512, 512, stddev=0.1))
+        y = tf.Variable(tf.random.truncated_normal([3, 3, 512, 512], stddev=0.1))
         x = tf.nn.conv2d(input=x, filters=y, padding='SAME', strides=(1, 1, 1, 1))
         x = tf.nn.relu(x)
 
