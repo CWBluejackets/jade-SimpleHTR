@@ -1,11 +1,10 @@
 editdistance==0.5.2
 lmdb==1.0.0
 matplotlib==3.2.1
-numpy==1.19.5
-opencv-python==4.4.0.46
+numpy==1.26
+opencv-python==4.8.0.76
 path==15.0.0
-#tensorflow==2.4.0
-tensorflow==2.5.0
+tensorflow==2.14
 pandas>=1.1.5
 pillow>=9.2.0
 levenshtein>=0.20.9
