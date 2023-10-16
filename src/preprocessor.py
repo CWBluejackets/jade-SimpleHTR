@@ -114,7 +114,7 @@ class Preprocessor:
         identifier = uuid.uuid4().hex
         debug_image(img, identifier, 'a')
 
-        img = img.astype(np.float)
+        img = img.astype(np.float64)
         debug_image(img, identifier, 'b')
 
         if self.data_augmentation:
