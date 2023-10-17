@@ -60,9 +60,9 @@ class Model:
         cnn_in4d = tf.expand_dims(input=self.input_imgs, axis=3)
 
         # list of parameters for the layers
-        kernel_vals = [5, 5, 3, 3, 3]
-        feature_vals = [1, 32, 64, 128, 128, 256]
-        stride_vals = pool_vals = [(2, 2), (2, 2), (1, 2), (1, 2), (1, 2)]
+        kernel_vals = [5, 5, 3, 3, 3, 3]
+        feature_vals = [1, 64, 128, 256, 512, 512, 512]
+        stride_vals = pool_vals = [(2, 2), (2, 2), (1, 2), (1, 2), (1, 2), (1,2)]
         num_layers = len(stride_vals)
 
         # create layers
