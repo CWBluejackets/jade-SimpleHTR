@@ -110,6 +110,9 @@ class Model:
         print("!!!", x.shape)
         x = tf.nn.max_pool2d(input=x, ksize=(1, 2, 2, 1), strides=(1, 1, 2, 1), padding='VALID')
         print("!!!", x.shape)
+        # imitate last layer from Scheidl to try to get squeeze to work
+        x = tf.nn.max_pool2d(input=x, ksize=(1, 1, 2, 1), strides=(1, 1, 2, 1), padding='VALID')
+        print("!!!", x.shape)
         # for i in range(num_layers):
         #     kernel = tf.Variable(
         #         tf.random.truncated_normal([kernel_vals[i], kernel_vals[i], feature_vals[i], feature_vals[i + 1]],
