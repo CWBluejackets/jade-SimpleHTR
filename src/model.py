@@ -58,14 +58,7 @@ class Model:
     def setup_cnn(self) -> None:
         """Create CNN layers."""
         cnn_in4d = tf.expand_dims(input=self.input_imgs, axis=3)
-
-        # list of parameters for the layers
-        kernel_vals = [5, 5, 3, 3, 3]
-        feature_vals = [1, 32, 64, 128, 128, 256]
-        stride_vals = pool_vals = [(2, 2), (2, 2), (1, 2), (1, 2), (1, 2)]
-        num_layers = len(stride_vals)
-
-        # create layers
+        # create layers (HS)
         # pool = cnn_in4d  # input to first CNN layer
 
         # Now imitating the network from Shi & al (2017)
@@ -113,6 +106,11 @@ class Model:
         # imitate last layer from Scheidl to try to get squeeze to work
         x = tf.nn.max_pool2d(input=x, ksize=(1, 1, 2, 1), strides=(1, 1, 2, 1), padding='VALID')
         print("!!!", x.shape)
+        # list of parameters for the layers (HS)
+        # kernel_vals = [5, 5, 3, 3, 3]
+        # feature_vals = [1, 32, 64, 128, 128, 256]
+        # stride_vals = pool_vals = [(2, 2), (2, 2), (1, 2), (1, 2), (1, 2)]
+        # num_layers = len(stride_vals)
         # for i in range(num_layers):
         #     kernel = tf.Variable(
         #         tf.random.truncated_normal([kernel_vals[i], kernel_vals[i], feature_vals[i], feature_vals[i + 1]],
