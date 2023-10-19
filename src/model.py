@@ -91,7 +91,7 @@ class Model:
 
         # https://machinelearningmastery.com/how-to-reduce-overfitting-with-dropout-regularization-in-keras/
         # https://www.tensorflow.org/api_docs/python/tf/compat/v1/layers/dropout
-        # suggests innsertion between LSTM and RNN
+        # suggests insertion between LSTM and RNN
 
         stacked = tf.compat.v1.nn.rnn_cell.MultiRNNCell(cells, state_is_tuple=True)
 
