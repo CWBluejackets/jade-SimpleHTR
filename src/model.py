@@ -104,7 +104,7 @@ class Model:
 
         # bidirectional RNN
         # BxTxF -> BxTx2H
-        (fw, bw), _ = tf.compat.v1.nn.bidirectional_dynamic_rnn(cell_fw=stacked_1, cell_bw=stacked,
+        (fw, bw), _ = tf.compat.v1.nn.bidirectional_dynamic_rnn(cell_fw=stacked_1, cell_bw=stacked_1,
                                                                 inputs=rnn_in3d, dtype=rnn_in3d.dtype)
 
         # BxTxH + BxTxH -> BxTx2H -> BxTx1X2H
