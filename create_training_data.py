@@ -335,7 +335,7 @@ def structured_shuffle(words_file_list: List[str], training_split: float) -> Lis
     result = training_lines + testing_lines
     output_split = len(training_lines) / len(result)
     logging.info(f'Structured shuffle result: {len(training_lines)} training, {len(testing_lines)} testing,')
-    logging.info(f'                           {len(result)} total, {output_split:.3f} split')
+    logging.info(f'Structured shuffle result: {len(result)} total, {output_split:.3f} split')
     return result
 
 
