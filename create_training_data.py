@@ -8,8 +8,8 @@ import math
 import os
 import random
 import uuid
-from collections import Counter
-from typing import Tuple, List
+from collections import Counter, defaultdict
+from typing import Tuple, List, Dict
 
 import pandas as pd
 from PIL import Image
@@ -265,14 +265,9 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
         words_file_data = words_file_data[holdout_size:]
         save_words_file(output_subdirectory, 'holdout', holdout_data)
 
-    # TODO insert new grouped shuffling here
-    # dataloader uses 95% training 5% test
-    words_file_data = structured_shuffle(words_file_data)
-
-    for sample in samples0:
-        sample_count = math.ceil(len(words_file_data) * sample)
-        sample_suffix = f'{sample:.2f}'
-        sample_data = random.sample(words_file_data, sample_count)
+    sampled_table = structured_sample(words_file_data, samples0)
+    for fraction, sample_data in sampled_table.items():
+        sample_suffix = f'{fraction:.2f}'
         save_words_file(output_subdirectory, sample_suffix, sample_data)
 
     count_df = pd.DataFrame.from_dict(word_counter, orient='index', columns=['count'])
@@ -282,19 +277,47 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
     return
 
 
-def structured_shuffle(words_file_list: List[str], fraction: float, test_split=0.05) -> List[str]:
+def structured_sample(words_file_list: List[str], sample_fractions: List[float],
+                      training_split=0.95) -> Dict[float, str]:
     """
-    Shuffle the list so that
-    :param test_split: how much of the output will be used as testing
-    :param fraction: how much of the input to return in total
+    For each sample size, shuffle the list to keep the labels in the training and the
+    testing split mostly distinct.
+    :param training_split: how much of the output will be used as training
+    :param sample_fractions: list of how much of the input to return
     :param words_file_list: list of filenames and labels
-    :return: list of filenames and labels with sensible grouping
+    :return: key = fraction; value = list of filenames and labels with sensible grouping
     """
-    shuffled_list = []
-
-
-
-    return shuffled_list
+    # group lines together by label
+    grouped = defaultdict(list)
+    for line in words_file_list:
+        key = line.split(' ', maxsplit=1)[1]
+        grouped[key].append(line)
+    labels = list(grouped.keys())
+    counts = [len(grouped[label]) for label in labels]
+    results = dict()
+    for fraction in sample_fractions:
+        # randomly select labels to produce approximately the right number of lines
+        if fraction < 1.0:
+            sample_size = math.ceil(fraction * len(words_file_list))
+            sample_labels = random.sample(labels, k=sample_size, counts=counts)
+            unique_labels = list(set(sample_labels))
+        else:
+            unique_labels = labels
+        random.shuffle(unique_labels)
+        # put together a list of data lines based on the selected labels, with matching labels still adjacent
+        output_list = []
+        for label in unique_labels:
+            output_list.extend(grouped[label])
+            cutoff = round(training_split * len(output_list))
+            # shuffle the first 95% and the last 5% separately
+            training_list = output_list[:cutoff]
+            testing_list = output_list[cutoff:]
+            random.shuffle(training_list)
+            random.shuffle(testing_list)
+            # and rejoin them
+            output_list = training_list + testing_list
+        results[fraction] = output_list
+    return results
 
 
 
