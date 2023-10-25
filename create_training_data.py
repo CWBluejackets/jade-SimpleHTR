@@ -265,7 +265,7 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
         words_file_data = words_file_data[holdout_size:]
         save_words_file(output_subdirectory, 'holdout', holdout_data)
 
-    sampled_table = structured_sample(words_file_data, samples0)
+    sampled_table = structured_sampling(words_file_data, samples0)
     for fraction, sample_data in sampled_table.items():
         sample_suffix = f'{fraction:.2f}'
         save_words_file(output_subdirectory, sample_suffix, sample_data)
@@ -277,15 +277,35 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
     return
 
 
-def structured_sample(words_file_list: List[str], sample_fractions: List[float],
-                      training_split=0.95) -> Dict[float, str]:
+def structured_sampling(words_file_list: List[str], sample_fractions: List[float],
+                        training_split=0.95) -> Dict[float, List[str]]:
     """
-    For each sample size, shuffle the list to keep the labels in the training and the
-    testing split mostly distinct.
+    For each sample size, produce a list with the labels in top (training) and the
+    bottom (testing) splits disjoint from each other.
     :param training_split: how much of the output will be used as training
     :param sample_fractions: list of how much of the input to return
     :param words_file_list: list of filenames and labels
     :return: key = fraction; value = list of filenames and labels with sensible grouping
+    """
+    results = dict()
+    for fraction in sample_fractions:
+        if fraction < 1.0:
+            sample_size = math.ceil(fraction * len(words_file_list))
+            sample_lines = random.sample(words_file_list, k=sample_size)
+        else:
+            sample_lines = words_file_list
+        results[fraction] = structured_shuffle(sample_lines, training_split=training_split)
+    return results
+
+
+def structured_shuffle(words_file_list: List[str], training_split: float) -> List[str]:
+    """
+    Group the lines by label then produce an amalgamated list with the
+    top (training) and bottom (testing) disjoint with regard to labels;
+    the top and bottom are internally shuffled then concatenated for output.
+    :param words_file_list: input list of ines
+    :param training_split: proportion of training
+    :return: rearranged list of input lines
     """
     # group lines together by label
     grouped = defaultdict(list)
@@ -294,31 +314,20 @@ def structured_sample(words_file_list: List[str], sample_fractions: List[float],
         grouped[key].append(line)
     labels = list(grouped.keys())
     counts = [len(grouped[label]) for label in labels]
-    results = dict()
-    for fraction in sample_fractions:
-        # randomly select labels to produce approximately the right number of lines
-        if fraction < 1.0:
-            sample_size = math.ceil(fraction * len(words_file_list))
-            sample_labels = random.sample(labels, k=sample_size, counts=counts)
-            unique_labels = list(set(sample_labels))
-        else:
-            unique_labels = labels
-        random.shuffle(unique_labels)
-        # put together a list of data lines based on the selected labels, with matching labels still adjacent
-        output_list = []
-        for label in unique_labels:
-            output_list.extend(grouped[label])
-            cutoff = round(training_split * len(output_list))
-            # shuffle the first 95% and the last 5% separately
-            training_list = output_list[:cutoff]
-            testing_list = output_list[cutoff:]
-            random.shuffle(training_list)
-            random.shuffle(testing_list)
-            # and rejoin them
-            output_list = training_list + testing_list
-        results[fraction] = output_list
-    return results
-
+    # pull out the right number of labels to approximately match the training split
+    training_size = round(training_split * len(words_file_list))
+    training_labels = random.sample(labels, k=training_size, counts=counts)
+    testing_labels = grouped.keys() - training_labels
+    # shuffle the training and testing lines separately then concatenate them
+    training_lines = []
+    for label in training_labels:
+        training_lines.extend(grouped[label])
+    random.shuffle(training_lines)
+    testing_lines = []
+    for label in testing_labels:
+        testing_lines.extend(grouped[label])
+    random.shuffle(testing_lines)
+    return training_lines + testing_lines
 
 
 def save_words_file(directory, infix: str, data: list):
