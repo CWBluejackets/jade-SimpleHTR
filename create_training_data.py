@@ -9,7 +9,7 @@ import os
 import random
 import uuid
 from collections import Counter
-from typing import Tuple
+from typing import Tuple, List
 
 import pandas as pd
 from PIL import Image
@@ -267,6 +267,7 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
 
     # TODO insert new grouped shuffling here
     # dataloader uses 95% training 5% test
+    words_file_data = structured_shuffle(words_file_data)
 
     for sample in samples0:
         sample_count = math.ceil(len(words_file_data) * sample)
@@ -279,6 +280,22 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
     count_df.to_csv(count_file_path, sep='\t')
     logging.info(f'Saved count file: {count_file_path}')
     return
+
+
+def structured_shuffle(words_file_list: List[str], fraction: float, test_split=0.05) -> List[str]:
+    """
+    Shuffle the list so that
+    :param test_split: how much of the output will be used as testing
+    :param fraction: how much of the input to return in total
+    :param words_file_list: list of filenames and labels
+    :return: list of filenames and labels with sensible grouping
+    """
+    shuffled_list = []
+
+
+
+    return shuffled_list
+
 
 
 def save_words_file(directory, infix: str, data: list):
