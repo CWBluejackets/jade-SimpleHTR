@@ -255,9 +255,8 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
                 words_file_data.append(generate_words_row(png_filename, row, text_column))
                 word_counter[row[text_column]] += 1
 
-    # carry out holdout and sampling on the control files so we write the images only once
-    # optional: holdout
-    # but create a separate all file to speed up reshuffling later if something looks fishy
+    # carry out optional holdout and sampling on the control files so we write the images
+    # only once; but create a separate all file to speed up reshuffling later if something looks fishy
     if holdout0:
         save_words_file(output_subdirectory, 'all', words_file_data)
         random.shuffle(words_file_data)
@@ -265,6 +264,9 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
         holdout_data = words_file_data[:holdout_size]
         words_file_data = words_file_data[holdout_size:]
         save_words_file(output_subdirectory, 'holdout', holdout_data)
+
+    # TODO insert new grouped shuffling here
+    # dataloader uses 95% training 5% test
 
     for sample in samples0:
         sample_count = math.ceil(len(words_file_data) * sample)
