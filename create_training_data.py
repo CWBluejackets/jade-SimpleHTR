@@ -11,6 +11,7 @@ import uuid
 from collections import Counter, defaultdict
 from typing import Tuple, List, Dict
 
+import numpy as np
 import pandas as pd
 from PIL import Image
 from pandas import Series, DataFrame
@@ -307,17 +308,21 @@ def structured_shuffle(words_file_list: List[str], training_split: float) -> Lis
     :param training_split: proportion of training
     :return: rearranged list of input lines
     """
+    logging.info(f'Structured shuffle from {len(words_file_list)} with {training_split} split')
     # group lines together by label
     grouped = defaultdict(list)
     for line in words_file_list:
         key = line.split(' ', maxsplit=1)[1]
         grouped[key].append(line)
     labels = list(grouped.keys())
-    counts = [len(grouped[label]) for label in labels]
+    random.shuffle(labels)
     # pull out the right number of labels to approximately match the training split
     training_size = round(training_split * len(words_file_list))
-    training_labels = random.sample(labels, k=training_size, counts=counts)
-    testing_labels = grouped.keys() - training_labels
+    label_counts = [len(grouped[label]) for label in labels]
+    label_cumsum = np.cumsum(label_counts)
+    label_cutoff = np.searchsorted(label_cumsum, training_size, side='right')
+    training_labels = labels[:label_cutoff]
+    testing_labels = labels[label_cutoff:]
     # shuffle the training and testing lines separately then concatenate them
     training_lines = []
     for label in training_labels:
@@ -327,7 +332,11 @@ def structured_shuffle(words_file_list: List[str], training_split: float) -> Lis
     for label in testing_labels:
         testing_lines.extend(grouped[label])
     random.shuffle(testing_lines)
-    return training_lines + testing_lines
+    result = training_lines + testing_lines
+    output_split = len(training_lines) / len(result)
+    logging.info(f'Structured shuffle result: {len(training_lines)} training, {len(testing_lines)} testing,')
+    logging.info(f'                           {len(result)} total, {output_split:.3f} split')
+    return result
 
 
 def save_words_file(directory, infix: str, data: list):
