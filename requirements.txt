@@ -1,6 +1,6 @@
 editdistance==0.5.2
 lmdb==1.0.0
-matplotlib==3.2.1
+matplotlib==3.3
 numpy==1.26
 opencv-python==4.8.0.76
 path==15.0.0
