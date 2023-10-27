@@ -7,6 +7,7 @@ import tensorflow as tf
 
 from dataloader_iam import Batch
 import locations
+
 # Disable eager mode
 tf.compat.v1.disable_eager_execution()
 
@@ -94,8 +95,8 @@ class Model:
         # suggests insertion between LSTM and RNN
 
         if locations.get_dropout() > 0.0:
-            stacked = tf.compat.v1.layers.dropout(cellss, rate=locations.get_dropout(),
-                                                    training=self.is_train)
+            stacked = tf.compat.v1.layers.dropout(cells, rate=locations.get_dropout(),
+                                                  training=self.is_train)
             stacked_1 = tf.compat.v1.nn.rnn_cell.MultiRNNCell(stacked, state_is_tuple=True)
         else:
             stacked = tf.compat.v1.nn.rnn_cell.MultiRNNCell(cells, state_is_tuple=True)
