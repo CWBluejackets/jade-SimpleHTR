@@ -93,13 +93,12 @@ class Model:
         # https://www.tensorflow.org/api_docs/python/tf/compat/v1/layers/dropout
         # suggests insertion between LSTM and RNN
 
-        stacked = tf.compat.v1.nn.rnn_cell.MultiRNNCell(cells, state_is_tuple=True)
-
-        # try inserting dropout between LSTM-RNN and birectional RNN
         if locations.get_dropout() > 0.0:
-            stacked_1 = tf.compat.v1.layers.dropout(stacked, rate=locations.get_dropout(),
+            stacked = tf.compat.v1.layers.dropout(cellss, rate=locations.get_dropout(),
                                                     training=self.is_train)
+            stacked_1 = tf.compat.v1.nn.rnn_cell.MultiRNNCell(stacked, state_is_tuple=True)
         else:
+            stacked = tf.compat.v1.nn.rnn_cell.MultiRNNCell(cells, state_is_tuple=True)
             stacked_1 = stacked
 
         # bidirectional RNN
