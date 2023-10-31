@@ -96,7 +96,7 @@ class Model:
             print('No dropout')
 
         # basic cells which is used to build RNN
-        num_hidden = 256
+        num_hidden = 512
         cells = [tf.compat.v1.nn.rnn_cell.LSTMCell(num_units=num_hidden, state_is_tuple=True) for _ in
                  range(2)]  # 2 layers
         stacked = tf.compat.v1.nn.rnn_cell.MultiRNNCell(cells, state_is_tuple=True)
