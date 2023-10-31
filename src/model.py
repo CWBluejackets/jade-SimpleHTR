@@ -87,11 +87,13 @@ class Model:
 
         # https://machinelearningmastery.com/how-to-reduce-overfitting-with-dropout-regularization-in-keras/
         # https://www.tensorflow.org/api_docs/python/tf/compat/v1/layers/dropout
-        # suggests insertion between LSTM and RNN
 
         if locations.get_dropout() > 0.0:
             rnn_in3d = tf.compat.v1.layers.dropout(rnn_in3d, rate=locations.get_dropout(),
                                                    training=self.is_train)
+            print(f'Using dropout: {locations.get_dropout()}')
+        else:
+            print('No dropout')
 
         # basic cells which is used to build RNN
         num_hidden = 256
