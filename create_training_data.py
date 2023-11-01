@@ -414,6 +414,8 @@ def save_shtr_files(cropped_image: Image, row: Series, info_file_path: str,
     row.to_csv(info_file_path)
     logging.info(f'Saved info {info_file_path}')
     if is_image_size_reasonable(cropped_image, png_limits):
+        # https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html#png-saving
+        # bits option is experimental but 8 is the default anyway
         cropped_image.save(png_path, bits=8)
         logging.info(f'Saved image {png_path}')
         result = True

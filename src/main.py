@@ -159,7 +159,9 @@ def apply(model: Model, control_file: Path, output_file: Path) -> None:
             img_path = os.path.join(main_dir, img_filename)
             # warning: cv2 does not trap missing files
             img = locations.imread(img_path, cv2.IMREAD_GRAYSCALE)
-            preprocessor = Preprocessor(get_img_size(), dynamic_width=True, padding=16)
+            # preprocessor = Preprocessor(get_img_size(), dynamic_width=True, padding=16)
+            # try it without dynamic width and padding for consistency with training
+            preprocessor = Preprocessor(get_img_size())
             img = preprocessor.process_img(img)
             batch = Batch([img], None, 1)
             recognized, probability = model.infer_batch(batch, True)
