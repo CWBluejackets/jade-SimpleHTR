@@ -7,6 +7,7 @@ import logging
 import math
 import os
 import random
+import re
 import uuid
 from collections import Counter, defaultdict
 from typing import Tuple, List, Dict
@@ -28,6 +29,9 @@ TYPE_SPEC = {'annotator': 'string', 'decision': 'string', 'decision1': 'string',
              'exclude': 'boolean', 'regex_ok': 'boolean', 'too_small': 'boolean',
              'wrong_column': 'boolean'}
 PARSE_DATES = ['timestamp']
+
+# for adapting labels to use in filenames
+FLATTEN_CHARS = re.compile(r'\W')
 
 
 def search_jpgs(small_jpg_directory: str, big_jpg_directory: str, require_big: bool):
@@ -248,9 +252,10 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
         small_df['jpg'] = 'big' if big_image else 'small'
         dataframe = dataframe.combine_first(small_df[['jpg']])
         for index, row in small_df.iterrows():
-            cropped_image = crop_image(small_image, big_image, row)
+            cropped_image, jpg_type = crop_image(small_image, big_image, row)
             info_path = os.path.join(output_subdirectory, 'info', f'{filename_prefix}_{index:07d}.csv')
-            png_filename = f'{filename_prefix}_{index:07d}.png'
+            filename_label = flatten_text(text_column)
+            png_filename = f'{filename_prefix}_{index:07d}_{jpg_type}_{filename_label}.png'
             png_path = os.path.join(img_subdirectory, png_filename)
             if save_shtr_files(cropped_image, row, info_path, png_path, png_limits):
                 words_file_data.append(generate_words_row(png_filename, row, text_column))
@@ -276,6 +281,11 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
     count_df.to_csv(count_file_path, sep='\t')
     logging.info(f'Saved count file: {count_file_path}')
     return
+
+
+def flatten_text(label: str) -> str:
+    result = FLATTEN_CHARS.sub('_', label)
+    return result
 
 
 def structured_sampling(words_file_list: List[str], sample_fractions: List[float],
@@ -370,7 +380,7 @@ def generate_words_row(png_filename, row: Series, text_column: str):
     return line
 
 
-def crop_image(small_image: Image, big_image: Image, row: Series) -> Image:
+def crop_image(small_image: Image, big_image: Image, row: Series) -> Tuple[Image, str]:
     """
     Crop the image according to the coordinates in the annotation.
     :param big_image:
@@ -391,12 +401,14 @@ def crop_image(small_image: Image, big_image: Image, row: Series) -> Image:
         row['scaled_right'] = right
         row['scaled_top'] = top
         row['scaled_bottom'] = bottom
+        source = 'B'
     else:
         # values already rounded
         left, right = row['left'], row['right']
         top, bottom = row['top'], row['bottom']
         cropped = small_image.crop(box=(left, top, right, bottom))
-    return cropped
+        source = 'S'
+    return cropped, source
 
 
 def save_shtr_files(cropped_image: Image, row: Series, info_file_path: str,
@@ -415,8 +427,7 @@ def save_shtr_files(cropped_image: Image, row: Series, info_file_path: str,
     logging.info(f'Saved info {info_file_path}')
     if is_image_size_reasonable(cropped_image, png_limits):
         # https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html#png-saving
-        # bits option is experimental but 8 is the default anyway
-        cropped_image.save(png_path, bits=8)
+        cropped_image.save(png_path, format='PNG')
         logging.info(f'Saved image {png_path}')
         result = True
     else:
