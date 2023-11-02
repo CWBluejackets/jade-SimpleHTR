@@ -130,7 +130,10 @@ def infer(model: Model, fn_img: Path) -> None:
     img = locations.imread(fn_img, cv2.IMREAD_GRAYSCALE)
     assert img is not None
 
-    preprocessor = Preprocessor(get_img_size(), dynamic_width=True, padding=16)
+    # HS original code uses dynamic width and padding (unlike training)
+    # preprocessor = Preprocessor(get_img_size(), dynamic_width=True, padding=16)
+    # This is more cowbell:
+    preprocessor = Preprocessor(get_img_size())
     img = preprocessor.process_img(img)
 
     batch = Batch([img], None, 1)
@@ -159,8 +162,9 @@ def apply(model: Model, control_file: Path, output_file: Path) -> None:
             img_path = os.path.join(main_dir, img_filename)
             # warning: cv2 does not trap missing files
             img = locations.imread(img_path, cv2.IMREAD_GRAYSCALE)
+            # HS original code uses dynamic width and padding (unlike training)
             # preprocessor = Preprocessor(get_img_size(), dynamic_width=True, padding=16)
-            # try it without dynamic width and padding for consistency with training
+            # This is more cowbell:
             preprocessor = Preprocessor(get_img_size())
             img = preprocessor.process_img(img)
             batch = Batch([img], None, 1)
