@@ -1,17 +1,6 @@
 #!/usr/bin/env python3
 import argparse
-import datetime
-import json
-import logging
-import os
-import re
-import time
-from collections import defaultdict, Counter
-from datetime import timedelta
-from typing import Dict
 
-import Levenshtein
-import numpy as np
 import pandas as pd
 
 # https://pandas.pydata.org/pandas-docs/stable/user_guide/basics.html#basics-dtypes
