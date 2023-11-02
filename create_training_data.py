@@ -551,7 +551,8 @@ if __name__ == "__main__":
     image_limits = (config.get('x_limit'), config.get('y_limit'))
 
     logging.info(f'Loading {input_filename}')
-    big_df = pd.read_csv(input_filename, dtype=TYPE_SPEC, parse_dates=PARSE_DATES)
+    big_df = pd.read_csv(input_filename, dtype=TYPE_SPEC,
+                         parse_dates=PARSE_DATES, index_col=0)
 
     log_image_problems(jpg_index, surplus_big_images, missing_big_images,
                        big_df, output_directory)
