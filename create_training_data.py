@@ -254,7 +254,7 @@ def process_workflow_df(dataframe: DataFrame, output_subdirectory: str, jpg_inde
         for index, row in small_df.iterrows():
             cropped_image, jpg_type = crop_image(small_image, big_image, row)
             info_path = os.path.join(output_subdirectory, 'info', f'{filename_prefix}_{index:07d}.csv')
-            filename_label = flatten_text(text_column)
+            filename_label = flatten_text(row[text_column])
             png_filename = f'{filename_prefix}_{index:07d}_{jpg_type}_{filename_label}.png'
             png_path = os.path.join(img_subdirectory, png_filename)
             if save_shtr_files(cropped_image, row, info_path, png_path, png_limits):
