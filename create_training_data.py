@@ -380,7 +380,7 @@ def generate_words_row(png_filename, row: Series, text_column: str):
     return line
 
 
-def crop_image(small_image: Image, big_image: Image, row: Series) -> Tuple[Image, str]:
+def crop_image(small_image: Image, big_image: Image, row: Series) -> tuple:
     """
     Crop the image according to the coordinates in the annotation.
     :param big_image:
