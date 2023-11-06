@@ -130,7 +130,10 @@ def infer(model: Model, fn_img: Path) -> None:
     img = locations.imread(fn_img, cv2.IMREAD_GRAYSCALE)
     assert img is not None
 
-    preprocessor = Preprocessor(get_img_size(), dynamic_width=True, padding=16)
+    # HS original code uses dynamic width and padding (unlike training)
+    # preprocessor = Preprocessor(get_img_size(), dynamic_width=True, padding=16)
+    # This is more cowbell:
+    preprocessor = Preprocessor(get_img_size())
     img = preprocessor.process_img(img)
 
     batch = Batch([img], None, 1)
@@ -159,7 +162,10 @@ def apply(model: Model, control_file: Path, output_file: Path) -> None:
             img_path = os.path.join(main_dir, img_filename)
             # warning: cv2 does not trap missing files
             img = locations.imread(img_path, cv2.IMREAD_GRAYSCALE)
-            preprocessor = Preprocessor(get_img_size(), dynamic_width=True, padding=16)
+            # HS original code uses dynamic width and padding (unlike training)
+            # preprocessor = Preprocessor(get_img_size(), dynamic_width=True, padding=16)
+            # This is more cowbell:
+            preprocessor = Preprocessor(get_img_size())
             img = preprocessor.process_img(img)
             batch = Batch([img], None, 1)
             recognized, probability = model.infer_batch(batch, True)
@@ -227,10 +233,16 @@ def parse_args() -> argparse.Namespace:
                         action='store_true', default=False)
     parser.add_argument('--debug_dir', help='directory to dump CV2',
                         type=Path, default=None)
+    parser.add_argument('--opt_lr', help='optimizer learning rate',
+                        type=float, default=None)
+    parser.add_argument('--opt_e', help='optimizer epsilon',
+                        type=float, default=None)
     parser.add_argument('--high_contrast', help='normalize image matrix to maximum contrast',
                         action='store_true', default=False)
     parser.add_argument('--output_file', help='output file for apply mode',
                         type=Path, default=None)
+    parser.add_argument('--dropout', help='dropout rate',
+                        type=float, default=None)
 
     return parser.parse_args()
 
@@ -244,6 +256,13 @@ def main():
     locations.set_debug_dir(args.debug_dir)
     locations.set_high_contrast(args.high_contrast)
     locations.set_convert_fractions(args.convert_fractions)
+    # options for AdamOptimizer and dropout
+    if args.opt_lr:
+        locations.set_optimizer_learning_rate(args.opt_lr)
+    if args.opt_e:
+        locations.set_optimizer_epsilon(args.opt_e)
+    if args.dropout:
+        locations.set_dropout(args.dropout)
 
     decoder_mapping = {'bestpath': DecoderType.BestPath,
                        'beamsearch': DecoderType.BeamSearch,

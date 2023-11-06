@@ -7,6 +7,7 @@ import tensorflow as tf
 
 from dataloader_iam import Batch
 import locations
+
 # Disable eager mode
 tf.compat.v1.disable_eager_execution()
 
@@ -47,9 +48,11 @@ class Model:
         # setup optimizer to train NN
         self.batches_trained = 0
         self.update_ops = tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.UPDATE_OPS)
+        # https://www.tensorflow.org/api_docs/python/tf/compat/v1/train/AdamOptimizer
         with tf.control_dependencies(self.update_ops):
-            self.optimizer = tf.compat.v1.train.AdamOptimizer().minimize(self.loss)
-
+            self.optimizer = tf.compat.v1.train.AdamOptimizer(epsilon=locations.get_optimizer_epsilon(),
+                                                              learning_rate=locations.get_optimizer_learning_rate()
+                                                              ).minimize(self.loss)
         # initialize TF
         self.sess, self.saver = self.setup_tf()
 
@@ -59,7 +62,7 @@ class Model:
 
         # list of parameters for the layers
         kernel_vals = [5, 5, 3, 3, 3]
-        feature_vals = [1, 32, 64, 128, 128, 256]
+        feature_vals = [1, 64, 128, 256, 512, 512]
         stride_vals = pool_vals = [(2, 2), (2, 2), (1, 2), (1, 2), (1, 2)]
         num_layers = len(stride_vals)
 
@@ -75,24 +78,33 @@ class Model:
             pool = tf.nn.max_pool2d(input=relu, ksize=(1, pool_vals[i][0], pool_vals[i][1], 1),
                                     strides=(1, stride_vals[i][0], stride_vals[i][1], 1), padding='VALID')
 
+        print("!!!", pool.shape)
         self.cnn_out_4d = pool
 
     def setup_rnn(self) -> None:
         """Create RNN layers."""
         rnn_in3d = tf.squeeze(self.cnn_out_4d, axis=[2])
 
+        # https://machinelearningmastery.com/how-to-reduce-overfitting-with-dropout-regularization-in-keras/
+        # https://www.tensorflow.org/api_docs/python/tf/compat/v1/layers/dropout
+
+        if locations.get_dropout() > 0.0:
+            rnn_in3d = tf.compat.v1.layers.dropout(rnn_in3d, rate=locations.get_dropout(),
+                                                   training=self.is_train)
+            print(f'Using dropout: {locations.get_dropout()}')
+        else:
+            print('No dropout')
+
         # basic cells which is used to build RNN
         num_hidden = 256
         cells = [tf.compat.v1.nn.rnn_cell.LSTMCell(num_units=num_hidden, state_is_tuple=True) for _ in
                  range(2)]  # 2 layers
-
-        # stack basic cells
         stacked = tf.compat.v1.nn.rnn_cell.MultiRNNCell(cells, state_is_tuple=True)
 
         # bidirectional RNN
         # BxTxF -> BxTx2H
-        (fw, bw), _ = tf.compat.v1.nn.bidirectional_dynamic_rnn(cell_fw=stacked, cell_bw=stacked, inputs=rnn_in3d,
-                                                                dtype=rnn_in3d.dtype)
+        (fw, bw), _ = tf.compat.v1.nn.bidirectional_dynamic_rnn(cell_fw=stacked, cell_bw=stacked,
+                                                                inputs=rnn_in3d, dtype=rnn_in3d.dtype)
 
         # BxTxH + BxTxH -> BxTx2H -> BxTx1X2H
         concat = tf.expand_dims(tf.concat([fw, bw], 2), 2)
