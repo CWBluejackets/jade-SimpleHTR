@@ -40,6 +40,7 @@ Pipeline for processing muster JPGs using trained models.
   * deviation (degrees from vertical/horizontal)
   * maximum H/V distance between V/H lines to group and merge
   * minimum number of lines to constitute a valid group
+  * merging function (H max, V mean)
 * intermediate directory: PNGs, maybe control files
 * hints for muster format/structure
 * output directory: CSVs
