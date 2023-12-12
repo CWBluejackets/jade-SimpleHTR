@@ -10,9 +10,10 @@ Pipeline for processing muster JPGs using trained models.
 
 ## Input information
 
-* JPG filename
+* JPG filename (or input directory for bulk processing on server)
 * muster date if present --- might be easier for a human to do this
-* typical muster formats (in a file referenced by the config file)
+* muster formats (in a file referenced by the config file)
+  * columns to be merged (e.g., eyes + hair + complexion; feet + inches) 
 * config file
 
 ## Derived information
@@ -21,8 +22,13 @@ Pipeline for processing muster JPGs using trained models.
   * vessel name
   * sequence number
 * from content
-  * columns
-  * rows
+  * column numbers for reassembly
+  * row numbers for reassembly
   * column headings / models
 
+## Configuration ideas
 
+* input directory (config file for server or CL options for testing)
+* intermediate directory: PNGs, maybe control files
+* hints for muster format/structure
+* output directory: CSVs
