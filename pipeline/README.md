@@ -13,7 +13,9 @@ Pipeline for processing muster JPGs using trained models.
 * JPG filename (or input directory for bulk processing on server)
 * muster date if present --- might be easier for a human to do this
 * muster formats (in a file referenced by the config file)
-  * columns to be merged (e.g., eyes + hair + complexion; feet + inches) 
+  * columns to be merged (e.g., eyes + hair + complexion; feet + inches)
+  * margin hints?
+  * typical row heights
 * config file
 
 ## Derived information
@@ -29,6 +31,15 @@ Pipeline for processing muster JPGs using trained models.
 ## Configuration ideas
 
 * input directory (config file for server or CL options for testing)
+* parameters, for rows and columns separately
+  * Canny min and max thresholds (TODO figure out what these mean)
+  * Canny aperture (5 works better than default 3)
+  * Hough threshold
+  * Hough min length
+  * Hough max gap
+  * deviation (degrees from vertical/horizontal)
+  * maximum H/V distance between V/H lines to group and merge
+  * minimum number of lines to constitute a valid group
 * intermediate directory: PNGs, maybe control files
 * hints for muster format/structure
 * output directory: CSVs
