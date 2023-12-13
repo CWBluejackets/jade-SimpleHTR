@@ -12,7 +12,14 @@ GREEN = (0, 128, 0)
 BLUE = (255, 0, 0)
 
 
-def process_sheet(filename, config):
+def process_sheet(filename, config, workflows):
+    """
+    Process sheet...
+    :param filename: JPG filename
+    :param config: general configuration
+    :param workflows: workflow specifications
+    :return:
+    """
     output_directory = config['png_directory']
     logging.info(f'Output to {output_directory}')
     logging.info(f'Reading image from {filename}')

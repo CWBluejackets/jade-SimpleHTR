@@ -4,6 +4,7 @@
   "csv_directory": "path/to/csv_dir",
   "log_directory": "path/to/log_dir",
   "img_file_exception": false,
+  "workflow_config": "workflows.json",
   "columns": {
     "canny_aperture": 5,
     "canny_max": 150,

@@ -1,0 +1,51 @@
+{
+  "21955": {
+    "description": "Names",
+    "numeric": false
+  },
+  "21969": {
+    "description": "Ratings",
+    "numeric": false
+  },
+  "21986": {
+    "description": "Where Born",
+    "numeric": false
+  },
+  "21987": {
+    "description": "Occupation",
+    "numeric": false
+  },
+  "22014": {
+    "description": "Age",
+    "numeric": true
+  },
+  "22015": {
+    "description": "Where Enlisted",
+    "numeric": false
+  },
+  "22016": {
+    "description": "Date of Enlistment",
+    "numeric": false
+  },
+  "22031": {
+    "description": "Ship's Number",
+    "numeric": true
+  },
+  "22038": {
+    "description": "Term of Enlistment",
+    "numeric": true
+  },
+  "22039": {
+    "description": "Remarks",
+    "numeric": false,
+    "ignore": true
+  },
+  "22044": {
+    "description": "Eyes, Hair & Complexion",
+    "numeric": false
+  },
+  "22045": {
+    "description": "Height",
+    "numeric": true
+  }
+}
