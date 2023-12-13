@@ -13,16 +13,18 @@ import statistics
 import matplotlib.pyplot as plt
 from collections import Counter
 
-
-
-oparser = argparse.ArgumentParser(description="Generate training data",
+oparser = argparse.ArgumentParser(description="Process muster sheets for ML application",
                                   formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 oparser.add_argument('-c', dest='config_file',
-                     type=str,
-                     required=True,
+                     type=str, required=True,
                      metavar='config.json',
                      help='config file')
+
+oparser.add_argument('-i', dest='input_location',
+                     type=str, default=None,
+                     metavar='FILE_OR_DIR',
+                     help='input file or directory')
 
 options = oparser.parse_args()
 
@@ -41,6 +43,18 @@ with open(options.config_file) as f:
         print(f'Log stdout')
         logging.basicConfig(level=logging.INFO,
                             format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+
+# Use options.input_location if specified; otherwise fall back to config['input_directory'];
+# options.input_location can be a single JPG or a directory containing *.jpg or *.JPG.
+
+input_location = options.input_location or config['input_directory']
+if os.path.isdir(input_location):
+    # input_files = input_location/**.jpg JPG
+    pass
+elif os.path.isfile(input_location):
+    input_files = [input_location]
+
+
 
 
 
