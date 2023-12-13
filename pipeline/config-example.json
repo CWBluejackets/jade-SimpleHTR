@@ -27,6 +27,7 @@
     "hough_min_length": 150,
     "hough_threshold": 100,
     "merge": "max",
-    "typical": 60
+    "typical": 60,
+    "descender": 0.5
   }
 }
