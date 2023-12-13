@@ -2,7 +2,7 @@
   "input_directory": null,
   "png_directory": "path/to/png_dir",
   "csv_directory": "path/to/csv_dir",
-  "log_directory": "/opt/data/bluejackets/logs",
+  "log_directory": "path/to/log_dir",
   "columns": {
     "canny_aperture": 5,
     "canny_max": 150,
