@@ -11,7 +11,8 @@ Pipeline for processing muster JPGs using trained models.
 ## Input information
 
 * JPG filename (or input directory for bulk processing on server)
-* muster date if present --- might be easier for a human to do this
+* muster date if present --- might be easier for a human to do this since
+  we haven't been training on it
 * muster formats (in a file referenced by the config file)
   * columns to be merged (e.g., eyes + hair + complexion; feet + inches)
   * margin hints?
@@ -23,10 +24,13 @@ Pipeline for processing muster JPGs using trained models.
 * from filename
   * vessel name
   * sequence number
-* from content
+* from box detection
   * column numbers for reassembly
   * row numbers for reassembly
   * column headings / models
+* from ML application
+  * label
+  * confidence score
 
 ## Configuration ideas
 
@@ -41,6 +45,10 @@ Pipeline for processing muster JPGs using trained models.
   * maximum H/V distance between V/H lines to group and merge
   * minimum number of lines to constitute a valid group
   * merging function (H max, V mean)
+* confidence score required to use the automatic annotation without checking
+  (0.0 to 1.0)
+* directory for images and labels to be checked and corrected
+  * How to format image-label combination for Zooniverse?
 * intermediate directory: PNGs, maybe control files
 * hints for muster format/structure
 * output directory: CSVs
