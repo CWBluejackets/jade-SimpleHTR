@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import glob
 from datetime import datetime
 import itertools
 import json
@@ -12,6 +13,8 @@ import math
 import statistics
 import matplotlib.pyplot as plt
 from collections import Counter
+
+import sheet_division
 
 oparser = argparse.ArgumentParser(description="Process muster sheets for ML application",
                                   formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -44,15 +47,24 @@ with open(options.config_file) as f:
         logging.basicConfig(level=logging.INFO,
                             format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
-# Use options.input_location if specified; otherwise fall back to config['input_directory'];
-# options.input_location can be a single JPG or a directory containing *.jpg or *.JPG.
+# Use options.input_location if specified; otherwise fall back to config file;
+# options.input_location can be a single JPG or a directory containing **/*.jpg (case-insensitive).
+# TODO handle .jpeg .JPEG ?
 
 input_location = options.input_location or config['input_directory']
 if os.path.isdir(input_location):
-    # input_files = input_location/**.jpg JPG
+    input_files = glob.iglob(os.path.join(input_location, '**/*.[jJ][pP][gG]'), recursive=True)
     pass
 elif os.path.isfile(input_location):
     input_files = [input_location]
+else:
+    raise ValueError(f'Input location {input_location} is not valid!')
+
+for input_file in input_files:
+    logging.info(f'Processing {input_file}')
+    sheet_division.process_sheet(input_file, config)
+
+
 
 
 
