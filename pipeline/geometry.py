@@ -11,6 +11,8 @@ import numpy as np
 # x = 0 = left
 # cv2 ndarray.shape = (height, width)
 
+# NOTE: cv2.line(...) can handle endpoints outside the image correctly and without
+# raising exceptions, so extrapolation does NOT need boundary safety
 
 def solve_line(point0, point1) -> Tuple[float, float]:
     """
@@ -37,13 +39,16 @@ def extrapolate_vertical(point0, point1, image: np.ndarray) -> tuple:
     x0, y0 = point0
     x1, y1 = point1
 
-    # special case: vertical lines has infinite slope
+    # special case: vertical line has infinite slope
     if x0 == x1:
         return (x0, 0), (x0, max_y), 0
 
     a, b = solve_line(point0, point1)
     top = (-b / a, 0)
     bottom = ((max_y - b) / a, max_y)
+
+    # TODO test top < 0
+    # TODO test bottom > max_y
 
     y_top = 0
     y_bottom = image.shape[0] - 1
