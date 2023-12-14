@@ -3,6 +3,8 @@
 import math
 from typing import Tuple
 
+import numpy as np
+
 
 # point = (x, y)
 # y = 0 = top
@@ -22,17 +24,16 @@ def solve_line(point0, point1) -> Tuple[float, float]:
     return a, b
 
 
-def extrapolate_vertical(point0, point1, image_array):
+def extrapolate_vertical(point0, point1, image: np.ndarray) -> tuple:
     """
     Extrapolate to the top and bottom edges. Warning: nothing yet to guard
     against negative x-values (or past the bottom edge)
     :param point0:
     :param point1:
-    :param image_array:
+    :param image:
     :return: top_point, bottom_point, horizontal_difference
     """
-    max_x = image_array.shape[1] - 1
-    max_y = image_array.shape[0] - 1
+    max_x, max_y = get_maxima(image)
     x0, y0 = point0
     x1, y1 = point1
 
@@ -44,9 +45,8 @@ def extrapolate_vertical(point0, point1, image_array):
     top = (-b / a, 0)
     bottom = ((max_y - b) / a, max_y)
 
-
     y_top = 0
-    y_bottom = image_array.shape[0] - 1
+    y_bottom = image.shape[0] - 1
     x_upper, y_upper = min(point0, point1, key=lambda p: p[1])
     x_lower, y_lower = max(point0, point1, key=lambda p: p[1])
     x_top = (y_top - y_lower) * (x_upper - x_lower) / (y_upper - y_lower) + x_lower
@@ -104,3 +104,10 @@ def is_horizontal(angle, tolerance):
 def is_vertical(angle, tolerance):
     return ((90 - tolerance) < angle < (90 + tolerance)) or ((270 - tolerance) < angle < (270 + tolerance))
 
+
+def is_within_image(point, max_x, max_y):
+    return (0 <= point[0] <= max_x) and (0 <= point[1] <= max_y)
+
+
+def get_maxima(image: np.ndarray) -> Tuple[int, int]:
+    return image.shape[0] - 1, image.shape[1] - 1
