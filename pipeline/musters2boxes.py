@@ -2,17 +2,10 @@
 
 import argparse
 import glob
-from datetime import datetime
-import itertools
 import json
 import logging
 import os.path
-import cv2
-import numpy as np
-import math
-import statistics
-import matplotlib.pyplot as plt
-from collections import Counter
+from datetime import datetime
 
 import sheet_division
 

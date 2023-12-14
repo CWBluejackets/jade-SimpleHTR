@@ -1,6 +1,6 @@
 # library file
+
 import logging
-import math
 import os
 
 import cv2
@@ -27,28 +27,6 @@ def process_sheet(filename, config, workflows):
     raw_lines = extract_raw_lines(image, config)
     # TODO
     return
-
-
-def measure(line0):
-    """
-    Measure the length and direction of a line
-    :param line0: (x0, y0, x1, y1)
-    :return: degrees (90 up), length, line (same format)
-    """
-    dy = line0[3] - line0[1]
-    dx = line0[2] - line0[0]
-    # angle in radians
-    angle_radians = math.atan2(dy, dx)
-    # angle in degrees
-    angle_degrees = angle_radians * 180 / math.pi
-    if angle_degrees < 0:
-        angle_degrees += 180
-    length = math.sqrt(dy * dy + dx * dx)
-    return angle_degrees, length, line0
-
-
-def is_horizontal(angle, tolerance):
-    return (- tolerance < angle < + tolerance) or (180 - tolerance < angle < 180 + tolerance)
 
 
 def extract_raw_lines(image, config):
