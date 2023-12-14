@@ -7,8 +7,8 @@ import numpy as np
 
 
 # point = (x, y)
-# y = 0 = top
-# x = 0 = left
+# in cv2, y = 0 = top
+#         x = 0 = left
 # cv2 ndarray.shape = (height, width)
 
 # NOTE: cv2.line(...) can handle endpoints outside the image correctly and without
@@ -26,10 +26,9 @@ def solve_line(point0, point1) -> Tuple[float, float]:
     return a, b
 
 
-def extrapolate_vertical(point0, point1, image: np.ndarray) -> tuple:
+def extrapolate_vertical(point0, point1, image: np.ndarray) -> Tuple[Tuple[int, int], Tuple[int, int], int]:
     """
-    Extrapolate to the top and bottom edges. Warning: nothing yet to guard
-    against negative x-values (or past the bottom edge)
+    Extrapolate to the top and bottom edges.
     :param point0:
     :param point1:
     :param image:
@@ -44,42 +43,29 @@ def extrapolate_vertical(point0, point1, image: np.ndarray) -> tuple:
         return (x0, 0), (x0, max_y), 0
 
     a, b = solve_line(point0, point1)
-    top = (-b / a, 0)
-    bottom = ((max_y - b) / a, max_y)
-
-    # TODO test top < 0
-    # TODO test bottom > max_y
-
-    y_top = 0
-    y_bottom = image.shape[0] - 1
-    x_upper, y_upper = min(point0, point1, key=lambda p: p[1])
-    x_lower, y_lower = max(point0, point1, key=lambda p: p[1])
-    x_top = (y_top - y_lower) * (x_upper - x_lower) / (y_upper - y_lower) + x_lower
-    x_top = int(x_top)
-    x_bottom = (y_bottom - y_upper) * (x_upper - x_lower) / (y_upper - y_lower) + x_upper
-    x_bottom = int(x_bottom)
-    return (x_top, y_top), (x_bottom, y_bottom), abs(x_top - x_bottom)
+    top = (round(-b / a), 0)
+    bottom = (round((max_y - b) / a), max_y)
+    x_diff = abs(bottom[0] - top[0])
+    return top, bottom, x_diff
 
 
-def extrapolate_horizontal(point0, point1, image_array):
+def extrapolate_horizontal(point0, point1, image: np.ndarray) -> Tuple[Tuple[int, int], Tuple[int, int], int]:
     """
     Extrapolate to the left and right edges. Warning: nothing yet to guard
     against negative x-values (or past the RH edge)
     :param point0:
     :param point1:
-    :param image_array:
+    :param image:
     :return: left_point, right_point, vertical_difference
     """
-    x_left = 0
-    x_right = image_array.shape[1] - 1
-    x_0, y_0 = min(point0, point1, key=lambda p: p[0])
-    x_1, y_1 = max(point0, point1, key=lambda p: p[0])
+    max_x, max_y = get_maxima(image)
+    a, b = solve_line(point0, point1)
 
-    y_left = y_1 - (x_1 - x_left) * (y_1 - y_0) / (x_1 - x_0)
-    y_left = int(y_left)
-    y_right = (x_right - x_0) * (y_1 - y_0) / (x_1 - x_0) + y_0
-    y_right = int(y_right)
-    return (x_left, y_left), (x_right, y_right), abs(y_right - y_left)
+    left = (0, round(b))
+    right = (max_x, round(a * max_x + b))
+    y_diff = abs(right[1] - left[1])
+
+    return left, right, y_diff
 
 
 def measure(line0):
@@ -108,10 +94,6 @@ def is_horizontal(angle, tolerance):
 
 def is_vertical(angle, tolerance):
     return ((90 - tolerance) < angle < (90 + tolerance)) or ((270 - tolerance) < angle < (270 + tolerance))
-
-
-def is_within_image(point, max_x, max_y):
-    return (0 <= point[0] <= max_x) and (0 <= point[1] <= max_y)
 
 
 def get_maxima(image: np.ndarray) -> Tuple[int, int]:
