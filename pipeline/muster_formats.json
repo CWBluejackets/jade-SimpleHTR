@@ -1,132 +1,642 @@
 {
-  "2": {
-    "type_name": "1861/C12",
-    "form_code": "USN 1861",
+  "type_1": {
+    "columns": [
+      {
+        "index": 1,
+        "name": "Ship's #",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 2,
+        "name": "Names",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 3,
+        "name": "DoE - Year",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 4,
+        "name": "DoE - Month",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 5,
+        "name": "DoE - Day",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 6,
+        "name": "Term of Enlistment",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 7,
+        "name": "Expiration of ToE - Year",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 8,
+        "name": "Expiration of ToE - Month",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 9,
+        "name": "Expiration of ToE - Day",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 10,
+        "name": "Rating",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 11,
+        "name": "Where Enlisted",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 12,
+        "name": "Remarks",
+        "width": null,
+        "workflow": null
+      }
+    ],
+    "example": "https://s3.amazonaws.com/NARAprodstorage/lz/dc-metro/rg-024/563603/563603-volumes1-549/563603-005/563603-005-0002.JPG",
     "first_year": 1861,
-    "1": "Ship's #",
-    "2": "Names",
-    "3": "DoE - Year",
-    "4": "DoE - Month",
-    "5": "DoE - Day",
-    "6": "Term of Enlistment",
-    "7": "Expiration of ToE - Year",
-    "8": "Expiration of ToE - Month",
-    "9": "Expiration of ToE - Day",
-    "10": "Rating",
-    "11": "Where Enlisted",
-    "12": "Remarks",
-    "example": "https://s3.amazonaws.com/NARAprodstorage/lz/dc-metro/rg-024/563603/563603-volumes1-549/563603-005/563603-005-0002.JPG"
+    "form_code": "USN 1861",
+    "type_name": "1861/C12"
   },
-  "3": {
-    "type_name": "1862/C20",
-    "form_code": "USN 1862",
+  "type_2": {
+    "columns": [
+      {
+        "index": 1,
+        "name": "Ship's #",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 2,
+        "name": "Names",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 3,
+        "name": "DoE - Year",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 4,
+        "name": "DoE - Month",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 5,
+        "name": "DoE - Day",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 6,
+        "name": "Where Enlisted",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 7,
+        "name": "Term of Enlistment",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 8,
+        "name": "Place / Vessel",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 9,
+        "name": "Rating",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 10,
+        "name": "Where Born - CTC",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 11,
+        "name": "Where Born - State",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 12,
+        "name": "State - Citizen",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 13,
+        "name": "Desc. - Age / Years",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 14,
+        "name": "Desc. - Occupation",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 15,
+        "name": "Desc. - Eyes",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 16,
+        "name": "Desc. - Hair",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 17,
+        "name": "Desc. - Complexion",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 18,
+        "name": "Desc. - Height (Feet)",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 19,
+        "name": "Desc. - Height (Inches)",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 20,
+        "name": "Remarks",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 21,
+        "name": null,
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 22,
+        "name": null,
+        "width": null,
+        "workflow": null
+      }
+    ],
+    "example": "https://s3.amazonaws.com/NARAprodstorage/lz/dc-metro/rg-024/563603/563603-volumes1-549/563603-001/563603-001-0020.JPG",
     "first_year": 1862,
-    "1": "Ship's #",
-    "2": "Names",
-    "3": "DoE - Year",
-    "4": "DoE - Month",
-    "5": "DoE - Day",
-    "6": "Where Enlisted",
-    "7": "Term of Enlistment",
-    "8": "Place / Vessel",
-    "9": "Rating",
-    "10": "Where Born - CTC",
-    "11": "Where Born - State",
-    "12": "State - Citizen",
-    "13": "Desc. - Age / Years",
-    "14": "Desc. - Occupation",
-    "15": "Desc. - Eyes",
-    "16": "Desc. - Hair",
-    "17": "Desc. - Complexion",
-    "18": "Desc. - Height (Feet)",
-    "19": "Desc. - Height (Inches)",
-    "20": "Remarks",
-    "21": null,
-    "22": null,
-    "example": "https://s3.amazonaws.com/NARAprodstorage/lz/dc-metro/rg-024/563603/563603-volumes1-549/563603-001/563603-001-0020.JPG"
+    "form_code": "USN 1862",
+    "type_name": "1862/C20"
   },
-  "4": {
-    "type_name": "1863-1864/C20",
-    "form_code": "USN 1863",
+  "type_3": {
+    "columns": [
+      {
+        "index": 1,
+        "name": "Ship's #",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 2,
+        "name": "Names",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 3,
+        "name": "Rating",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 4,
+        "name": "DoE - Year",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 5,
+        "name": "DoE - Month",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 6,
+        "name": "DoE - Day",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 7,
+        "name": "Where Enlisted",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 8,
+        "name": "Term of Enlistment",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 9,
+        "name": "Place / Vessel",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 10,
+        "name": "Where Born - CTC",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 11,
+        "name": "Where Born - State",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 12,
+        "name": "State - Citizen",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 13,
+        "name": "Desc. - Age / Years",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 14,
+        "name": "Desc. - Occupation",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 15,
+        "name": "Desc. - Eyes",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 16,
+        "name": "Desc. - Hair",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 17,
+        "name": "Desc. - Complexion",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 18,
+        "name": "Desc. - Height (Feet)",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 19,
+        "name": "Desc. - Height (Inches)",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 20,
+        "name": "Remarks",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 21,
+        "name": null,
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 22,
+        "name": null,
+        "width": null,
+        "workflow": null
+      }
+    ],
+    "example": "https://s3.amazonaws.com/NARAprodstorage/lz/dc-metro/rg-024/563603/563603-volumes1-549/563603-001/563603-001-0030.JPG",
     "first_year": 1863,
-    "1": "Ship's #",
-    "2": "Names",
-    "3": "Rating",
-    "4": "DoE - Year",
-    "5": "DoE - Month",
-    "6": "DoE - Day",
-    "7": "Where Enlisted",
-    "8": "Term of Enlistment",
-    "9": "Place / Vessel",
-    "10": "Where Born - CTC",
-    "11": "Where Born - State",
-    "12": "State - Citizen",
-    "13": "Desc. - Age / Years",
-    "14": "Desc. - Occupation",
-    "15": "Desc. - Eyes",
-    "16": "Desc. - Hair",
-    "17": "Desc. - Complexion",
-    "18": "Desc. - Height (Feet)",
-    "19": "Desc. - Height (Inches)",
-    "20": "Remarks",
-    "21": null,
-    "22": null,
-    "example": "https://s3.amazonaws.com/NARAprodstorage/lz/dc-metro/rg-024/563603/563603-volumes1-549/563603-001/563603-001-0030.JPG"
+    "form_code": "USN 1863",
+    "type_name": "1863-1864/C20"
   },
-  "5": {
-    "type_name": "1863-1864/C20",
+  "type_4": {
+    "columns": [
+      {
+        "index": 1,
+        "name": "Ship's #",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 2,
+        "name": "Names",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 3,
+        "name": "Rating",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 4,
+        "name": "DoE - Year",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 5,
+        "name": "DoE - Month",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 6,
+        "name": "DoE - Day",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 7,
+        "name": "Where Enlisted",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 8,
+        "name": "Term of Enlistment",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 9,
+        "name": "Place / Vessel",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 10,
+        "name": "Where Born - CTC",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 11,
+        "name": "Where Born - State",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 12,
+        "name": "State - Citizen",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 13,
+        "name": "Desc. - Age / Years",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 14,
+        "name": "Desc. - Occupation",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 15,
+        "name": "Desc. - Eyes",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 16,
+        "name": "Desc. - Hair",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 17,
+        "name": "Desc. - Complexion",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 18,
+        "name": "Desc. - Height (Feet)",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 19,
+        "name": "Desc. - Height (Inches)",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 20,
+        "name": "Remarks",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 21,
+        "name": null,
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 22,
+        "name": null,
+        "width": null,
+        "workflow": null
+      }
+    ],
+    "example": "https://s3.amazonaws.com/NARAprodstorage/lz/dc-metro/rg-024/563603/563603-volumes1-549/563603-001/563603-001-0004.JPG",
+    "first_year": 1864,
     "form_code": "BoER 1864",
-    "first_year": 1864,
-    "1": "Ship's #",
-    "2": "Names",
-    "3": "Rating",
-    "4": "DoE - Year",
-    "5": "DoE - Month",
-    "6": "DoE - Day",
-    "7": "Where Enlisted",
-    "8": "Term of Enlistment",
-    "9": "Place / Vessel",
-    "10": "Where Born - CTC",
-    "11": "Where Born - State",
-    "12": "State - Citizen",
-    "13": "Desc. - Age / Years",
-    "14": "Desc. - Occupation",
-    "15": "Desc. - Eyes",
-    "16": "Desc. - Hair",
-    "17": "Desc. - Complexion",
-    "18": "Desc. - Height (Feet)",
-    "19": "Desc. - Height (Inches)",
-    "20": "Remarks",
-    "21": null,
-    "22": null,
-    "example": "https://s3.amazonaws.com/NARAprodstorage/lz/dc-metro/rg-024/563603/563603-volumes1-549/563603-001/563603-001-0004.JPG"
+    "type_name": "1863-1864/C20"
   },
-  "6": {
-    "type_name": "1863-1864/C20",
-    "form_code": "BoER 1864 (alt)",
+  "type_5": {
+    "columns": [
+      {
+        "index": 1,
+        "name": "Ship's #",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 2,
+        "name": "Names",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 3,
+        "name": "Rating",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 4,
+        "name": "DoE - Year",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 5,
+        "name": "DoE - Month",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 6,
+        "name": "DoE - Day",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 7,
+        "name": "Where Enlisted",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 8,
+        "name": "Term of Enlistment",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 9,
+        "name": "Place / Vessel",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 10,
+        "name": "Where Born - CTC",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 11,
+        "name": "Where Born - State",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 12,
+        "name": "State - Citizen",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 13,
+        "name": "Desc. - Age / Years",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 14,
+        "name": "Desc. - Occupation",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 15,
+        "name": "Desc. - Eyes",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 16,
+        "name": "Desc. - Hair",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 17,
+        "name": "Desc. - Complexion",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 18,
+        "name": "Desc. - Height (Feet)",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 19,
+        "name": "Desc. - Height (Inches)",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 20,
+        "name": "Remarks",
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 21,
+        "name": null,
+        "width": null,
+        "workflow": null
+      },
+      {
+        "index": 22,
+        "name": null,
+        "width": null,
+        "workflow": null
+      }
+    ],
+    "example": "https://s3.amazonaws.com/NARAprodstorage/lz/dc-metro/rg-024/563603/563603-volumes1-549/563603-001/563603-001-0036.JPG",
     "first_year": 1864,
-    "1": "Ship's #",
-    "2": "Names",
-    "3": "Rating",
-    "4": "DoE - Year",
-    "5": "DoE - Month",
-    "6": "DoE - Day",
-    "7": "Where Enlisted",
-    "8": "Term of Enlistment",
-    "9": "Place / Vessel",
-    "10": "Where Born - CTC",
-    "11": "Where Born - State",
-    "12": "State - Citizen",
-    "13": "Desc. - Age / Years",
-    "14": "Desc. - Occupation",
-    "15": "Desc. - Eyes",
-    "16": "Desc. - Hair",
-    "17": "Desc. - Complexion",
-    "18": "Desc. - Height (Feet)",
-    "19": "Desc. - Height (Inches)",
-    "20": "Remarks",
-    "21": null,
-    "22": null,
-    "example": "https://s3.amazonaws.com/NARAprodstorage/lz/dc-metro/rg-024/563603/563603-volumes1-549/563603-001/563603-001-0036.JPG"
+    "form_code": "BoER 1864 (alt)",
+    "type_name": "1863-1864/C20"
   }
 }
