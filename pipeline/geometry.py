@@ -70,7 +70,7 @@ def extrapolate_horizontal(point0, point1, image: np.ndarray) -> Tuple[Tuple[int
 
 def measure(line0):
     """
-    Measure the length and direction of a line
+    Measure the length and direction of a line (ACW from +x).
     :param line0: (x0, y0, x1, y1) format returned by HoughLinesP
     :return: degrees (positive float), length, line (repeated in same format)
     """
