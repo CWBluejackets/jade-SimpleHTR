@@ -5,37 +5,37 @@
         "index": 1,
         "name": "Ship's #",
         "width": null,
-        "workflow": null
+        "workflow": 22031
       },
       {
         "index": 2,
         "name": "Names",
         "width": null,
-        "workflow": null
+        "workflow": 21955
       },
       {
         "index": 3,
         "name": "DoE - Year",
         "width": null,
-        "workflow": null
+        "workflow": 22016
       },
       {
         "index": 4,
         "name": "DoE - Month",
         "width": null,
-        "workflow": null
+        "workflow": 22016
       },
       {
         "index": 5,
         "name": "DoE - Day",
         "width": null,
-        "workflow": null
+        "workflow": 22016
       },
       {
         "index": 6,
         "name": "Term of Enlistment",
         "width": null,
-        "workflow": null
+        "workflow": 22038
       },
       {
         "index": 7,
@@ -59,19 +59,19 @@
         "index": 10,
         "name": "Rating",
         "width": null,
-        "workflow": null
+        "workflow": 21969
       },
       {
         "index": 11,
         "name": "Where Enlisted",
         "width": null,
-        "workflow": null
+        "workflow": 22015
       },
       {
         "index": 12,
         "name": "Remarks",
         "width": null,
-        "workflow": null
+        "workflow": -1
       }
     ],
     "example": "https://s3.amazonaws.com/NARAprodstorage/lz/dc-metro/rg-024/563603/563603-volumes1-549/563603-005/563603-005-0002.JPG",
@@ -85,43 +85,43 @@
         "index": 1,
         "name": "Ship's #",
         "width": null,
-        "workflow": null
+        "workflow": 22031
       },
       {
         "index": 2,
         "name": "Names",
         "width": null,
-        "workflow": null
+        "workflow": 21955
       },
       {
         "index": 3,
         "name": "DoE - Year",
         "width": null,
-        "workflow": null
+        "workflow": 22016
       },
       {
         "index": 4,
         "name": "DoE - Month",
         "width": null,
-        "workflow": null
+        "workflow": 22016
       },
       {
         "index": 5,
         "name": "DoE - Day",
         "width": null,
-        "workflow": null
+        "workflow": 22016
       },
       {
         "index": 6,
         "name": "Where Enlisted",
         "width": null,
-        "workflow": null
+        "workflow": 22015
       },
       {
         "index": 7,
         "name": "Term of Enlistment",
         "width": null,
-        "workflow": null
+        "workflow": 22038
       },
       {
         "index": 8,
@@ -133,19 +133,19 @@
         "index": 9,
         "name": "Rating",
         "width": null,
-        "workflow": null
+        "workflow": 21969
       },
       {
         "index": 10,
         "name": "Where Born - CTC",
         "width": null,
-        "workflow": null
+        "workflow": 21986
       },
       {
         "index": 11,
         "name": "Where Born - State",
         "width": null,
-        "workflow": null
+        "workflow": 21986
       },
       {
         "index": 12,
@@ -157,49 +157,49 @@
         "index": 13,
         "name": "Desc. - Age / Years",
         "width": null,
-        "workflow": null
+        "workflow": 22014
       },
       {
         "index": 14,
         "name": "Desc. - Occupation",
         "width": null,
-        "workflow": null
+        "workflow": 21987
       },
       {
         "index": 15,
         "name": "Desc. - Eyes",
         "width": null,
-        "workflow": null
+        "workflow": 22044
       },
       {
         "index": 16,
         "name": "Desc. - Hair",
         "width": null,
-        "workflow": null
+        "workflow": 22044
       },
       {
         "index": 17,
         "name": "Desc. - Complexion",
         "width": null,
-        "workflow": null
+        "workflow": 22044
       },
       {
         "index": 18,
         "name": "Desc. - Height (Feet)",
         "width": null,
-        "workflow": null
+        "workflow": 22045
       },
       {
         "index": 19,
         "name": "Desc. - Height (Inches)",
         "width": null,
-        "workflow": null
+        "workflow": 22045
       },
       {
         "index": 20,
         "name": "Remarks",
         "width": null,
-        "workflow": null
+        "workflow": -1
       },
       {
         "index": 21,
@@ -225,49 +225,49 @@
         "index": 1,
         "name": "Ship's #",
         "width": null,
-        "workflow": null
+        "workflow": 22031
       },
       {
         "index": 2,
         "name": "Names",
         "width": null,
-        "workflow": null
+        "workflow": 21955
       },
       {
         "index": 3,
         "name": "Rating",
         "width": null,
-        "workflow": null
+        "workflow": 21969
       },
       {
         "index": 4,
         "name": "DoE - Year",
         "width": null,
-        "workflow": null
+        "workflow": 22016
       },
       {
         "index": 5,
         "name": "DoE - Month",
         "width": null,
-        "workflow": null
+        "workflow": 22016
       },
       {
         "index": 6,
         "name": "DoE - Day",
         "width": null,
-        "workflow": null
+        "workflow": 22016
       },
       {
         "index": 7,
         "name": "Where Enlisted",
         "width": null,
-        "workflow": null
+        "workflow": 22015
       },
       {
         "index": 8,
         "name": "Term of Enlistment",
         "width": null,
-        "workflow": null
+        "workflow": 22038
       },
       {
         "index": 9,
@@ -279,13 +279,13 @@
         "index": 10,
         "name": "Where Born - CTC",
         "width": null,
-        "workflow": null
+        "workflow": 21986
       },
       {
         "index": 11,
         "name": "Where Born - State",
         "width": null,
-        "workflow": null
+        "workflow": 21986
       },
       {
         "index": 12,
@@ -297,49 +297,49 @@
         "index": 13,
         "name": "Desc. - Age / Years",
         "width": null,
-        "workflow": null
+        "workflow": 22014
       },
       {
         "index": 14,
         "name": "Desc. - Occupation",
         "width": null,
-        "workflow": null
+        "workflow": 21987
       },
       {
         "index": 15,
         "name": "Desc. - Eyes",
         "width": null,
-        "workflow": null
+        "workflow": 22044
       },
       {
         "index": 16,
         "name": "Desc. - Hair",
         "width": null,
-        "workflow": null
+        "workflow": 22044
       },
       {
         "index": 17,
         "name": "Desc. - Complexion",
         "width": null,
-        "workflow": null
+        "workflow": 22044
       },
       {
         "index": 18,
         "name": "Desc. - Height (Feet)",
         "width": null,
-        "workflow": null
+        "workflow": 22045
       },
       {
         "index": 19,
         "name": "Desc. - Height (Inches)",
         "width": null,
-        "workflow": null
+        "workflow": 22045
       },
       {
         "index": 20,
         "name": "Remarks",
         "width": null,
-        "workflow": null
+        "workflow": -1
       },
       {
         "index": 21,
@@ -365,49 +365,49 @@
         "index": 1,
         "name": "Ship's #",
         "width": null,
-        "workflow": null
+        "workflow": 22031
       },
       {
         "index": 2,
         "name": "Names",
         "width": null,
-        "workflow": null
+        "workflow": 21955
       },
       {
         "index": 3,
         "name": "Rating",
         "width": null,
-        "workflow": null
+        "workflow": 21969
       },
       {
         "index": 4,
         "name": "DoE - Year",
         "width": null,
-        "workflow": null
+        "workflow": 22016
       },
       {
         "index": 5,
         "name": "DoE - Month",
         "width": null,
-        "workflow": null
+        "workflow": 22016
       },
       {
         "index": 6,
         "name": "DoE - Day",
         "width": null,
-        "workflow": null
+        "workflow": 22016
       },
       {
         "index": 7,
         "name": "Where Enlisted",
         "width": null,
-        "workflow": null
+        "workflow": 22015
       },
       {
         "index": 8,
         "name": "Term of Enlistment",
         "width": null,
-        "workflow": null
+        "workflow": 22038
       },
       {
         "index": 9,
@@ -419,13 +419,13 @@
         "index": 10,
         "name": "Where Born - CTC",
         "width": null,
-        "workflow": null
+        "workflow": 21986
       },
       {
         "index": 11,
         "name": "Where Born - State",
         "width": null,
-        "workflow": null
+        "workflow": 21986
       },
       {
         "index": 12,
@@ -437,49 +437,49 @@
         "index": 13,
         "name": "Desc. - Age / Years",
         "width": null,
-        "workflow": null
+        "workflow": 22014
       },
       {
         "index": 14,
         "name": "Desc. - Occupation",
         "width": null,
-        "workflow": null
+        "workflow": 21987
       },
       {
         "index": 15,
         "name": "Desc. - Eyes",
         "width": null,
-        "workflow": null
+        "workflow": 22044
       },
       {
         "index": 16,
         "name": "Desc. - Hair",
         "width": null,
-        "workflow": null
+        "workflow": 22044
       },
       {
         "index": 17,
         "name": "Desc. - Complexion",
         "width": null,
-        "workflow": null
+        "workflow": 22044
       },
       {
         "index": 18,
         "name": "Desc. - Height (Feet)",
         "width": null,
-        "workflow": null
+        "workflow": 22045
       },
       {
         "index": 19,
         "name": "Desc. - Height (Inches)",
         "width": null,
-        "workflow": null
+        "workflow": 22045
       },
       {
         "index": 20,
         "name": "Remarks",
         "width": null,
-        "workflow": null
+        "workflow": -1
       },
       {
         "index": 21,
@@ -505,49 +505,49 @@
         "index": 1,
         "name": "Ship's #",
         "width": null,
-        "workflow": null
+        "workflow": 22031
       },
       {
         "index": 2,
         "name": "Names",
         "width": null,
-        "workflow": null
+        "workflow": 21955
       },
       {
         "index": 3,
         "name": "Rating",
         "width": null,
-        "workflow": null
+        "workflow": 21969
       },
       {
         "index": 4,
         "name": "DoE - Year",
         "width": null,
-        "workflow": null
+        "workflow": 22016
       },
       {
         "index": 5,
         "name": "DoE - Month",
         "width": null,
-        "workflow": null
+        "workflow": 22016
       },
       {
         "index": 6,
         "name": "DoE - Day",
         "width": null,
-        "workflow": null
+        "workflow": 22016
       },
       {
         "index": 7,
         "name": "Where Enlisted",
         "width": null,
-        "workflow": null
+        "workflow": 22015
       },
       {
         "index": 8,
         "name": "Term of Enlistment",
         "width": null,
-        "workflow": null
+        "workflow": 22038
       },
       {
         "index": 9,
@@ -559,13 +559,13 @@
         "index": 10,
         "name": "Where Born - CTC",
         "width": null,
-        "workflow": null
+        "workflow": 21986
       },
       {
         "index": 11,
         "name": "Where Born - State",
         "width": null,
-        "workflow": null
+        "workflow": 21986
       },
       {
         "index": 12,
@@ -577,49 +577,49 @@
         "index": 13,
         "name": "Desc. - Age / Years",
         "width": null,
-        "workflow": null
+        "workflow": 22014
       },
       {
         "index": 14,
         "name": "Desc. - Occupation",
         "width": null,
-        "workflow": null
+        "workflow": 21987
       },
       {
         "index": 15,
         "name": "Desc. - Eyes",
         "width": null,
-        "workflow": null
+        "workflow": 22044
       },
       {
         "index": 16,
         "name": "Desc. - Hair",
         "width": null,
-        "workflow": null
+        "workflow": 22044
       },
       {
         "index": 17,
         "name": "Desc. - Complexion",
         "width": null,
-        "workflow": null
+        "workflow": 22044
       },
       {
         "index": 18,
         "name": "Desc. - Height (Feet)",
         "width": null,
-        "workflow": null
+        "workflow": 22045
       },
       {
         "index": 19,
         "name": "Desc. - Height (Inches)",
         "width": null,
-        "workflow": null
+        "workflow": 22045
       },
       {
         "index": 20,
         "name": "Remarks",
         "width": null,
-        "workflow": null
+        "workflow": -1
       },
       {
         "index": 21,
