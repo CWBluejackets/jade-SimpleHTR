@@ -11,6 +11,21 @@ RED = (0, 0, 255)
 GREEN = (0, 128, 0)
 BLUE = (255, 0, 0)
 
+# workflow specification:
+# key int -> { 'description': string, 'numeric': bool }
+
+# format specification:
+# key str 'type_<#>'
+# -> { 'columns' -> list of column specifications (LTR),
+#      'example': str url,
+#      'first_year': int, 'form_code': str, 'type_name': str }
+
+# column specification
+# { 'index': int, 'name': str,
+#   'process': bool, 'skip': bool,
+#   'workflow': None or int,
+#   'width': None or int or list of int (maybe) }
+
 
 def process_sheet(filename, config, workflows, formats):
     """
@@ -26,7 +41,10 @@ def process_sheet(filename, config, workflows, formats):
     logging.info(f'Reading image from {filename}')
     image = safe_imread(filename, cv2.IMREAD_GRAYSCALE, exception_if_missing=config['img_file_exception'])
     raw_lines = extract_raw_lines(image, config)
-    # TODO
+    # TODO filter vertical lines
+    #      check against formats
+    # TODO filter horizontal lines
+    #      check against approximate multiples of config['rows']['typical']
     return
 
 

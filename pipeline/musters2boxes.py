@@ -2,6 +2,7 @@
 
 import argparse
 import glob
+import itertools
 import json
 import logging
 import os.path
@@ -24,6 +25,10 @@ oparser.add_argument('-i', dest='input_location',
 
 options = oparser.parse_args()
 
+# TODO split configuration into two parts:
+# a. thresholds, row height, etc. (machine-independent)
+# b. file/directory locations (machine-dependent)
+
 with open(options.config_file, 'r') as f:
     config = json.load(f)
     log_directory = config.get('log_directory')
@@ -45,6 +50,8 @@ workflow_file = os.path.join(os.path.dirname(options.config_file),
                              config['workflows'])
 with open(workflow_file, 'r') as f:
     workflows = json.load(f)
+    # JSON requires string keys; convert to int
+    workflows = {int(k): v for k, v in workflows.items()}
 
 format_file = os.path.join(os.path.dirname(options.config_file),
                            config['formats'])
@@ -52,18 +59,19 @@ with open(workflow_file, 'r') as f:
     formats = json.load(f)
 
 # Use options.input_location if specified; otherwise fall back to config file;
-# options.input_location can be a single JPG or a directory containing **/*.jpg (case-insensitive).
-# TODO handle .jpeg .JPEG ?
+# options.input_location can be a single JPG or a directory containing them
 
 input_location = options.input_location or config['input_directory']
 if os.path.isdir(input_location):
-    input_files = glob.iglob(os.path.join(input_location, '**/*.[jJ][pP][gG]'), recursive=True)
-    pass
+    extensions = ['jpg', 'JPG', 'jpeg', 'JPEG']
+    file_globs = [glob.iglob(os.path.join(input_location, f'**/*.{extension}'), recursive=True)
+                  for extension in extensions]
+    input_files = itertools.chain.from_iterable(file_globs)
 elif os.path.isfile(input_location):
     input_files = [input_location]
 else:
-    raise ValueError(f'Input location {input_location} is not valid!')
+    raise ValueError(f'Input location {input_location} is not a valid file or directory!')
 
 for input_file in input_files:
     logging.info(f'Processing {input_file}')
-    sheet_division.process_sheet(input_file, config, workflows)
+    sheet_division.process_sheet(input_file, config, workflows, formats)
