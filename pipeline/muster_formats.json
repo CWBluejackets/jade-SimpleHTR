@@ -4,78 +4,104 @@
       {
         "index": 0,
         "name": "LH_skip",
+        "process": false,
+        "skip": true,
         "width": [],
         "workflow": null
       },
       {
         "index": 1,
         "name": "Ship's #",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22031
       },
       {
         "index": 2,
         "name": "Names",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 21955
       },
       {
         "index": 3,
         "name": "DoE - Year",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22016
       },
       {
         "index": 4,
         "name": "DoE - Month",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22016
       },
       {
         "index": 5,
         "name": "DoE - Day",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22016
       },
       {
         "index": 6,
         "name": "Term of Enlistment",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22038
       },
       {
         "index": 7,
         "name": "Expiration of ToE - Year",
+        "process": false,
+        "skip": false,
         "width": null,
         "workflow": null
       },
       {
         "index": 8,
         "name": "Expiration of ToE - Month",
+        "process": false,
+        "skip": false,
         "width": null,
         "workflow": null
       },
       {
         "index": 9,
         "name": "Expiration of ToE - Day",
+        "process": false,
+        "skip": false,
         "width": null,
         "workflow": null
       },
       {
         "index": 10,
         "name": "Rating",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 21969
       },
       {
         "index": 11,
         "name": "Where Enlisted",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22015
       },
       {
         "index": 12,
         "name": "Remarks",
+        "process": false,
+        "skip": false,
         "width": null,
         "workflow": -1
       }
@@ -90,126 +116,168 @@
       {
         "index": 0,
         "name": "LH_skip",
+        "process": false,
+        "skip": true,
         "width": [],
         "workflow": null
       },
       {
         "index": 1,
         "name": "Ship's #",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22031
       },
       {
         "index": 2,
         "name": "Names",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 21955
       },
       {
         "index": 3,
         "name": "DoE - Year",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22016
       },
       {
         "index": 4,
         "name": "DoE - Month",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22016
       },
       {
         "index": 5,
         "name": "DoE - Day",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22016
       },
       {
         "index": 6,
         "name": "Where Enlisted",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22015
       },
       {
         "index": 7,
         "name": "Term of Enlistment",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22038
       },
       {
         "index": 8,
         "name": "Place / Vessel",
+        "process": false,
+        "skip": false,
         "width": null,
         "workflow": null
       },
       {
         "index": 9,
         "name": "Rating",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 21969
       },
       {
         "index": 10,
         "name": "Where Born - CTC",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 21986
       },
       {
         "index": 11,
         "name": "Where Born - State",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 21986
       },
       {
         "index": 12,
         "name": "State - Citizen",
+        "process": false,
+        "skip": false,
         "width": null,
         "workflow": null
       },
       {
         "index": 13,
         "name": "Desc. - Age / Years",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22014
       },
       {
         "index": 14,
         "name": "Desc. - Occupation",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 21987
       },
       {
         "index": 15,
         "name": "Desc. - Eyes",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22044
       },
       {
         "index": 16,
         "name": "Desc. - Hair",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22044
       },
       {
         "index": 17,
         "name": "Desc. - Complexion",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22044
       },
       {
         "index": 18,
         "name": "Desc. - Height (Feet)",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22045
       },
       {
         "index": 19,
         "name": "Desc. - Height (Inches)",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22045
       },
       {
         "index": 20,
         "name": "Remarks",
+        "process": false,
+        "skip": false,
         "width": null,
         "workflow": -1
       }
@@ -224,126 +292,168 @@
       {
         "index": 0,
         "name": "LH_skip",
+        "process": false,
+        "skip": true,
         "width": [],
         "workflow": null
       },
       {
         "index": 1,
         "name": "Ship's #",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22031
       },
       {
         "index": 2,
         "name": "Names",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 21955
       },
       {
         "index": 3,
         "name": "Rating",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 21969
       },
       {
         "index": 4,
         "name": "DoE - Year",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22016
       },
       {
         "index": 5,
         "name": "DoE - Month",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22016
       },
       {
         "index": 6,
         "name": "DoE - Day",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22016
       },
       {
         "index": 7,
         "name": "Where Enlisted",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22015
       },
       {
         "index": 8,
         "name": "Term of Enlistment",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22038
       },
       {
         "index": 9,
         "name": "Place / Vessel",
+        "process": false,
+        "skip": false,
         "width": null,
         "workflow": null
       },
       {
         "index": 10,
         "name": "Where Born - CTC",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 21986
       },
       {
         "index": 11,
         "name": "Where Born - State",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 21986
       },
       {
         "index": 12,
         "name": "State - Citizen",
+        "process": false,
+        "skip": false,
         "width": null,
         "workflow": null
       },
       {
         "index": 13,
         "name": "Desc. - Age / Years",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22014
       },
       {
         "index": 14,
         "name": "Desc. - Occupation",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 21987
       },
       {
         "index": 15,
         "name": "Desc. - Eyes",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22044
       },
       {
         "index": 16,
         "name": "Desc. - Hair",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22044
       },
       {
         "index": 17,
         "name": "Desc. - Complexion",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22044
       },
       {
         "index": 18,
         "name": "Desc. - Height (Feet)",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22045
       },
       {
         "index": 19,
         "name": "Desc. - Height (Inches)",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22045
       },
       {
         "index": 20,
         "name": "Remarks",
+        "process": false,
+        "skip": false,
         "width": null,
         "workflow": -1
       }
@@ -358,126 +468,168 @@
       {
         "index": 0,
         "name": "LH_skip",
+        "process": false,
+        "skip": true,
         "width": [],
         "workflow": null
       },
       {
         "index": 1,
         "name": "Ship's #",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22031
       },
       {
         "index": 2,
         "name": "Names",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 21955
       },
       {
         "index": 3,
         "name": "Rating",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 21969
       },
       {
         "index": 4,
         "name": "DoE - Year",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22016
       },
       {
         "index": 5,
         "name": "DoE - Month",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22016
       },
       {
         "index": 6,
         "name": "DoE - Day",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22016
       },
       {
         "index": 7,
         "name": "Where Enlisted",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22015
       },
       {
         "index": 8,
         "name": "Term of Enlistment",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22038
       },
       {
         "index": 9,
         "name": "Place / Vessel",
+        "process": false,
+        "skip": false,
         "width": null,
         "workflow": null
       },
       {
         "index": 10,
         "name": "Where Born - CTC",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 21986
       },
       {
         "index": 11,
         "name": "Where Born - State",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 21986
       },
       {
         "index": 12,
         "name": "State - Citizen",
+        "process": false,
+        "skip": false,
         "width": null,
         "workflow": null
       },
       {
         "index": 13,
         "name": "Desc. - Age / Years",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22014
       },
       {
         "index": 14,
         "name": "Desc. - Occupation",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 21987
       },
       {
         "index": 15,
         "name": "Desc. - Eyes",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22044
       },
       {
         "index": 16,
         "name": "Desc. - Hair",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22044
       },
       {
         "index": 17,
         "name": "Desc. - Complexion",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22044
       },
       {
         "index": 18,
         "name": "Desc. - Height (Feet)",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22045
       },
       {
         "index": 19,
         "name": "Desc. - Height (Inches)",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22045
       },
       {
         "index": 20,
         "name": "Remarks",
+        "process": false,
+        "skip": false,
         "width": null,
         "workflow": -1
       }
@@ -492,126 +644,168 @@
       {
         "index": 0,
         "name": "LH_skip",
+        "process": false,
+        "skip": true,
         "width": [],
         "workflow": null
       },
       {
         "index": 1,
         "name": "Ship's #",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22031
       },
       {
         "index": 2,
         "name": "Names",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 21955
       },
       {
         "index": 3,
         "name": "Rating",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 21969
       },
       {
         "index": 4,
         "name": "DoE - Year",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22016
       },
       {
         "index": 5,
         "name": "DoE - Month",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22016
       },
       {
         "index": 6,
         "name": "DoE - Day",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22016
       },
       {
         "index": 7,
         "name": "Where Enlisted",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22015
       },
       {
         "index": 8,
         "name": "Term of Enlistment",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22038
       },
       {
         "index": 9,
         "name": "Place / Vessel",
+        "process": false,
+        "skip": false,
         "width": null,
         "workflow": null
       },
       {
         "index": 10,
         "name": "Where Born - CTC",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 21986
       },
       {
         "index": 11,
         "name": "Where Born - State",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 21986
       },
       {
         "index": 12,
         "name": "State - Citizen",
+        "process": false,
+        "skip": false,
         "width": null,
         "workflow": null
       },
       {
         "index": 13,
         "name": "Desc. - Age / Years",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22014
       },
       {
         "index": 14,
         "name": "Desc. - Occupation",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 21987
       },
       {
         "index": 15,
         "name": "Desc. - Eyes",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22044
       },
       {
         "index": 16,
         "name": "Desc. - Hair",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22044
       },
       {
         "index": 17,
         "name": "Desc. - Complexion",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22044
       },
       {
         "index": 18,
         "name": "Desc. - Height (Feet)",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22045
       },
       {
         "index": 19,
         "name": "Desc. - Height (Inches)",
+        "process": true,
+        "skip": false,
         "width": null,
         "workflow": 22045
       },
       {
         "index": 20,
         "name": "Remarks",
+        "process": false,
+        "skip": false,
         "width": null,
         "workflow": -1
       }
