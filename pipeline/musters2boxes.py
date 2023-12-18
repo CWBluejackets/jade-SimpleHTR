@@ -42,9 +42,14 @@ with open(options.config_file, 'r') as f:
     # TODO how to pass logging config to sheet_division.py?
 
 workflow_file = os.path.join(os.path.dirname(options.config_file),
-                             config['workflows.json'])
+                             config['workflows'])
 with open(workflow_file, 'r') as f:
     workflows = json.load(f)
+
+format_file = os.path.join(os.path.dirname(options.config_file),
+                           config['formats'])
+with open(workflow_file, 'r') as f:
+    formats = json.load(f)
 
 # Use options.input_location if specified; otherwise fall back to config file;
 # options.input_location can be a single JPG or a directory containing **/*.jpg (case-insensitive).
@@ -62,10 +67,3 @@ else:
 for input_file in input_files:
     logging.info(f'Processing {input_file}')
     sheet_division.process_sheet(input_file, config, workflows)
-
-
-
-
-
-
-

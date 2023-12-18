@@ -12,9 +12,10 @@ GREEN = (0, 128, 0)
 BLUE = (255, 0, 0)
 
 
-def process_sheet(filename, config, workflows):
+def process_sheet(filename, config, workflows, formats):
     """
     Process sheet...
+    :param formats: column format specifications
     :param filename: JPG filename
     :param config: general configuration
     :param workflows: workflow specifications
