@@ -103,7 +103,7 @@
         "process": false,
         "skip": false,
         "width": null,
-        "workflow": -1
+        "workflow": 22039
       }
     ],
     "example": "https://s3.amazonaws.com/NARAprodstorage/lz/dc-metro/rg-024/563603/563603-volumes1-549/563603-005/563603-005-0002.JPG",
@@ -279,7 +279,7 @@
         "process": false,
         "skip": false,
         "width": null,
-        "workflow": -1
+        "workflow": 22039
       }
     ],
     "example": "https://s3.amazonaws.com/NARAprodstorage/lz/dc-metro/rg-024/563603/563603-volumes1-549/563603-001/563603-001-0020.JPG",
@@ -455,7 +455,7 @@
         "process": false,
         "skip": false,
         "width": null,
-        "workflow": -1
+        "workflow": 22039
       }
     ],
     "example": "https://s3.amazonaws.com/NARAprodstorage/lz/dc-metro/rg-024/563603/563603-volumes1-549/563603-001/563603-001-0030.JPG",
@@ -631,7 +631,7 @@
         "process": false,
         "skip": false,
         "width": null,
-        "workflow": -1
+        "workflow": 22039
       }
     ],
     "example": "https://s3.amazonaws.com/NARAprodstorage/lz/dc-metro/rg-024/563603/563603-volumes1-549/563603-001/563603-001-0004.JPG",
@@ -807,7 +807,7 @@
         "process": false,
         "skip": false,
         "width": null,
-        "workflow": -1
+        "workflow": 22039
       }
     ],
     "example": "https://s3.amazonaws.com/NARAprodstorage/lz/dc-metro/rg-024/563603/563603-volumes1-549/563603-001/563603-001-0036.JPG",
