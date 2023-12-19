@@ -1,17 +1,18 @@
 # library file
 
 import logging
-import os
 
 import cv2
 import numpy as np
 
 import geometry
+import utilities
 
 # the cv2 color scheme is (blue, green, red)
 RED = (0, 0, 255)
 GREEN = (0, 128, 0)
 BLUE = (255, 0, 0)
+
 
 # workflow specification:
 # key int -> { 'description': string, 'numeric': bool }
@@ -42,7 +43,8 @@ def process_sheet(filename, output_dir, config, workflows, formats):
     output_directory = config['png_directory']
     logging.info(f'Output to {output_directory}')
     logging.info(f'Reading image from {filename}')
-    image = safe_imread(filename, cv2.IMREAD_GRAYSCALE, exception_if_missing=config['img_file_exception'])
+    image = utilities.safe_imread(filename, cv2.IMREAD_GRAYSCALE,
+                                  exception_if_missing=config['img_file_exception'])
     raw_lines = extract_raw_lines(image, config)
     # HoughLinesP output shape is (nbr_lines, 1, 4) where the 4 is (x0, y0, x1, y1)
     measured_lines = [geometry.measure(line[0]) for line in raw_lines.tolist()]
@@ -65,14 +67,3 @@ def extract_raw_lines(image, config) -> np.ndarray:
     return lines
 
 
-def safe_imread(img_path, cv2_flags, exception_if_missing=False):
-    if os.path.exists(img_path):
-        result = cv2.imread(img_path, cv2_flags)
-    else:
-        result = None
-        message = f'File {img_path} is missing!'
-        if exception_if_missing:
-            raise FileNotFoundError(message)
-        else:
-            print(message)
-    return result
