@@ -10,13 +10,22 @@ from datetime import datetime
 
 import sheet_division
 
+HERE = os.path.dirname(os.path.realpath(__file__))
+DEFAULT_CONFIG_FILE = os.path.join(HERE, 'config.json')
+
 oparser = argparse.ArgumentParser(description="Process muster sheets for ML application",
                                   formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 oparser.add_argument('-c', dest='config_file',
                      type=str, required=True,
-                     metavar='config.json',
-                     help='config file')
+                     default=DEFAULT_CONFIG_FILE,
+                     metavar='CONFIG.JSON',
+                     help='general config file')
+
+oparser.add_argument('-l', dest='locations_file',
+                     type=str, required=True,
+                     metavar='LOCATIONS.JSON',
+                     help='file locations config file')
 
 oparser.add_argument('-i', dest='input_location',
                      type=str, default=None,
