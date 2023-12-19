@@ -112,6 +112,7 @@
     "first_year": 1861,
     "form_code": "USN 1861",
     "row_height": 58,
+    "row_height_top": null,
     "type_name": "1861/C12"
   },
   "type_2": {
@@ -288,6 +289,8 @@
     "example": "https://s3.amazonaws.com/NARAprodstorage/lz/dc-metro/rg-024/563603/563603-volumes1-549/563603-001/563603-001-0020.JPG",
     "first_year": 1862,
     "form_code": "USN 1862",
+    "row_height": null,
+    "row_height_top": null,
     "type_name": "1862/C20"
   },
   "type_3": {
@@ -464,6 +467,8 @@
     "example": "https://s3.amazonaws.com/NARAprodstorage/lz/dc-metro/rg-024/563603/563603-volumes1-549/563603-001/563603-001-0030.JPG",
     "first_year": 1863,
     "form_code": "USN 1863",
+    "row_height": null,
+    "row_height_top": null,
     "type_name": "1863-1864/C20"
   },
   "type_4": {
@@ -640,6 +645,8 @@
     "example": "https://s3.amazonaws.com/NARAprodstorage/lz/dc-metro/rg-024/563603/563603-volumes1-549/563603-001/563603-001-0004.JPG",
     "first_year": 1864,
     "form_code": "BoER 1864",
+    "row_height": 59,
+    "row_height_top": 90,
     "type_name": "1863-1864/C20"
   },
   "type_5": {
@@ -816,6 +823,8 @@
     "example": "https://s3.amazonaws.com/NARAprodstorage/lz/dc-metro/rg-024/563603/563603-volumes1-549/563603-001/563603-001-0036.JPG",
     "first_year": 1864,
     "form_code": "BoER 1864 (alt)",
+    "row_height": null,
+    "row_height_top": null,
     "type_name": "1863-1864/C20"
   }
 }
