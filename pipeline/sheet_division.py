@@ -6,6 +6,8 @@ import os
 import cv2
 import numpy as np
 
+import geometry
+
 # the cv2 color scheme is (blue, green, red)
 RED = (0, 0, 255)
 GREEN = (0, 128, 0)
@@ -42,6 +44,12 @@ def process_sheet(filename, output_dir, config, workflows, formats):
     logging.info(f'Reading image from {filename}')
     image = safe_imread(filename, cv2.IMREAD_GRAYSCALE, exception_if_missing=config['img_file_exception'])
     raw_lines = extract_raw_lines(image, config)
+    # HoughLinesP output shape is (nbr_lines, 1, 4) where the 4 is (x0, y0, x1, y1)
+    measured_lines = [geometry.measure(line[0]) for line in raw_lines.tolist()]
+    vertical_lines = [line for line in measured_lines
+                      if geometry.is_vertical(line[0], config['columns']['deviation'])]
+    horizontal_lines = [line for line in measured_lines
+                        if geometry.is_horizontal(line[0], config['rows']['deviation'])]
     # TODO filter vertical lines
     #      check against formats
     # TODO filter horizontal lines
@@ -49,7 +57,7 @@ def process_sheet(filename, output_dir, config, workflows, formats):
     return
 
 
-def extract_raw_lines(image, config):
+def extract_raw_lines(image, config) -> np.ndarray:
     dst = cv2.Canny(image, config['canny_min'], config['canny_max'], None,
                     config['canny_aperture'], True)
     lines = cv2.HoughLinesP(dst, 1, np.pi / 180, config['hough_threshold'],
