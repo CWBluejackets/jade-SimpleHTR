@@ -34,10 +34,11 @@ oparser.add_argument('-i', dest='input_location',
 
 options = oparser.parse_args()
 
-# TODO split configuration into two parts:
-# a. thresholds, row height, etc. (machine-independent)
-# b. file/directory locations (machine-dependent)
+# machine-dependent configuration (directories)
+with open(options.location_file, 'r') as f:
+    locations = json.load(f)
 
+# machine-independent configuration (parameters)
 with open(options.config_file, 'r') as f:
     config = json.load(f)
     log_directory = config.get('log_directory')
@@ -53,7 +54,7 @@ with open(options.config_file, 'r') as f:
         logging.basicConfig(level=logging.INFO,
                             format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
-    # TODO how to pass logging config to sheet_division.py?
+    # TODO how to pass logging options to sheet_division.py?
 
 workflow_file = os.path.join(os.path.dirname(options.config_file),
                              config['workflows'])
@@ -67,10 +68,13 @@ format_file = os.path.join(os.path.dirname(options.config_file),
 with open(workflow_file, 'r') as f:
     formats = json.load(f)
 
+# output of this program is PNGs and control files
+output_dir = os.path.join(os.path.dirname(options.locations_file), locations['png_directory'])
+
 # Use options.input_location if specified; otherwise fall back to config file;
 # options.input_location can be a single JPG or a directory containing them
 
-input_location = options.input_location or config['input_directory']
+input_location = options.input_location or locations['input_directory']
 if os.path.isdir(input_location):
     extensions = ['jpg', 'JPG', 'jpeg', 'JPEG']
     file_globs = [glob.iglob(os.path.join(input_location, f'**/*.{extension}'), recursive=True)
@@ -83,4 +87,4 @@ else:
 
 for input_file in input_files:
     logging.info(f'Processing {input_file}')
-    sheet_division.process_sheet(input_file, config, workflows, formats)
+    sheet_division.process_sheet(input_file, output_dir, config, workflows, formats)

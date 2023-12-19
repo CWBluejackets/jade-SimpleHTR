@@ -27,9 +27,10 @@ BLUE = (255, 0, 0)
 #   'width': None or int or list of int (maybe) }
 
 
-def process_sheet(filename, config, workflows, formats):
+def process_sheet(filename, output_dir, config, workflows, formats):
     """
     Process sheet...
+    :param output_dir: directory for PNGs and control files
     :param formats: column format specifications
     :param filename: JPG filename
     :param config: general configuration
