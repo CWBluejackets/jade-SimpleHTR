@@ -88,3 +88,4 @@ else:
 for input_file in input_files:
     logging.info(f'Processing {input_file}')
     sheet_division.process_sheet(input_file, output_dir, config, workflows, formats)
+

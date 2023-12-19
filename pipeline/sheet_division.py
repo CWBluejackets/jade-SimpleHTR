@@ -30,20 +30,23 @@ BLUE = (255, 0, 0)
 #   'width': None or int or list of int (maybe) }
 
 
-def process_sheet(filename, output_dir, config, workflows, formats):
+def process_sheet(input_jpg_file, output_dir, config, workflows, formats):
     """
     Process sheet...
     :param output_dir: directory for PNGs and control files
     :param formats: column format specifications
-    :param filename: JPG filename
+    :param input_jpg_file: JPG filename
     :param config: general configuration
     :param workflows: workflow specifications
     :return:
     """
     output_directory = config['png_directory']
     logging.info(f'Output to {output_directory}')
-    logging.info(f'Reading image from {filename}')
-    image = utilities.safe_imread(filename, cv2.IMREAD_GRAYSCALE,
+    logging.info(f'Reading image from {input_jpg_file}')
+    vessel, page = utilities.get_vessel_and_page(input_jpg_file)
+    control_data = {'muster': {'vessel': vessel,
+                               'page': page}}
+    image = utilities.safe_imread(input_jpg_file, cv2.IMREAD_GRAYSCALE,
                                   exception_if_missing=config['img_file_exception'])
     raw_lines = extract_raw_lines(image, config)
     # HoughLinesP output shape is (nbr_lines, 1, 4) where the 4 is (x0, y0, x1, y1)
@@ -56,6 +59,8 @@ def process_sheet(filename, output_dir, config, workflows, formats):
     #      check against formats
     # TODO filter horizontal lines
     #      check against approximate multiples of config['rows']['typical']
+    # TODO generate boxes and record everything in the control data
+    utilities.write_control_file(input_jpg_file, output_directory, control_data)
     return
 
 

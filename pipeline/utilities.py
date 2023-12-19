@@ -1,4 +1,6 @@
 # library file
+import json
+import logging
 import os.path
 import re
 from typing import Tuple
@@ -21,6 +23,18 @@ def get_vessel_and_page(path: str) -> Tuple[str, int]:
     else:
         result = (None, None)
     return result
+
+
+def write_control_file(input_path: str, output_directory: str, data: dict):
+    input_name = os.path.basename(input_path)
+    stem = os.path.splitext(input_name)[0]
+    output_path = os.path.join(output_directory, stem + '.json')
+    data['source'] = {'path': input_path,
+                      'filename': input_name}
+    logging.info(f'Writing {output_path}')
+    with open(output_path, 'w') as f:
+        json.dump(data, f, indent=2, sort_keys=True)
+    return
 
 
 def safe_imread(img_path, cv2_flags, exception_if_missing=False):
