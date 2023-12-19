@@ -6,7 +6,7 @@
         "name": "LH_skip",
         "process": false,
         "skip": true,
-        "width": [],
+        "width": [3132],
         "workflow": null
       },
       {
@@ -14,7 +14,8 @@
         "name": "Ship's #",
         "process": true,
         "skip": false,
-        "width": null,
+        "width": 152,
+        "note": "open LH",
         "workflow": 22031
       },
       {
@@ -22,7 +23,7 @@
         "name": "Names",
         "process": true,
         "skip": false,
-        "width": null,
+        "width": 493,
         "workflow": 21955
       },
       {
@@ -30,7 +31,7 @@
         "name": "DoE - Year",
         "process": true,
         "skip": false,
-        "width": null,
+        "width": 83,
         "workflow": 22016
       },
       {
@@ -38,7 +39,7 @@
         "name": "DoE - Month",
         "process": true,
         "skip": false,
-        "width": null,
+        "width": 127,
         "workflow": 22016
       },
       {
@@ -46,7 +47,7 @@
         "name": "DoE - Day",
         "process": true,
         "skip": false,
-        "width": null,
+        "width": 85,
         "workflow": 22016
       },
       {
@@ -54,7 +55,7 @@
         "name": "Term of Enlistment",
         "process": true,
         "skip": false,
-        "width": null,
+        "width": 104,
         "workflow": 22038
       },
       {
@@ -62,7 +63,7 @@
         "name": "Expiration of ToE - Year",
         "process": false,
         "skip": false,
-        "width": null,
+        "width": 88,
         "workflow": null
       },
       {
@@ -70,7 +71,7 @@
         "name": "Expiration of ToE - Month",
         "process": false,
         "skip": false,
-        "width": null,
+        "width": 104,
         "workflow": null
       },
       {
@@ -78,7 +79,7 @@
         "name": "Expiration of ToE - Day",
         "process": false,
         "skip": false,
-        "width": null,
+        "width": 85,
         "workflow": null
       },
       {
@@ -86,7 +87,7 @@
         "name": "Rating",
         "process": true,
         "skip": false,
-        "width": null,
+        "width": 147,
         "workflow": 21969
       },
       {
@@ -94,7 +95,7 @@
         "name": "Where Enlisted",
         "process": true,
         "skip": false,
-        "width": null,
+        "width": 213,
         "workflow": 22015
       },
       {
@@ -102,13 +103,15 @@
         "name": "Remarks",
         "process": false,
         "skip": false,
-        "width": null,
+        "width": 264,
+        "note": "open RH",
         "workflow": 22039
       }
     ],
     "example": "https://s3.amazonaws.com/NARAprodstorage/lz/dc-metro/rg-024/563603/563603-volumes1-549/563603-005/563603-005-0002.JPG",
     "first_year": 1861,
     "form_code": "USN 1861",
+    "row_height": 58,
     "type_name": "1861/C12"
   },
   "type_2": {
