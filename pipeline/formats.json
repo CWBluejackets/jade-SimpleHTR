@@ -289,8 +289,8 @@
     "example": "https://s3.amazonaws.com/NARAprodstorage/lz/dc-metro/rg-024/563603/563603-volumes1-549/563603-001/563603-001-0020.JPG",
     "first_year": 1862,
     "form_code": "USN 1862",
-    "row_height": null,
-    "row_height_top": null,
+    "row_height": 60,
+    "row_height_top": 67,
     "type_name": "1862/C20"
   },
   "type_3": {
@@ -467,7 +467,7 @@
     "example": "https://s3.amazonaws.com/NARAprodstorage/lz/dc-metro/rg-024/563603/563603-volumes1-549/563603-001/563603-001-0030.JPG",
     "first_year": 1863,
     "form_code": "USN 1863",
-    "row_height": null,
+    "row_height": 60,
     "row_height_top": null,
     "type_name": "1863-1864/C20"
   },
