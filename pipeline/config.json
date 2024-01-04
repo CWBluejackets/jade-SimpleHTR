@@ -25,6 +25,7 @@
     "hough_threshold": 100,
     "merge": "max",
     "typical": 60,
-    "descender": 0.5
+    "descender": 0.5,
+    "height_tolerance": 0.10
   }
 }

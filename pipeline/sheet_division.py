@@ -40,8 +40,7 @@ def process_sheet(input_jpg_file, output_dir, config, workflows, formats):
     :param workflows: workflow specifications
     :return:
     """
-    output_directory = config['png_directory']
-    logging.info(f'Output to {output_directory}')
+    logging.info(f'Output to {output_dir}')
     logging.info(f'Reading image from {input_jpg_file}')
     vessel, page = utilities.get_vessel_and_page(input_jpg_file)
     control_data = {'muster': {'vessel': vessel,
@@ -56,11 +55,13 @@ def process_sheet(input_jpg_file, output_dir, config, workflows, formats):
     horizontal_lines = [line for line in measured_lines
                         if geometry.is_horizontal(line[0], config['rows']['deviation'])]
     # TODO filter vertical lines
-    #      check against formats
+    #      check against formats; use to determine most likely format
     # TODO filter horizontal lines
-    #      check against approximate multiples of config['rows']['typical']
+    #      check against format['row_height_top'] and approximate multiples of format['row_height']
+    #      and use config['rows']['height_tolerance']
     # TODO generate boxes and record everything in the control data
-    utilities.write_control_file(input_jpg_file, output_directory, control_data)
+    # merge adjacent columns with same workflow ID
+    utilities.write_control_file(input_jpg_file, output_dir, control_data)
     return
 
 
