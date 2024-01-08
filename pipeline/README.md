@@ -37,6 +37,10 @@ Pipeline for processing muster JPGs using trained models.
 * input directory (config file for server or CL options for testing)
 * parameters, for rows and columns separately
   * Canny min and max thresholds (TODO figure out what these mean)
+    * if gradient > high threshold it's a "strong" edge pixel
+    * if gradient < low threshold it's suppressed
+    * The two threshold values are empirically determined and their definition will depend on the content of a given input image.
+      https://en.wikipedia.org/wiki/Canny_edge_detector#Double_threshold
   * Canny aperture (5 works better than default 3)
   * Hough threshold
   * Hough min length
