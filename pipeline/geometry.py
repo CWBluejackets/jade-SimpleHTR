@@ -72,28 +72,32 @@ def measure(line0):
     """
     Measure the length and direction of a line (ACW from +x).
     :param line0: (x0, y0, x1, y1) format returned by HoughLinesP
-    :return: degrees (positive float), length, line (repeated in same format)
+    :return: degrees, length, line (repeated in same format)
     """
     dy = line0[3] - line0[1]
     dx = line0[2] - line0[0]
-    # arctangent in radians
-    angle_radians = math.atan2(dy, dx)
-    # convert to degrees
-    angle_degrees = angle_radians * 180 / math.pi
-    # normalize to positive angle
-    if angle_degrees < 0:
-        angle_degrees += 180
+    angle = math.degrees(math.atan2(dy, dx))
     # Pythagoras
     length = math.sqrt(dy * dy + dx * dx)
-    return angle_degrees, length, line0
+    return angle, length, line0
+
+
+def normalize_angle(angle):
+    while angle < -45:
+        angle += 180
+    while angle >= 135:
+        angle -= 180
+    return angle
 
 
 def is_horizontal(angle, tolerance):
-    return ((0 - tolerance) < angle < (0 + tolerance)) or ((180 - tolerance) < angle < (180 + tolerance))
+    norm_angle = normalize_angle(angle)
+    return (0 - tolerance) < norm_angle < (0 + tolerance)
 
 
 def is_vertical(angle, tolerance):
-    return ((90 - tolerance) < angle < (90 + tolerance)) or ((270 - tolerance) < angle < (270 + tolerance))
+    norm_angle = normalize_angle(angle)
+    return (90 - tolerance) < norm_angle < (90 + tolerance)
 
 
 def get_maxima(image: np.ndarray) -> Tuple[int, int]:
