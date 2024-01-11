@@ -59,6 +59,8 @@ def process_sheet(input_jpg_file, output_dir, config, workflows, formats):
     # TODO filter horizontal lines
     #      check against format['row_height_top'] and approximate multiples of format['row_height']
     #      and use config['rows']['height_tolerance']
+    # TODO detect the rotation of the image using the typical variation from 0 or 90° of nearly H or V lines
+    #      and rotate the whole image to rectify that
     # TODO generate boxes and record everything in the control data
     # merge adjacent columns with same workflow ID
     utilities.write_control_file(input_jpg_file, output_dir, control_data)
