@@ -102,3 +102,16 @@ def is_vertical(angle, tolerance):
 
 def get_maxima(image: np.ndarray) -> Tuple[int, int]:
     return image.shape[0] - 1, image.shape[1] - 1
+
+
+def binned_mode(values, bins=10, range=None):
+    # TODO implement the proper histogram mode formula
+    # https://www.statology.org/histogram-mode/
+    if not range:
+        range0 = (values.min(), values.max())
+    else:
+        range0 = range
+    counts, lefts = np.histogram(values, bins=bins, range=range0)
+    i = counts.argmax()
+    return (lefts[i] + lefts[i + 1]) / 2.0
+
