@@ -7,11 +7,11 @@ import numpy as np
 
 
 # point = (x, y)
-# in cv2, y = 0 = top
-#         x = 0 = left
+# in cv2, y = 0 at the top
+#         x = 0 at the left
 # cv2 ndarray.shape = (height, width)
 
-# NOTE: cv2.line(...) can handle endpoints outside the image correctly and without
+# NOTE: cv2.line(...) correctly handles endpoints outside the image without
 # raising exceptions, so extrapolation does NOT need boundary safety
 
 def solve_line(point0, point1) -> Tuple[float, float]:
