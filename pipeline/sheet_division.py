@@ -46,18 +46,19 @@ def process_sheet(input_jpg_file, output_dir, config, workflows, formats):
     vessel, page = utilities.get_vessel_and_page(input_jpg_file)
     control_data = {'muster': {'vessel': vessel,
                                'page': page}}
-    image = utilities.safe_imread(input_jpg_file, cv2.IMREAD_GRAYSCALE,
-                                  exception_if_missing=config['img_file_exception'])
-    rotation = get_image_rotation(image, config)
-    image_rotated = ndimage.rotate(image, angle=rotation, reshape=False)
+    image_raw = utilities.safe_imread(input_jpg_file, cv2.IMREAD_GRAYSCALE,
+                                      exception_if_missing=config['img_file_exception'])
+    rotation = get_image_rotation(image_raw, config)
+    image = ndimage.rotate(image_raw, angle=rotation, reshape=False)
 
-    # TODO rotate and proceed
+    # TODO use looser thresholds for line detection now
+    lines = extract_measured_lines(image, config)
+    vertical_lines = [line for line in lines
+                      if geometry.is_vertical(line[0], config['columns']['deviation'])]
+    horizontal_lines = [line for line in lines
+                        if geometry.is_horizontal(line[0], config['rows']['deviation'])]
 
-    # measured_lines = extract_measured_lines(image, config)
-    # vertical_lines = [line for line in measured_lines
-    #                   if geometry.is_vertical(line[0], config['columns']['deviation'])]
-    # horizontal_lines = [line for line in measured_lines
-    #                     if geometry.is_horizontal(line[0], config['rows']['deviation'])]
+
     # TODO filter vertical lines
     #      check against formats; use to determine most likely format
     # TODO filter horizontal lines
@@ -95,9 +96,7 @@ def get_image_rotation(image: np.ndarray, config) -> float:
     """
     all_lines = extract_measured_lines(image, config)
     horizontal_lines = [line for line in all_lines
-                        if geometry.is_horizontal(line[0], config['rows']['deviation'])]
+                        if geometry.is_horizontal(line[0], config['rows']['initial_deviation'])]
     angles = [line(0) for line in horizontal_lines]
     rotation = geometry.binned_mode(angles)
     return rotation
-
-
