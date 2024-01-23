@@ -7,6 +7,7 @@ import numpy as np
 
 import geometry
 import utilities
+import scipy.ndimage as ndimage
 
 # the cv2 color scheme is (blue, green, red)
 RED = (0, 0, 255)
@@ -48,9 +49,10 @@ def process_sheet(input_jpg_file, output_dir, config, workflows, formats):
     image = utilities.safe_imread(input_jpg_file, cv2.IMREAD_GRAYSCALE,
                                   exception_if_missing=config['img_file_exception'])
     rotation = get_image_rotation(image, config)
+    image_rotated = ndimage.rotate(image, angle=rotation, reshape=False)
 
     # TODO rotate and proceed
-    
+
     # measured_lines = extract_measured_lines(image, config)
     # vertical_lines = [line for line in measured_lines
     #                   if geometry.is_vertical(line[0], config['columns']['deviation'])]
