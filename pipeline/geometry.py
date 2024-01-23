@@ -51,8 +51,7 @@ def extrapolate_vertical(point0, point1, image: np.ndarray) -> Tuple[Tuple[int, 
 
 def extrapolate_horizontal(point0, point1, image: np.ndarray) -> Tuple[Tuple[int, int], Tuple[int, int], int]:
     """
-    Extrapolate to the left and right edges. Warning: nothing yet to guard
-    against negative x-values (or past the RH edge)
+    Extrapolate to the left and right edges.
     :param point0:
     :param point1:
     :param image:
@@ -70,7 +69,9 @@ def extrapolate_horizontal(point0, point1, image: np.ndarray) -> Tuple[Tuple[int
 
 def measure(line0):
     """
-    Measure the length and direction of a line (ACW from +x).
+    Measure the length and direction of a line (CW from +x axis).
+    Note: because in opencv y increases down the image, the angles
+    are backwards from usual trigonometric convention.
     :param line0: (x0, y0, x1, y1) format returned by HoughLinesP
     :return: degrees, length, line (repeated in same format)
     """
@@ -83,6 +84,12 @@ def measure(line0):
 
 
 def normalize_angle(angle):
+    """
+    Normalize the angle to the range -45° <= angle < 135° to simplify
+    horizontal and vertical detection.
+    :param angle:
+    :return:
+    """
     while angle < -45:
         angle += 180
     while angle >= 135:
@@ -105,7 +112,7 @@ def get_maxima(image: np.ndarray) -> Tuple[int, int]:
 
 
 def binned_mode(values, bins=10, range=None):
-    # TODO implement the proper histogram mode formula
+    # TODO maybe implement the proper histogram mode formula
     # https://www.statology.org/histogram-mode/
     if not range:
         range0 = (values.min(), values.max())
