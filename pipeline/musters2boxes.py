@@ -13,6 +13,15 @@ import sheet_division
 HERE = os.path.dirname(os.path.realpath(__file__))
 DEFAULT_CONFIG_FILE = os.path.join(HERE, 'config.json')
 
+
+def get_metadata(input_filename):
+    # TODO implement this based on accompanying information
+    metadata = {'directory': os.path.dirname(input_filename),
+                'filename': os.path.basename(input_filename),
+                'muster_date': None}
+    return metadata
+
+
 oparser = argparse.ArgumentParser(description="Process muster sheets for ML application",
                                   formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
@@ -87,5 +96,6 @@ else:
 
 for input_file in input_files:
     logging.info(f'Processing {input_file}')
-    sheet_division.process_sheet(input_file, output_dir, config, workflows, formats)
+    image_metadata = get_metadata(input_file)
+    sheet_division.process_sheet(input_file, image_metadata, output_dir, config, workflows, formats)
 

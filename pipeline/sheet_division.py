@@ -5,6 +5,7 @@ import logging
 import cv2
 import numpy as np
 
+import formatting
 import geometry
 import utilities
 import scipy.ndimage as ndimage
@@ -31,7 +32,7 @@ BLUE = (255, 0, 0)
 #   'width': None or int or list of int (maybe) }
 
 
-def process_sheet(input_jpg_file, output_dir, config, workflows, formats):
+def process_sheet(input_jpg_file, image_metadata, output_dir, config, workflows, formats):
     """
     Process sheet...
     :param output_dir: directory for PNGs and control files
@@ -45,7 +46,8 @@ def process_sheet(input_jpg_file, output_dir, config, workflows, formats):
     logging.info(f'Reading image from {input_jpg_file}')
     vessel, page = utilities.get_vessel_and_page(input_jpg_file)
     control_data = {'muster': {'vessel': vessel,
-                               'page': page}}
+                               'page': page,
+                               'date': image_metadata['muster_date']}}
     image_raw = utilities.safe_imread(input_jpg_file, cv2.IMREAD_GRAYSCALE,
                                       exception_if_missing=config['img_file_exception'])
     rotation = get_image_rotation(image_raw, config)
@@ -58,6 +60,9 @@ def process_sheet(input_jpg_file, output_dir, config, workflows, formats):
     horizontal_lines = [line for line in lines
                         if geometry.is_horizontal(line[0], config['rows']['deviation'])]
 
+    # convert vertical lines to a vector feature for format classification
+    format_type, format_info = formatting.get_format(vertical_lines, formats, workflows, image_metadata['muster_date'])
+    column_specifications = formatting.get_columns(vertical_lines, formats, workflows, format_type, format_info)
 
     # TODO filter vertical lines
     #      check against formats; use to determine most likely format
