@@ -46,7 +46,7 @@ def process_muster_sheet(input_jpg_file, image_metadata, output_dir, config, wor
     control_data = {'muster': {'vessel': vessel,
                                'page': page,
                                'date': muster_date}}
-    vertical_lines, horizontal_lines = process_image(input_jpg_file, output_dir, config)
+    vertical_lines, horizontal_lines, test_image = process_image(input_jpg_file, config)
 
     # convert vertical lines to a vector feature for format classification
     format_type, format_info = formatting.get_format(vertical_lines, formats, workflows, image_metadata['muster_date'])
