@@ -129,7 +129,7 @@ def binned_mode(values, bins=10, range=None) -> float:
     # TODO maybe implement the proper histogram mode formula
     # https://www.statology.org/histogram-mode/
     if not range:
-        range0 = (values.min(), values.max())
+        range0 = (min(values), max(values))
     else:
         range0 = range
     counts, lefts = np.histogram(values, bins=bins, range=range0)
@@ -165,8 +165,8 @@ def get_medians(image: np.ndarray, config):
     :return: overall, left, right
     """
     overall_median = np.median(image)
-    left = round(image.shape[1] * config['edge_test']['horizontal_band'])
-    top = round(image.shape[0] * config['edge_test']['vertical_exclusion'])
+    left = round(image.shape[1] * config['margin_detection']['horizontal_band'])
+    top = round(image.shape[0] * config['margin_detection']['vertical_exclusion'])
     left_median = np.median(image[top:-top, :left])
     right_median = np.median(image[top:-top, -left:])
     return overall_median, left_median, right_median
@@ -210,7 +210,7 @@ def smoothed_vertical_medians(image: np.ndarray, config):
     :return: array with the image width
     """
     medians = vertical_medians(image)
-    window = config['edge_detection']['window_size']
+    window = config['margin_detection']['smoothing_window']
     return window_average(medians, window)
 
 

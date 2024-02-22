@@ -30,7 +30,7 @@
     "descender": 0.5,
     "height_tolerance": 0.10
   },
-  "edge_test": {
+  "margin_detection": {
     "horizontal_band": 0.15,
     "vertical_exclusion": 0.20,
     "smoothing_window": 10

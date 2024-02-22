@@ -78,7 +78,7 @@ def process_image(input_jpg_file, config, debug=False, exception_if_missing=Fals
     image = geometry.erase_margins(image, config)
 
     # TODO use looser thresholds for line detection now
-    lines = extract_measured_lines(image, config)
+    lines = extract_measured_lines(image, config, 'columns')
     vertical_lines = [line for line in lines
                       if geometry.is_vertical(line[0], config['columns']['deviation'])]
     horizontal_lines = [line for line in lines
@@ -88,16 +88,18 @@ def process_image(input_jpg_file, config, debug=False, exception_if_missing=Fals
     return vertical_lines, horizontal_lines, test_image
 
 
-def extract_raw_lines(image, config) -> np.ndarray:
-    dst = cv2.Canny(image, config['canny_min'], config['canny_max'], None,
-                    config['canny_aperture'], True)
-    lines = cv2.HoughLinesP(dst, 1, np.pi / 180, config['hough_threshold'],
-                            None, config['hough_min_length'], config['hough_max_gap'])
+def extract_raw_lines(image, config, subconfig) -> np.ndarray:
+    dst = cv2.Canny(image, config[subconfig]['canny_min'],
+                    config[subconfig]['canny_max'], None,
+                    config[subconfig]['canny_aperture'], True)
+    lines = cv2.HoughLinesP(dst, 1, np.pi / 180, config[subconfig]['hough_threshold'],
+                            None, config[subconfig]['hough_min_length'],
+                            config[subconfig]['hough_max_gap'])
     return lines
 
 
-def extract_measured_lines(image, config) -> list:
-    raw_lines = extract_raw_lines(image, config)
+def extract_measured_lines(image, config, subconfig) -> list:
+    raw_lines = extract_raw_lines(image, config, subconfig)
     # HoughLinesP output shape is (nbr_lines, 1, 4) where the 4 is (x0, y0, x1, y1)
     measured_lines = [geometry.measure(line[0]) for line in raw_lines.tolist()]
     return measured_lines
@@ -110,9 +112,9 @@ def get_image_rotation(image: np.ndarray, config) -> float:
     :param config:
     :return: angle CW in degrees
     """
-    all_lines = extract_measured_lines(image, config)
+    all_lines = extract_measured_lines(image, config, 'rows')
     horizontal_lines = [line for line in all_lines
                         if geometry.is_horizontal(line[0], config['rows']['initial_deviation'])]
-    angles = [line(0) for line in horizontal_lines]
+    angles = [line[0] for line in horizontal_lines]
     rotation = geometry.binned_mode(angles)
     return rotation
