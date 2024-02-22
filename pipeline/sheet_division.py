@@ -94,7 +94,7 @@ def extract_measured_lines(image, config) -> list:
 
 def get_image_rotation(image: np.ndarray, config) -> float:
     """
-    Determine the rotation of the nearly horizontal lines.
+    Determine the rotation angle from the nearly horizontal lines.
     :param image: array from cv2
     :param config:
     :return: angle CW in degrees

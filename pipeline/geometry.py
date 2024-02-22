@@ -1,6 +1,7 @@
 # library file
 
 import math
+from collections import Counter
 from typing import Tuple
 
 import numpy as np
@@ -111,7 +112,14 @@ def get_maxima(image: np.ndarray) -> Tuple[int, int]:
     return image.shape[0] - 1, image.shape[1] - 1
 
 
-def binned_mode(values, bins=10, range=None):
+def binned_mode(values, bins=10, range=None) -> float:
+    """
+    Make histogram bins and find the mode.
+    :param values:
+    :param bins: number of bins
+    :param range: (otherwise determined from values)
+    :return: the mode
+    """
     # TODO maybe implement the proper histogram mode formula
     # https://www.statology.org/histogram-mode/
     if not range:
@@ -121,4 +129,72 @@ def binned_mode(values, bins=10, range=None):
     counts, lefts = np.histogram(values, bins=bins, range=range0)
     i = counts.argmax()
     return (lefts[i] + lefts[i + 1]) / 2.0
+
+
+def most_frequent_values(values, interval, end, count):
+    bins = range(0, end, interval)
+    counts, edges = np.histogram(values, bins=bins)
+    middles = [round((edges[i] + edges[i+1])/2) for i in range(len(edges) - 1)]
+    d = {middles[i]: counts[i] for i in range(len(counts)) if (counts[i] > 0)}
+    c = Counter(d)
+    return c.most_common(count)
+
+
+def identify_image_sides(image: np.ndarray, config):
+    """
+    Identify left and right ends of image. Note that the array has shape (vertical, horizontal)
+    :param image: greyscale image
+    :param config: config file object
+    :return:
+    """
+    overall_median = np.median(image)
+    left = round(image.shape[1] * config['edge_test']['horizontal_band'])
+    top = round(image.shape[0] * config['edge_test']['vertical_exclusion'])
+    left_median = np.median(image[top:-top, :left])
+    right_median = np.median(image[top:-top, -left:])
+    left_result = median_result(left_median, overall_median)
+    right_result = median_result(right_median, overall_median)
+    return left_result, right_result
+
+
+def median_result(test_median, overall_median):
+    if test_median >= (overall_median + 3):
+        result = 'light'
+    elif test_median < (overall_median / 2):
+        result = 'dark'
+    else:
+        result = 'unknown'
+    return result
+
+
+def window_average(values, window_size):
+    """
+    Calculate the window average over a series of values
+    https://stackoverflow.com/questions/14313510/how-to-calculate-rolling-moving-average-using-python-numpy-scipy
+    :param values: list of values to average:
+    :param window_size: size:
+    :return: array with the same size as the input array
+    """
+    return np.convolve(values, np.ones(window_size), 'same') / window_size
+
+
+def vertical_medians(image: np.ndarray):
+    """
+    Calculate the median of each vertical line in the image
+    :param image: greyscale image
+    :return: array of medians with the image width
+    """
+    return np.median(image, axis=0)
+
+
+def smoothed_vertical_medians(image: np.ndarray, config):
+    """
+    Calculate the smooothed median of each vertical line
+    :param image: greyscale image
+    :param config: config file object
+    :return: array with the image width
+    """
+    medians = vertical_medians(image)
+    window = config['edge_detection']['window_size']
+    return window_average(medians, window)
 
