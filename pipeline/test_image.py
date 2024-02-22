@@ -10,6 +10,11 @@ import cv2
 import musters2boxes
 import sheet_division
 
+
+def get_filename_stem(path):
+    return os.path.splitext(os.path.basename(path))[0]
+
+
 if __name__ == "__main__":
     oparser = argparse.ArgumentParser(description="Process muster sheets for ML application",
                                       formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -66,7 +71,7 @@ if __name__ == "__main__":
         print(f'Reading {input_file}')
         v_lines, h_lines, test_image = sheet_division.process_image(input_file, config, debug=True,
                                                                     exception_if_missing=True)
-        output_file = os.path.join(options.output_dir, os.path.basename(input_file) + '_DEBUG.png')
+        output_file = os.path.join(options.output_dir, get_filename_stem(input_file) + '_DEBUG.png')
         print(f'Writing {output_file}')
         cv2.imwrite(output_file, test_image)
 
