@@ -225,8 +225,8 @@ def erase_margins(image: np.ndarray, config) -> np.ndarray:
     overall_median, left_median, right_median = get_medians(image, config)
     edge_types = identify_image_sides(overall_median, left_median, right_median)
     v_medians = smoothed_vertical_medians(image, config)
-    x_lh = get_left_cutoff(v_medians, edge_types[0])
-    x_rh = get_right_cutoff(v_medians, edge_types[1])
+    x_lh = get_left_cutoff(v_medians, edge_types[0], overall_median)
+    x_rh = get_right_cutoff(v_medians, edge_types[1], overall_median)
     y_max = image.shape[0] - 1
     modified_image = image.copy()
     for x in range(0, x_lh + 1):
