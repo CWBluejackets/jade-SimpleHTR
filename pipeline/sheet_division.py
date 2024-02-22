@@ -1,6 +1,7 @@
 # library file
 
 import logging
+from typing import Tuple
 
 import cv2
 import numpy as np
@@ -64,7 +65,7 @@ def process_muster_sheet(input_jpg_file, image_metadata, output_dir, config, wor
     return
 
 
-def process_image(input_jpg_file, config, debug=False):
+def process_image(input_jpg_file, config, debug=False) -> Tuple[list, list, np.ndarray]:
     image_raw = utilities.safe_imread(input_jpg_file, cv2.IMREAD_GRAYSCALE,
                                       exception_if_missing=config['img_file_exception'])
     # determine and correct the rotation

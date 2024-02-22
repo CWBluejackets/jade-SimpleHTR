@@ -26,7 +26,7 @@ oparser = argparse.ArgumentParser(description="Process muster sheets for ML appl
                                   formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 oparser.add_argument('-c', dest='config_file',
-                     type=str, required=True,
+                     type=str,
                      default=DEFAULT_CONFIG_FILE,
                      metavar='CONFIG.JSON',
                      help='general config file')
