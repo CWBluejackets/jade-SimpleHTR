@@ -35,6 +35,7 @@ BLUE = (255, 0, 0)
 def process_sheet(input_jpg_file, image_metadata, output_dir, config, workflows, formats):
     """
     Process sheet...
+    :param image_metadata:
     :param output_dir: directory for PNGs and control files
     :param formats: column format specifications
     :param input_jpg_file: JPG filename
@@ -52,6 +53,8 @@ def process_sheet(input_jpg_file, image_metadata, output_dir, config, workflows,
                                       exception_if_missing=config['img_file_exception'])
     rotation = get_image_rotation(image_raw, config)
     image = ndimage.rotate(image_raw, angle=rotation, reshape=False)
+
+    image = geometry.erase_margins(image, config)
 
     # TODO use looser thresholds for line detection now
     lines = extract_measured_lines(image, config)

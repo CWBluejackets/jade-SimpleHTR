@@ -140,21 +140,30 @@ def most_frequent_values(values, interval, end, count):
     return c.most_common(count)
 
 
-def identify_image_sides(image: np.ndarray, config):
+def identify_image_sides(overall_median, left_median, right_median):
     """
-    Identify left and right ends of image. Note that the array has shape (vertical, horizontal)
+    Identify left and right ends of image.
+    :return:
+    """
+    left_result = median_result(left_median, overall_median)
+    right_result = median_result(right_median, overall_median)
+    return left_result, right_result
+
+
+def get_medians(image: np.ndarray, config):
+    """
+    Get medians for the whole image and the left and right parts.
+    Note that the array has shape (vertical, horizontal)
     :param image: greyscale image
     :param config: config file object
-    :return:
+    :return: overall, left, right
     """
     overall_median = np.median(image)
     left = round(image.shape[1] * config['edge_test']['horizontal_band'])
     top = round(image.shape[0] * config['edge_test']['vertical_exclusion'])
     left_median = np.median(image[top:-top, :left])
     right_median = np.median(image[top:-top, -left:])
-    left_result = median_result(left_median, overall_median)
-    right_result = median_result(right_median, overall_median)
-    return left_result, right_result
+    return overall_median, left_median, right_median
 
 
 def median_result(test_median, overall_median):
@@ -197,4 +206,30 @@ def smoothed_vertical_medians(image: np.ndarray, config):
     medians = vertical_medians(image)
     window = config['edge_detection']['window_size']
     return window_average(medians, window)
+
+
+def erase_margins(image: np.ndarray, config) -> np.ndarray:
+    """
+    Determine the left and right cutoffs off the main form and overwrite
+    the edges with the image median.
+    :param image: greyscale image
+    :param config: config file object
+    :return:
+    """
+    overall_median, left_median, right_median = get_medians(image, config)
+    edge_types = identify_image_sides(overall_median, left_median, right_median)
+    v_medians = smoothed_vertical_medians(image, config)
+
+    #modified_image = COPY
+
+    # TODO find left and right cutoffs using different methods for light and dark
+    # create new image
+    return image
+
+
+
+
+
+
+
 
