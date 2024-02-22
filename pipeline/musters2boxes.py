@@ -95,6 +95,8 @@ if __name__ == "__main__":
     else:
         raise ValueError(f'Input location {input_location} is not a valid file or directory!')
 
+    exception_if_missing = locations['img_file_exception']
+
     for input_file in input_files:
         logging.info(f'Processing {input_file}')
         image_metadata = get_metadata(input_file)

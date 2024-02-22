@@ -63,7 +63,8 @@ if __name__ == "__main__":
         raise ValueError(f'Input location {input_location} is not a valid file or directory!')
 
     for input_file in input_files:
-        v_lines, h_lines, test_image = sheet_division.process_image(input_file, config, debug=True)
+        v_lines, h_lines, test_image = sheet_division.process_image(input_file, config, debug=True,
+                                                                    exception_if_missing=True)
         output_file = os.path.join(options.ouput_dir, os.path.basename(input_file) + '_DEBUG.png')
         cv2.imwrite(output_file, test_image)
 

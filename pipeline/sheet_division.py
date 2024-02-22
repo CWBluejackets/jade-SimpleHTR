@@ -28,7 +28,8 @@ import scipy.ndimage as ndimage
 #   'width': None or int or list of int (maybe) }
 
 
-def process_muster_sheet(input_jpg_file, image_metadata, output_dir, config, workflows, formats):
+def process_muster_sheet(input_jpg_file, image_metadata, output_dir, config, workflows, formats,
+                         exception_if_missing):
     """
     Process sheet...
     :param image_metadata:
@@ -46,7 +47,8 @@ def process_muster_sheet(input_jpg_file, image_metadata, output_dir, config, wor
     control_data = {'muster': {'vessel': vessel,
                                'page': page,
                                'date': muster_date}}
-    vertical_lines, horizontal_lines, test_image = process_image(input_jpg_file, config)
+    vertical_lines, horizontal_lines, test_image = process_image(input_jpg_file, config, debug=False,
+                                                                 exception_if_missing=exception_if_missing)
 
     # convert vertical lines to a vector feature for format classification
     format_type, format_info = formatting.get_format(vertical_lines, formats, workflows, image_metadata['muster_date'])
@@ -65,9 +67,9 @@ def process_muster_sheet(input_jpg_file, image_metadata, output_dir, config, wor
     return
 
 
-def process_image(input_jpg_file, config, debug=False) -> Tuple[list, list, np.ndarray]:
+def process_image(input_jpg_file, config, debug=False, exception_if_missing=False) -> Tuple[list, list, np.ndarray]:
     image_raw = utilities.safe_imread(input_jpg_file, cv2.IMREAD_GRAYSCALE,
-                                      exception_if_missing=config['img_file_exception'])
+                                      exception_if_missing=exception_if_missing)
     # determine and correct the rotation
     rotation = get_image_rotation(image_raw, config)
     image = ndimage.rotate(image_raw, angle=rotation, reshape=False)
