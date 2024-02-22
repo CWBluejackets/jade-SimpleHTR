@@ -7,7 +7,6 @@ from typing import Tuple
 import cv2
 import numpy as np
 
-
 # point = (x, y)
 # in cv2, y = 0 at the top
 #         x = 0 at the left
@@ -15,6 +14,12 @@ import numpy as np
 
 # NOTE: cv2.line(...) correctly handles endpoints outside the image without
 # raising exceptions, so extrapolation does NOT need boundary safety
+
+# the cv2 color scheme is (blue, green, red)
+RED = (0, 0, 255)
+GREEN = (0, 128, 0)
+BLUE = (255, 0, 0)
+
 
 def solve_line(point0, point1) -> Tuple[float, float]:
     """
@@ -262,6 +267,15 @@ def get_right_cutoff(medians, edge_type, overall_median):
                 break
     return cutoff
 
+
+def generate_test_image(image, horizontal_lines, vertical_lines, debug):
+    if not debug:
+        return None
+    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    for measured_line in horizontal_lines + vertical_lines:
+        line = measured_line[2]
+        cv2.line(image_rgb, (line[0], line[1]), (line[2], line[3]), BLUE, 1)
+    return image_rgb
 
 
 

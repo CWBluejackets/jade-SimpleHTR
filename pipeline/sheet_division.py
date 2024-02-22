@@ -10,11 +10,6 @@ import geometry
 import utilities
 import scipy.ndimage as ndimage
 
-# the cv2 color scheme is (blue, green, red)
-RED = (0, 0, 255)
-GREEN = (0, 128, 0)
-BLUE = (255, 0, 0)
-
 
 # workflow specification:
 # key int -> { 'description': string, 'numeric': bool }
@@ -32,7 +27,7 @@ BLUE = (255, 0, 0)
 #   'width': None or int or list of int (maybe) }
 
 
-def process_sheet(input_jpg_file, image_metadata, output_dir, config, workflows, formats):
+def process_muster_sheet(input_jpg_file, image_metadata, output_dir, config, workflows, formats):
     """
     Process sheet...
     :param image_metadata:
@@ -46,22 +41,11 @@ def process_sheet(input_jpg_file, image_metadata, output_dir, config, workflows,
     logging.info(f'Output to {output_dir}')
     logging.info(f'Reading image from {input_jpg_file}')
     vessel, page = utilities.get_vessel_and_page(input_jpg_file)
+    muster_date = image_metadata.get('muster_date', 'unknown')
     control_data = {'muster': {'vessel': vessel,
                                'page': page,
-                               'date': image_metadata['muster_date']}}
-    image_raw = utilities.safe_imread(input_jpg_file, cv2.IMREAD_GRAYSCALE,
-                                      exception_if_missing=config['img_file_exception'])
-    rotation = get_image_rotation(image_raw, config)
-    image = ndimage.rotate(image_raw, angle=rotation, reshape=False)
-
-    image = geometry.erase_margins(image, config)
-
-    # TODO use looser thresholds for line detection now
-    lines = extract_measured_lines(image, config)
-    vertical_lines = [line for line in lines
-                      if geometry.is_vertical(line[0], config['columns']['deviation'])]
-    horizontal_lines = [line for line in lines
-                        if geometry.is_horizontal(line[0], config['rows']['deviation'])]
+                               'date': muster_date}}
+    vertical_lines, horizontal_lines = process_image(input_jpg_file, output_dir, config)
 
     # convert vertical lines to a vector feature for format classification
     format_type, format_info = formatting.get_format(vertical_lines, formats, workflows, image_metadata['muster_date'])
@@ -78,6 +62,27 @@ def process_sheet(input_jpg_file, image_metadata, output_dir, config, workflows,
     # merge adjacent columns with same workflow ID
     utilities.write_control_file(input_jpg_file, output_dir, control_data)
     return
+
+
+def process_image(input_jpg_file, config, debug=False):
+    image_raw = utilities.safe_imread(input_jpg_file, cv2.IMREAD_GRAYSCALE,
+                                      exception_if_missing=config['img_file_exception'])
+    # determine and correct the rotation
+    rotation = get_image_rotation(image_raw, config)
+    image = ndimage.rotate(image_raw, angle=rotation, reshape=False)
+
+    # overwrite the left and write junk to eliminate false lines
+    image = geometry.erase_margins(image, config)
+
+    # TODO use looser thresholds for line detection now
+    lines = extract_measured_lines(image, config)
+    vertical_lines = [line for line in lines
+                      if geometry.is_vertical(line[0], config['columns']['deviation'])]
+    horizontal_lines = [line for line in lines
+                        if geometry.is_horizontal(line[0], config['rows']['deviation'])]
+    # TODO generate a test image with lines marked
+    test_image = geometry.generate_test_image(image, horizontal_lines, vertical_lines, debug)
+    return vertical_lines, horizontal_lines, test_image
 
 
 def extract_raw_lines(image, config) -> np.ndarray:
