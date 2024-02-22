@@ -4,6 +4,7 @@ import math
 from collections import Counter
 from typing import Tuple
 
+import cv2
 import numpy as np
 
 
@@ -198,7 +199,7 @@ def vertical_medians(image: np.ndarray):
 
 def smoothed_vertical_medians(image: np.ndarray, config):
     """
-    Calculate the smooothed median of each vertical line
+    Calculate the smoothed median of each vertical line
     :param image: greyscale image
     :param config: config file object
     :return: array with the image width
@@ -219,16 +220,47 @@ def erase_margins(image: np.ndarray, config) -> np.ndarray:
     overall_median, left_median, right_median = get_medians(image, config)
     edge_types = identify_image_sides(overall_median, left_median, right_median)
     v_medians = smoothed_vertical_medians(image, config)
+    x_lh = get_left_cutoff(v_medians, edge_types[0])
+    x_rh = get_right_cutoff(v_medians, edge_types[1])
+    y_max = image.shape[0] - 1
+    modified_image = image.copy()
+    for x in range(0, x_lh + 1):
+        cv2.line(modified_image, (x, 0), (x, y_max), overall_median, 1)
+    for x in range(x_rh, image.shape[1]):
+        cv2.line(modified_image, (x, 0), (x, y_max), overall_median, 1)
+    return modified_image
 
-    #modified_image = COPY
 
-    # TODO find left and right cutoffs using different methods for light and dark
-    # create new image
-    return image
+def get_left_cutoff(medians, edge_type, overall_median):
+    max_left = len(medians) // 4
+    cutoff = 0
+    if edge_type == 'light':
+        for x in range(max_left, 0, -1):
+            if medians[x] - overall_median > 5:
+                cutoff = x
+                break
+    elif edge_type == 'dark':
+        for x in range(max_left, 0, -1):
+            if medians[x] < overall_median * 0.8:
+                cutoff = x
+                break
+    return cutoff
 
 
-
-
+def get_right_cutoff(medians, edge_type, overall_median):
+    min_right = len(medians) * 3 // 4
+    cutoff = len(medians) - 1
+    if edge_type == 'light':
+        for x in range(min_right, len(medians)):
+            if medians[x] - overall_median > 5:
+                cutoff = x
+                break
+    elif edge_type == 'dark':
+        for x in range(min_right, len(medians)):
+            if medians[x] < overall_median * 0.8:
+                cutoff = x
+                break
+    return cutoff
 
 
 
