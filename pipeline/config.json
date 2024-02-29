@@ -31,8 +31,11 @@
     "height_tolerance": 0.10
   },
   "margin_detection": {
-    "horizontal_band": 0.15,
-    "vertical_exclusion": 0.20,
-    "smoothing_window": 10
+    "left_right_limit": 0.20,
+    "top_bottom_limit": 0.15,
+    "left_right_test": 0.10,
+    "smoothing_window": 10,
+    "black_limit": 0.75,
+    "gradient_cutoff": 5
   }
 }
