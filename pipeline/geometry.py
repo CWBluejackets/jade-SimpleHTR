@@ -155,16 +155,23 @@ def most_frequent_values(values, interval, end, count):
     return c.most_common(count)
 
 
-def identify_image_sides(overall_median, left_median, right_median, config) -> Tuple[str, str]:
+def identify_image_sides(image_median, left_median, right_median, config) -> Tuple[str, str]:
     """
     Identify left and right ends of image as 'light', 'dark', or 'unknown'
-    :return:
+    :return: left and right 'light' or 'dark'
     """
-    left_result = margin_median_result(left_median, overall_median)
-    right_result = margin_median_result(right_median, overall_median)
+    left_result = margin_median_result(left_median, image_median, config)
+    right_result = margin_median_result(right_median, image_median, config)
     if config['verbose']:
         print(f'Left: {left_median} {left_result}')
         print(f'Right: {right_median} {right_result}')
+    # The binding is hard to detect so let's fudge it
+    if left_result == 'unknown' and right_result == 'dark':
+        left_result = 'light'
+    elif left_result == 'dark' and right_result == 'unknown'
+        right_result = 'light'
+    if config['verbose']:
+        print(f'Updated: left {left_result}, right {right_result}')
     return left_result, right_result
 
 
@@ -182,16 +189,18 @@ def get_edge_medians(image: np.ndarray, config) -> Tuple[int, int]:
     return left_median, right_median
 
 
-def margin_median_result(test_median, overall_median) -> str:
+def margin_median_result(test_median, overall_median, config) -> str:
     """
     Determine the condition of the left and white sides (binding or black background)
-    :param test_median:
-    :param overall_median:
-    :return:
+    :param config: config file object
+    :param test_median: median of the left or right edge
+    :param overall_median: median of the whole image
+    :return: 'light', 'dark', or 'unknown'
     """
+    black_limit = overall_median * config['margin_detection']['black_limit']
     if test_median >= (overall_median + 3):
         result = 'light'
-    elif test_median < (overall_median / 2):
+    elif test_median < black_limit:
         result = 'dark'
     else:
         result = 'unknown'
