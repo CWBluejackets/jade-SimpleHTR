@@ -67,6 +67,7 @@ if __name__ == "__main__":
     else:
         raise ValueError(f'Input location {input_location} is not a valid file or directory!')
 
+    # Process each file and write the processed image to the debug directory
     for input_file in input_files:
         print(f'Reading {input_file}')
         v_lines, h_lines, test_image = sheet_division.process_image(input_file, config, debug=True,

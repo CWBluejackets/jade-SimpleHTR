@@ -138,6 +138,15 @@ def binned_mode(values, bins=10, range=None) -> float:
 
 
 def most_frequent_values(values, interval, end, count):
+    """
+    Bin the values histogram-style and return the middles and
+    counts of the most frequent bins
+    :param values: sequence of values
+    :param interval: bin size
+    :param end: high value of highest bin
+    :param count: number of values to return
+    :return:
+    """
     bins = range(0, end, interval)
     counts, edges = np.histogram(values, bins=bins)
     middles = [round((edges[i] + edges[i+1])/2) for i in range(len(edges) - 1)]
@@ -148,7 +157,7 @@ def most_frequent_values(values, interval, end, count):
 
 def identify_image_sides(overall_median, left_median, right_median) -> Tuple[str, str]:
     """
-    Identify left and right ends of image.
+    Identify left and right ends of image as 'light', 'dark', or 'unknown'
     :return:
     """
     left_result = median_result(left_median, overall_median)
@@ -247,6 +256,7 @@ def erase_margins(image: np.ndarray, config) -> np.ndarray:
     # scan vertical lines from the MODIFIED image
     overall_median, left_median, right_median = get_medians(modified_image, config)
     side_types = identify_image_sides(overall_median, left_median, right_median)
+    print(side_types)
     v_medians = smoothed_vertical_medians(modified_image, config)
     x_lh = get_left_cutoff(v_medians, side_types[0], overall_median, config)
     x_rh = get_right_cutoff(v_medians, side_types[1], overall_median, config)
