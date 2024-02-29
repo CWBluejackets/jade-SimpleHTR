@@ -168,7 +168,7 @@ def identify_image_sides(image_median, left_median, right_median, config) -> Tup
     # The binding is hard to detect so let's fudge it
     if left_result == 'unknown' and right_result == 'dark':
         left_result = 'light'
-    elif left_result == 'dark' and right_result == 'unknown'
+    elif left_result == 'dark' and right_result == 'unknown':
         right_result = 'light'
     if config['verbose']:
         print(f'Updated: left {left_result}, right {right_result}')
