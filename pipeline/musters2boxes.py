@@ -37,6 +37,11 @@ if __name__ == "__main__":
                          metavar='LOCATIONS.JSON',
                          help='file locations config file')
 
+    oparser.add_argument('-v', dest='verbose',
+                         action='store_true',
+                         default=False,
+                         help='verbose')
+
     oparser.add_argument('-i', dest='input_location',
                          type=str, default=None,
                          metavar='FILE_OR_DIR',
@@ -51,6 +56,7 @@ if __name__ == "__main__":
     # machine-independent configuration (parameters)
     with open(options.config_file, 'r') as f:
         config = json.load(f)
+        config['verbose'] = options.verbose
         log_directory = config.get('log_directory')
 
         if log_directory:

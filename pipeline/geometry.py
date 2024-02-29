@@ -155,17 +155,20 @@ def most_frequent_values(values, interval, end, count):
     return c.most_common(count)
 
 
-def identify_image_sides(overall_median, left_median, right_median) -> Tuple[str, str]:
+def identify_image_sides(overall_median, left_median, right_median, config) -> Tuple[str, str]:
     """
     Identify left and right ends of image as 'light', 'dark', or 'unknown'
     :return:
     """
-    left_result = median_result(left_median, overall_median)
-    right_result = median_result(right_median, overall_median)
+    left_result = margin_median_result(left_median, overall_median)
+    right_result = margin_median_result(right_median, overall_median)
+    if config['verbose']:
+        print(f'Left: {left_median} {left_result}')
+        print(f'Right: {right_median} {right_result}')
     return left_result, right_result
 
 
-def get_medians(image: np.ndarray, config) -> Tuple[int, int, int]:
+def get_edge_medians(image: np.ndarray, config) -> Tuple[int, int]:
     """
     Get medians for the whole image and the left and right parts.
     Note that the array has shape (vertical, horizontal)
@@ -173,14 +176,13 @@ def get_medians(image: np.ndarray, config) -> Tuple[int, int, int]:
     :param config: config file object
     :return: overall, left, right
     """
-    overall_median = np.median(image)
     left = round(image.shape[1] * config['margin_detection']['left_right_test'])
-    left_median = np.median(image[:, :left])
-    right_median = np.median(image[:, -left:])
-    return overall_median, left_median, right_median
+    left_median = round(np.median(image[:, :left]))
+    right_median = round(np.median(image[:, -left:]))
+    return left_median, right_median
 
 
-def median_result(test_median, overall_median) -> str:
+def margin_median_result(test_median, overall_median) -> str:
     """
     Determine the condition of the left and white sides (binding or black background)
     :param test_median:
@@ -240,9 +242,13 @@ def erase_margins(image: np.ndarray, config) -> np.ndarray:
     :return:
     """
     # set some values
-    image_median = np.median(image)
+    image_median = round(np.median(image))
     x_max = image.shape[1] - 1
     y_max = image.shape[0] - 1
+
+    if config['verbose']:
+        print(f'Shape: {image.shape}')
+        print(f'Median: {image_median}')
 
     # scan horizontal lines
     top_cutoff, bottom_cutoff = get_top_bottom_cutoffs(image, config)
@@ -254,17 +260,20 @@ def erase_margins(image: np.ndarray, config) -> np.ndarray:
         cv2.line(modified_image, (0, y), (x_max, y), image_median, 1)
 
     # scan vertical lines from the MODIFIED image
-    overall_median, left_median, right_median = get_medians(modified_image, config)
-    side_types = identify_image_sides(overall_median, left_median, right_median)
-    print(side_types)
+    left_median, right_median = get_edge_medians(modified_image, config)
+    if config['verbose']:
+        print(f'Side medians: left {left_median}, right {right_median}')
+    side_types = identify_image_sides(image_median, left_median, right_median, config)
     v_medians = smoothed_vertical_medians(modified_image, config)
-    x_lh = get_left_cutoff(v_medians, side_types[0], overall_median, config)
-    x_rh = get_right_cutoff(v_medians, side_types[1], overall_median, config)
+    left_cutoff = get_left_cutoff(v_medians, side_types[0], image_median, config)
+    right_cutoff = get_right_cutoff(v_medians, side_types[1], image_median, config)
     # and erase the left and right margins
-    for x in range(0, x_lh + 1):
+    for x in range(0, left_cutoff + 1):
         cv2.line(modified_image, (x, 0), (x, y_max), image_median, 1)
-    for x in range(x_rh, image.shape[1]):
+    for x in range(right_cutoff, image.shape[1]):
         cv2.line(modified_image, (x, 0), (x, y_max), image_median, 1)
+    if config['verbose']:
+        print(f'Cutoffs: top {top_cutoff}, bottom {bottom_cutoff}, left {left_cutoff}, right {right_cutoff}')
     return modified_image
 
 
