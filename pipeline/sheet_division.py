@@ -72,6 +72,8 @@ def process_image(input_jpg_file, config, debug=False, exception_if_missing=Fals
                                       exception_if_missing=exception_if_missing)
     # determine and correct the rotation
     rotation = get_image_rotation(image_raw, config)
+    if config['verbose']:
+        print(f'Rotation: {rotation}')
     image = ndimage.rotate(image_raw, angle=rotation, reshape=False)
 
     # overwrite the left and write junk to eliminate false lines
@@ -112,9 +114,11 @@ def get_image_rotation(image: np.ndarray, config) -> float:
     :param config:
     :return: angle CW in degrees
     """
+    deviation = config['rows']['initial_deviation']
+    bins = config['rows']['bins']
     all_lines = extract_measured_lines(image, config, 'rows')
     horizontal_lines = [line for line in all_lines
-                        if geometry.is_horizontal(line[0], config['rows']['initial_deviation'])]
+                        if geometry.is_horizontal(line[0], deviation)]
     angles = [line[0] for line in horizontal_lines]
-    rotation = geometry.binned_mode(angles)
+    rotation = geometry.binned_mode(angles, bins=bins, range=(-deviation, deviation))
     return rotation

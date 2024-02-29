@@ -20,6 +20,7 @@
     "canny_min": 100,
     "deviation": 1,
     "initial_deviation": 2,
+    "bins": 31,
     "group_max_diff": 10,
     "group_min_size": 2,
     "hough_max_gap": 5,

@@ -78,4 +78,5 @@ if __name__ == "__main__":
         output_file = os.path.join(options.output_dir, get_filename_stem(input_file) + '_DEBUG.png')
         print(f'Writing {output_file}')
         cv2.imwrite(output_file, test_image)
+        print()
 
