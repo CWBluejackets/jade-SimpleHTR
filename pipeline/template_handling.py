@@ -1,4 +1,5 @@
 import os
+from collections import defaultdict
 from typing import List
 
 import cv2
@@ -62,21 +63,41 @@ def get_rows(form: np.ndarray, y_ref: int, x_ref: int):
 
 
 def add_template_info(specification: dict) -> dict:
+    """
+    Load the template image, extract column and row information.
+    :param specification:
+    :return:
+    """
     form_file = os.path.join(FORM_DIR, specification['template'])
     y_ref_line = specification['y_ref_line']
     image = utilities.safe_imread(form_file, cv2.IMREAD_GRAYSCALE)
+    # find the black column boundaries in the template
     column_lines, x_ref_line = get_columns(image, y_ref_line)
     columns_needed = len(specification['columns'])
     if columns_needed != len(column_lines) - 1:
         raise ValueError(f'Mismatch! specified columns = {columns_needed}; boundaries found = {len(column_lines)}')
+    # find the black row lines (starting with the bottom of the first writing row)
     row_lines = [y_ref_line] + get_rows(image, y_ref_line, x_ref_line)
     specification['image'] = image
     specification['row_lines'] = row_lines
     for index, column in enumerate(specification['columns']):
         column['start'] = column_lines[index]
         column['end'] = column_lines[index + 1]
-            
-
-
-
+    # merge adjacent columns of the same workflow (e.g., height feet + height inches
+    # and determine the start and end x-values
+    output_columns = dict()
+    workflow_starts = defaultdict(set)
+    workflow_ends = defaultdict(set)
+    for column in specification['columns']:
+        if column['process']:
+            workflow = column['workflow']
+            workflow_starts[workflow].add(column['start'])
+            workflow_ends[workflow].add(column['end'])
+    for workflow in workflow_starts.keys():
+        column = {'workflow': workflow,
+                  'start': min(workflow_starts),
+                  'end': max(workflow_ends)}
+        output_columns.append(column)
+    specification['output_columns'] = output_columns
+    return specification
 
