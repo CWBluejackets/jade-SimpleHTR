@@ -160,12 +160,7 @@
         "workflow": null
       },
       {
-        "name": "Where Born - CTC",
-        "process": true,
-        "workflow": 21986
-      },
-      {
-        "name": "Where Born - State",
+        "name": "Where Born - CTC and state",
         "process": true,
         "workflow": 21986
       },
