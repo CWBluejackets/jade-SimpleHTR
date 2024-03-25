@@ -1,0 +1,7 @@
+opencv-python==4.8.0.76
+#
+# following in bluejackets-exploration environment
+# probably pulled in by opencv-python
+# matplotlib                   3.2.1
+# numpy                        1.26.0
+# pandas                       1.4.4

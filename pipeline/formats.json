@@ -1,0 +1,229 @@
+{
+  "type_2": {
+    "columns": [
+      {
+        "name": "Ship's #",
+        "process": true,
+        "workflow": 22031
+      },
+      {
+        "name": "Names",
+        "process": true,
+        "workflow": 21955
+      },
+      {
+        "name": "DoE - Year",
+        "process": true,
+        "workflow": 22016
+      },
+      {
+        "name": "DoE - Month",
+        "process": true,
+        "workflow": 22016
+      },
+      {
+        "name": "DoE - Day",
+        "process": true,
+        "workflow": 22016
+      },
+      {
+        "name": "Where Enlisted",
+        "process": true,
+        "workflow": 22015
+      },
+      {
+        "name": "Term of Enlistment",
+        "process": true,
+        "workflow": 22038
+      },
+      {
+        "name": "Place / Vessel",
+        "process": false,
+        "workflow": null
+      },
+      {
+        "name": "Rating",
+        "process": true,
+        "workflow": 21969
+      },
+      {
+        "name": "Where Born - CTC",
+        "process": true,
+        "workflow": 21986
+      },
+      {
+        "name": "Where Born - State",
+        "process": true,
+        "workflow": 21986
+      },
+      {
+        "name": "State - Citizen",
+        "process": false,
+        "workflow": null
+      },
+      {
+        "name": "Desc. - Age / Years",
+        "process": true,
+        "workflow": 22014
+      },
+      {
+        "name": "Desc. - Occupation",
+        "process": true,
+        "workflow": 21987
+      },
+      {
+        "name": "Desc. - Eyes",
+        "process": true,
+        "workflow": 22044
+      },
+      {
+        "name": "Desc. - Hair",
+        "process": true,
+        "workflow": 22044
+      },
+      {
+        "name": "Desc. - Complexion",
+        "process": true,
+        "workflow": 22044
+      },
+      {
+        "name": "Desc. - Height (Feet)",
+        "process": true,
+        "workflow": 22045
+      },
+      {
+        "name": "Desc. - Height (Inches)",
+        "process": true,
+        "workflow": 22045
+      },
+      {
+        "name": "Remarks",
+        "process": false,
+        "workflow": 22039
+      }
+    ],
+    "examples": [
+      "https://s3.amazonaws.com/NARAprodstorage/lz/dc-metro/rg-024/563603/563603-volumes1-549/563603-001/563603-001-0020.JPG"
+    ],
+    "first_year": 1862,
+    "form_codes": [
+      "USN 1862"
+    ],
+    "template": "type-2-outline.png",
+    "y_ref_line": 804,
+    "type_name": "1862/C20"
+  },
+  "type_3": {
+    "columns": [
+      {
+        "name": "Ship's #",
+        "process": true,
+        "workflow": 22031
+      },
+      {
+        "name": "Names",
+        "process": true,
+        "workflow": 21955
+      },
+      {
+        "name": "Rating",
+        "process": true,
+        "workflow": 21969
+      },
+      {
+        "name": "DoE - Year",
+        "process": true,
+        "workflow": 22016
+      },
+      {
+        "name": "DoE - Month",
+        "process": true,
+        "workflow": 22016
+      },
+      {
+        "name": "DoE - Day",
+        "process": true,
+        "workflow": 22016
+      },
+      {
+        "name": "Where Enlisted",
+        "process": true,
+        "workflow": 22015
+      },
+      {
+        "name": "Term of Enlistment",
+        "process": true,
+        "workflow": 22038
+      },
+      {
+        "name": "Place / Vessel",
+        "process": false,
+        "workflow": null
+      },
+      {
+        "name": "Where Born - CTC and state",
+        "process": true,
+        "workflow": 21986
+      },
+      {
+        "name": "State - Citizen",
+        "process": false,
+        "workflow": null
+      },
+      {
+        "name": "Desc. - Age / Years",
+        "process": true,
+        "workflow": 22014
+      },
+      {
+        "name": "Desc. - Occupation",
+        "process": true,
+        "workflow": 21987
+      },
+      {
+        "name": "Desc. - Eyes",
+        "process": true,
+        "workflow": 22044
+      },
+      {
+        "name": "Desc. - Hair",
+        "process": true,
+        "workflow": 22044
+      },
+      {
+        "name": "Desc. - Complexion",
+        "process": true,
+        "workflow": 22044
+      },
+      {
+        "name": "Desc. - Height (Feet)",
+        "process": true,
+        "workflow": 22045
+      },
+      {
+        "name": "Desc. - Height (Inches)",
+        "process": true,
+        "workflow": 22045
+      },
+      {
+        "name": "Remarks",
+        "process": false,
+        "workflow": 22039
+      }
+    ],
+    "examples": [
+      "https://s3.amazonaws.com/NARAprodstorage/lz/dc-metro/rg-024/563603/563603-volumes1-549/563603-001/563603-001-0030.JPG",
+      "https://s3.amazonaws.com/NARAprodstorage/lz/dc-metro/rg-024/563603/563603-volumes1-549/563603-001/563603-001-0004.JPG",
+      "https://s3.amazonaws.com/NARAprodstorage/lz/dc-metro/rg-024/563603/563603-volumes1-549/563603-001/563603-001-0036.JPG"
+    ],
+    "first_year": 1863,
+    "form_codes": [
+      "USN 1863",
+      "BoER 1864",
+      "BoER 1864 (alt)"
+    ],
+    "template": "type-3-outline.png",
+    "y_ref_line": 764,
+    "type_name": "1863-1864/C20"
+  }
+}

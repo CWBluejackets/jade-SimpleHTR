@@ -1,0 +1,42 @@
+{
+  "workflows": "workflows.json",
+  "formats": "formats.json",
+  "columns": {
+    "canny_aperture": 5,
+    "canny_max": 150,
+    "canny_min": 100,
+    "deviation": 1,
+    "initial_deviation": 2,
+    "group_max_diff": 4,
+    "group_min_size": 3,
+    "hough_max_gap": 10,
+    "hough_min_length": 80,
+    "hough_threshold": 100,
+    "merge": "mean"
+  },
+  "rows": {
+    "canny_aperture": 5,
+    "canny_min": 53,
+    "canny_max": 255,
+    "initial_deviation": 2,
+    "deviation": 1,
+    "bins": 31,
+    "group_max_diff": 10,
+    "group_min_size": 2,
+    "hough_max_gap": 10,
+    "hough_min_length": 200,
+    "hough_threshold": 1,
+    "merge": "max",
+    "typical": 60,
+    "descender": 0.5,
+    "height_tolerance": 0.10
+  },
+  "margin_detection": {
+    "left_right_limit": 0.20,
+    "top_bottom_limit": 0.15,
+    "left_right_test": 0.10,
+    "smoothing_window": 10,
+    "black_limit": 0.75,
+    "gradient_cutoff": 5
+  }
+}
