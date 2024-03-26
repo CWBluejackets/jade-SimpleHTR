@@ -13,6 +13,13 @@ from preprocessor import Preprocessor
 # not using line_mode or wide_mode
 PREPROCESSOR_SIZE = (128, 32)
 
+
+class TrainedModel:
+    def __init__(self):
+        return
+
+# well, crap, there's a lot of global state to untangle
+
 model = None
 decoder_type = DecoderType.BestPath
 preprocessor = Preprocessor(PREPROCESSOR_SIZE)
