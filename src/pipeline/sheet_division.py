@@ -38,6 +38,7 @@ def process_muster_sheet(input_jpg_file, image_metadata, output_dir, config, wor
     :param input_jpg_file: JPG filename
     :param config: general configuration
     :param workflows: workflow specifications
+    :param exception_if_missing: throw exception for missing file
     :return:
     """
     logging.info(f'Output to {output_dir}')
@@ -82,9 +83,9 @@ def process_image(input_jpg_file, config, debug=False, exception_if_missing=Fals
     # TODO use looser thresholds for line detection now
     lines = extract_measured_lines(image, config, 'columns')
     vertical_lines = [line for line in lines
-                      if geometry.is_vertical(line[0], config['columns']['deviation'])]
+                      if geometry.is_nearly_vertical(line[0], config['columns']['deviation'])]
     horizontal_lines = [line for line in lines
-                        if geometry.is_horizontal(line[0], config['rows']['deviation'])]
+                        if geometry.is_nearly_horizontal(line[0], config['rows']['deviation'])]
     # TODO generate a test image with lines marked
     test_image = geometry.generate_test_image(image, horizontal_lines, vertical_lines, debug)
     return vertical_lines, horizontal_lines, test_image
@@ -118,7 +119,7 @@ def get_image_rotation(image: np.ndarray, config) -> float:
     bins = config['rows']['bins']
     all_lines = extract_measured_lines(image, config, 'rows')
     horizontal_lines = [line for line in all_lines
-                        if geometry.is_horizontal(line[0], deviation)]
+                        if geometry.is_nearly_horizontal(line[0], deviation)]
     angles = [line[0] for line in horizontal_lines]
     rotation = geometry.binned_mode(angles, bins=bins, range=(-deviation, deviation))
     return rotation

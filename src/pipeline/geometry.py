@@ -6,6 +6,7 @@ from typing import Tuple
 
 import cv2
 import numpy as np
+from scipy import ndimage
 
 # point = (x, y)
 # in cv2, y = 0 at the top
@@ -104,12 +105,12 @@ def normalize_angle(angle):
     return angle
 
 
-def is_horizontal(angle, tolerance):
+def is_nearly_horizontal(angle, tolerance):
     norm_angle = normalize_angle(angle)
     return (0 - tolerance) < norm_angle < (0 + tolerance)
 
 
-def is_vertical(angle, tolerance):
+def is_nearly_vertical(angle, tolerance):
     norm_angle = normalize_angle(angle)
     return (90 - tolerance) < norm_angle < (90 + tolerance)
 
@@ -376,4 +377,51 @@ def generate_test_image(image, horizontal_lines, vertical_lines, debug):
     return image_rgb
 
 
+def rotate_correct(image: np.ndarray, config: dict) -> np.ndarray:
+    canny_min = config['rotation']['canny_min']
+    canny_max = config['rotation']['canny_max']
+    canny_aperture = config['rotation']['canny_aperture']
+    hough_threshold = config['rotation']['hough_threshold']
+    hough_min_length = config['rotation']['hough_min_length']
+    hough_max_gap = config['rotation']['hough_max_gap']
+    deviation = config['rotation']['deviation']
+    dst = cv2.Canny(image, canny_min, canny_max, None, canny_aperture, True)
+    lines = cv2.HoughLinesP(dst, 1, np.pi / 180, hough_threshold, None, hough_min_length, hough_max_gap)
+    measured_lines = [measure(line[0]) for line in lines.tolist()]
+    h_lines = [d for d in measured_lines if is_nearly_horizontal(d[0], deviation)]
+    angles = [d[0] for d in h_lines]
+    rotation = binned_mode(angles, bins=21, range=(-deviation, deviation))
+    return ndimage.rotate(image, angle=rotation, reshape=False)
 
+
+def erase_margins_notebook(image: np.ndarray):
+    # set some values
+    image_median = round(np.median(image))
+    x_max = image.shape[1] - 1
+    y_max = image.shape[0] - 1
+    print(f'Shape: {image.shape}')
+    print(f'Median: {image_median}')
+
+    # scan horizontal lines
+    top_cutoff, bottom_cutoff = get_top_bottom_cutoffs(image)
+    modified_image = image.copy()
+    # erase the top and bottom margins
+    for y in range(0, top_cutoff):
+        cv2.line(modified_image, (0, y), (x_max, y), image_median, 1)
+    for y in range(bottom_cutoff, y_max):
+        cv2.line(modified_image, (0, y), (x_max, y), image_median, 1)
+
+    # scan vertical lines from the MODIFIED image
+    left_median, right_median = get_edge_medians(modified_image)
+    print(f'Side medians: left {left_median}, right {right_median}')
+    side_types = identify_image_sides(image_median, left_median, right_median)
+    v_medians = smoothed_vertical_medians(modified_image)
+    left_cutoff = get_left_cutoff(v_medians, side_types[0], image_median)
+    right_cutoff = get_right_cutoff(v_medians, side_types[1], image_median)
+    # and erase the left and right margins
+    for x in range(0, left_cutoff + 1):
+        cv2.line(modified_image, (x, 0), (x, y_max), image_median, 1)
+    for x in range(right_cutoff, image.shape[1]):
+        cv2.line(modified_image, (x, 0), (x, y_max), image_median, 1)
+    print(f'Cutoffs: top {top_cutoff}, bottom {bottom_cutoff}, left {left_cutoff}, right {right_cutoff}')
+    return modified_image, (left_cutoff, right_cutoff, top_cutoff, bottom_cutoff)

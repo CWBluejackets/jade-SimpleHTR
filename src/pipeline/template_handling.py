@@ -65,8 +65,8 @@ def get_rows(form: np.ndarray, y_ref: int, x_ref: int):
 def add_template_info(specification: dict) -> dict:
     """
     Load the template image, extract column and row information.
-    :param specification:
-    :return:
+    :param specification: a value from pipeline-templates.json
+    :return: enhanced version of the same
     """
     form_file = os.path.join(FORM_DIR, specification['template'])
     y_ref_line = specification['y_ref_line']
