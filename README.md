@@ -1,10 +1,13 @@
-# jade-SimpleHTR
+# jade-SimpleHTR plus muster pipeline
+
+## jade-SimpleHTR training and testing
+
 conda set-up and scripts for using SimpleHTR on JADE2
 
 Target:
 https://github.com/githubharald/SimpleHTR
 
-## Python environment
+### Python environment
 
 ```bash
 conda create -n simplehtr1 python==3.7
@@ -16,17 +19,17 @@ pip install -r requirements.txt
 (The scripts use pandas and pillow; the rest is from SimpleHTR's 
 requirements file.)
 
-### Conda note
+#### Conda note
 
 * conda `lmbd` package: the c libraries for the database application itself.
 * conda `python-lmdb` package: provides python module lmdb
 * might not be relevant using pip?
 
-## batch submission on jade2
+### batch submission on jade2
 
 This does *not* work if the environment is active in the shell when you run `sbatch`!
 
-## Config file
+### Config file
 
 * `input_directory` containing CSV files from Zooniverse
 * `intermediate_file` our CSV format for generating training data
@@ -38,7 +41,7 @@ This does *not* work if the environment is active in the shell when you run `sba
 * `digits_only` ignore annotations containing anything other than digits, boolean
 * `sampling` generate four sizes of training datasets (25%, 50%, 75%, 100% of what is available)
 
-## Filter file (WIP)
+### Filter file (WIP)
 
 Key-value pairs: workflow (`str` ) to regex (`str`).
 If a workflow in the data does not have a filter specified, 
@@ -46,9 +49,9 @@ everything is passed through.
 
 Note: the regex will be applied using `fullmatch`.
 
-## new training data structure
+### new training data structure
 
-### File structure
+#### File structure
 
 info/annotations_000000085.csv
 img/0e0f9b6f3bf64dd680c8c033cb73a9c0_0000085.png
@@ -69,17 +72,17 @@ img/0e0f9b6f3bf64dd680c8c033cb73a9c0_0000124.png
     ...
 ```
 
-# pipeline
+## muster pipeline
 
 Pipeline for processing muster JPGs using trained models.
 
-## Tools
+### Tools
 
 * to_name = read JPGs; write control files and lots of PNGs
 * to_name = read control file then PNGs; apply models; write CSV (probably)
 * **TODO** add API to jade-SimpleHTR for applying models to PNGs in bulk
 
-## Input information
+### Input information
 
 * JPG filename (or input directory for bulk processing on server)
 * muster date if present --- might be easier for a human to do this since
@@ -90,7 +93,7 @@ Pipeline for processing muster JPGs using trained models.
   * typical row heights
 * config file
 
-## Derived information
+### Derived information
 
 * from filename
   * vessel name
@@ -103,7 +106,7 @@ Pipeline for processing muster JPGs using trained models.
   * label
   * confidence score
 
-## Configuration ideas
+### Configuration ideas
 
 * input directory (config file for server or CL options for testing)
 * parameters, for rows and columns separately
