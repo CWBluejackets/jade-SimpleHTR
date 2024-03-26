@@ -11,20 +11,23 @@ from dataloader_iam import Batch
 tf.compat.v1.disable_eager_execution()
 
 
+def load_char_list(model_dir: str) -> List[str]:
+    char_file = os.path.join(model_dir, 'charList.txt')
+    with open(char_file) as f:
+        char_list = list(f.read())
+    return char_list
+
+
 class Model:
     """Minimalistic TF model for HTR."""
 
-    def __init__(self,
-                 char_list: List[str],
-                 model_dir: str,
-                 must_restore: bool = False,
-                 dump: bool = False) -> None:
+    def __init__(self, model_dir: str):
         """Init model: add CNN, RNN and CTC and initialize TF."""
-        self.dump = dump
-        self.char_list = char_list
-        self.must_restore = must_restore
-        self.snap_ID = 0
         self.model_dir = model_dir
+        self.dump = False
+        self.char_list = load_char_list(self.model_dir)
+        self.must_restore = True
+        self.snap_ID = 0
         # forcing decoder type to BestPath for simplification
 
         # Whether to use normalization over a batch or a population
@@ -188,18 +191,6 @@ class Model:
 
         # map labels to chars for all batch elements
         return [''.join([self.char_list[c] for c in labelStr]) for labelStr in label_strs]
-
-    def train_batch(self, batch: Batch) -> float:
-        """Feed a batch into the NN to train it."""
-        num_batch_elements = len(batch.imgs)
-        max_text_len = batch.imgs[0].shape[0] // 4
-        sparse = self.to_sparse(batch.gt_texts)
-        eval_list = [self.optimizer, self.loss]
-        feed_dict = {self.input_imgs: batch.imgs, self.gt_texts: sparse,
-                     self.seq_len: [max_text_len] * num_batch_elements, self.is_train: True}
-        _, loss_val = self.sess.run(eval_list, feed_dict)
-        self.batches_trained += 1
-        return loss_val
 
     @staticmethod
     def dump_nn_output(rnn_output: np.ndarray) -> None:

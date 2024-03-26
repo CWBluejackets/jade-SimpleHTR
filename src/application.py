@@ -4,10 +4,8 @@ from typing import Tuple
 
 import numpy as np
 
-import locations
 from dataloader_iam import Batch
-from main import char_list_from_file
-from model import Model, DecoderType
+from model_nonglobal import Model
 from preprocessor import Preprocessor
 
 # not using line_mode or wide_mode
@@ -15,27 +13,17 @@ PREPROCESSOR_SIZE = (128, 32)
 
 
 class TrainedModel:
-    def __init__(self):
+
+    def __init__(self, model_directory: str):
+        self.model_directory = model_directory
+        self.model = Model(self.model_directory)
+        self.preprocessor = Preprocessor(PREPROCESSOR_SIZE)
         return
 
-# well, crap, there's a lot of global state to untangle
+    # TODO proper big batches
 
-model = None
-decoder_type = DecoderType.BestPath
-preprocessor = Preprocessor(PREPROCESSOR_SIZE)
-
-
-def set_model(model_dir):
-    global model
-    locations.set_model_dir(model_dir)
-    model = Model(char_list_from_file(), decoder_type, must_restore=True, dump=False)
-    return
-
-
-def apply(image: np.ndarray) -> Tuple[str, float]:
-    if model is None:
-        raise RuntimeError("Model is not set")
-    image = preprocessor.process_img(image)
-    batch = Batch([image], None, 1)
-    text, probability = model.infer_batch(batch, True)
-    return text, probability
+    def apply(self, image: np.ndarray) -> Tuple[str, float]:
+        image = self.preprocessor.process_img(image)
+        batch = Batch([image], None, 1)
+        text, probability = self.model.infer_batch(batch, True)
+        return text, probability
