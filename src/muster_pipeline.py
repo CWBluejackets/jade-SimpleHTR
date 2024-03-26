@@ -8,7 +8,7 @@ import logging
 import os.path
 from datetime import datetime
 
-import sheet_division
+from pipeline import sheet_division
 
 HERE = os.path.dirname(os.path.realpath(__file__))
 DEFAULT_CONFIG_FILE = os.path.join(HERE, 'config.json')

@@ -7,8 +7,8 @@ import os
 
 import cv2
 
-import musters2boxes
-import sheet_division
+import muster_pipeline
+from pipeline import sheet_division
 
 
 def get_filename_stem(path):
@@ -21,7 +21,7 @@ if __name__ == "__main__":
 
     oparser.add_argument('-c', dest='config_file',
                          type=str,
-                         default=musters2boxes.DEFAULT_CONFIG_FILE,
+                         default=muster_pipeline.DEFAULT_CONFIG_FILE,
                          metavar='CONFIG.JSON',
                          help='general config file')
 
