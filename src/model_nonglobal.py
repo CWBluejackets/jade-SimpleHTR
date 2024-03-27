@@ -21,7 +21,7 @@ def load_char_list(model_dir: str) -> List[str]:
 class Model:
     """Minimalistic TF model for HTR."""
 
-    def __init__(self, model_dir: str):
+    def __init__(self, model_dir):
         """Init model: add CNN, RNN and CTC and initialize TF."""
         self.model_dir = model_dir
         self.dump = False

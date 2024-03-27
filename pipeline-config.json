@@ -1,6 +1,7 @@
 {
   "templates": "pipeline-templates.json",
   "workflows": "workflows.json",
+  "template_directory": "pipeline-templates.json",
   "rotation": {
     "canny_min": 53,
     "canny_max": 255,

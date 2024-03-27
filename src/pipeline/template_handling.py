@@ -59,14 +59,17 @@ def get_rows(form: np.ndarray, y_ref: int, x_ref: int):
     return [row + y_offset for row in shifted_rows]
 
 
-def add_template_info(specification: dict, template_directory) -> dict:
+def add_template_info(specification: dict, template_directory, workflows):
     """
-    Load the template image, extract column and row information.
+    Load the template image; derive row and column information; derive cell boundaries
     :param specification: a value from pipeline-templates.json
     :return: enhanced version of the same
+    :param template_directory: location of the templates
+    :param workflows: workflow specifications
     """
     form_file = os.path.join(template_directory, specification['template'])
     y_ref_line = specification['y_ref_line']
+    print(f'Loading template image from {form_file}')
     image = utilities.safe_imread(form_file, cv2.IMREAD_GRAYSCALE)
     # find the black column boundaries in the template
     column_lines, x_ref_line = get_columns(image, y_ref_line)
@@ -96,7 +99,8 @@ def add_template_info(specification: dict, template_directory) -> dict:
                   'end': max(workflow_ends)}
         output_columns.append(column)
     specification['output_columns'] = output_columns
-    return specification
+    generate_cells(specification, workflows)
+    return
 
 
 def generate_cells(specification: dict, workflows: dict):
@@ -108,7 +112,7 @@ def generate_cells(specification: dict, workflows: dict):
         right = column['end']
         width = right - left
         # 0 do nothing
-        # float is a proportion
+        # float is a proportion of height or width
         # 1 up is number of pixels
         if 0 < left_adj < 1:
             left = left - round(left_adj * width)
@@ -138,7 +142,7 @@ def generate_cells(specification: dict, workflows: dict):
                     "bottom": bottom}
             cells.append(cell)
     specification['cells'] = cells
-    return specification
+    return
 
 
 def get_cell_adjustments(workflow, workflows: dict):
@@ -152,32 +156,3 @@ def get_cell_adjustments(workflow, workflows: dict):
     bottom = adjustments.get('bottom', 0)
     return left, right, top, bottom
 
-
-def adjust_cell(coordinates: tuple, workflow, workflows: dict):
-    """
-    Adjust the cell boundaries according to the workflow
-    """
-    left, right, top, bottom = coordinates
-    width = right - left
-    height = bottom - top
-    left_adj, right_adj, top_adj, bottom_adj = get_cell_adjustments(workflow, workflows)
-    # 0 do nothing
-    # float is a proportion
-    # 1 up is number of pixels
-    if 0 < left_adj < 1:
-        left = left - round(left_adj * width)
-    elif 1 <= left_adj:
-        left = left - left_adj
-    if 0 < right_adj < 1:
-        right = right + round(right_adj * width)
-    elif 1 <= right_adj:
-        right = right + right_adj
-    if 0 < top_adj < 1:
-        top = top - round(top_adj * height)
-    elif 1 <= top_adj:
-        top = top - top_adj
-    if 0 < bottom_adj < 1:
-        bottom = bottom + round(bottom_adj * height)
-    elif 1 <= bottom_adj:
-        bottom = bottom + bottom_adj
-    return left, right, top, bottom

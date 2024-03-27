@@ -1,9 +1,9 @@
 {
   "input_directory": null,
-  "png_directory": "path/to/png_dir",
-  "csv_directory": "path/to/csv_dir",
+  "output_directory": "path/to/output",
+  "corrections_directory": "path/to/corrections",
   "img_file_exception": false,
   "metadata_file": "path/to/Master_Sheet_Entry_Log.csv",
-  "model_directory": "path/to/models",
+  "models_directory": "path/to/models",
   "model_mapping": "workflow-models.json"
 }

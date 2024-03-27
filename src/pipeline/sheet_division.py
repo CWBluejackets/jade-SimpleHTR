@@ -8,7 +8,7 @@ import geometry
 import utilities
 
 
-def process_muster_sheet(input_jpg_file, image_metadata, output_dir, config, workflows, formats,
+def process_muster_sheet(input_jpg_file, image_metadata, output_dir, config, workflows, templates,
                          exception_if_missing):
     """
     Process sheet...
@@ -32,7 +32,7 @@ def process_muster_sheet(input_jpg_file, image_metadata, output_dir, config, wor
 
     image_raw = utilities.safe_imread(input_jpg_file, cv2.IMREAD_GRAYSCALE,
                                       exception_if_missing=exception_if_missing)
-    template_image = formats[format_type]['image']
+    template_image = templates[format_type]['image']
 
     registered_image = geometry.adjust_image(image_raw, template_image, config)
 

@@ -4,6 +4,7 @@ import re
 
 
 WHITESPACE = re.compile(r'\s+')
+INTEGER = re.compile(r'\d+')
 
 # columns:
 # "Ship name","ship#","volume#","sheet#","Muster Type","Alignment issue?",
@@ -18,8 +19,20 @@ def get_image_filename(muster_info):
     return f"{volume:03d}_{vessel}_{sheet:04d}.jpg"
 
 
-def yes_boolean(yesno: str):
+def yes_boolean(yesno: str) -> bool:
     return yesno.strip().lower().startswith('y')
+
+
+def extract_integer(type_name: str) -> int:
+    """
+    Convert 'Type 3' to the int 3.
+    """
+    int_str = INTEGER.search(type_name)
+    if int_str:
+        result = int(int_str.group(0))
+    else:
+        result = 0
+    return result
 
 
 class Metadata:
@@ -40,13 +53,15 @@ class Metadata:
                 muster_date = muster_date_specified
             bad_alignment = yes_boolean(row['Alignment issue?'])
             non_standard = yes_boolean(row['Non-standard?'])
+            type_name = row['Muster Type']
             item = {"vessel": row['Ship name'].strip(),
                     "vessel_no": int(row['ship#']),
                     "volume": int(row['volume#']),
                     "sheet": int(row['sheet#']),
                     "muster_date_specified": muster_date_specified,
                     "muster_date": muster_date,
-                    "type": row['Muster Type'],
+                    "type_name": type_name,
+                    "type": extract_integer(type_name),
                     "bad_alignment": bad_alignment,
                     "non_standard": non_standard}
             image_filename = get_image_filename(item)
