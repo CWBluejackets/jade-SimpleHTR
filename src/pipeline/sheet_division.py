@@ -3,6 +3,7 @@
 import logging
 
 import cv2
+import numpy as np
 
 import geometry
 import utilities
@@ -23,27 +24,32 @@ def process_muster_sheet(input_jpg_file, image_metadata, output_dir, config, wor
     """
     logging.info(f'Output to {output_dir}')
     logging.info(f'Reading image from {input_jpg_file}')
-    vessel, page = utilities.get_vessel_and_page(input_jpg_file)
     muster_date = image_metadata.get('muster_date', 'unknown')
-    format_type = image_metadata.get('format_type', 'type2')
-    control_data = {'muster': {'vessel': vessel,
-                               'page': page,
-                               'date': muster_date}}
+    format_type = image_metadata.get('format_type', '2')
 
     image_raw = utilities.safe_imread(input_jpg_file, cv2.IMREAD_GRAYSCALE,
                                       exception_if_missing=exception_if_missing)
-    template_image = templates[format_type]['image']
+    template = templates[format_type]
+    template_image = template['image']
 
-    registered_image = geometry.adjust_image(image_raw, template_image, config)
+    registered_image = geometry.adjust_muster_to_template(image_raw, template_image, config)
+    for cell in template['cells']:
+        wf_id = cell['workflow']
+        model = workflows[wf_id]['model']
+        threshold = workflows[wf_id]['confidence']
+        cell_result = process_cell(registered_image, cell, model, threshold)
 
-    # TODO
-
-    utilities.write_control_file(input_jpg_file, output_dir, control_data)
+    utilities.write_control_file(input_jpg_file, output_dir)
     return
 
 
-
-
-
+def process_cell(image: np.ndarray, cell, model, threshold: float):
+    cell_output = {'threshold': threshold}
+    cell_output.update(cell)
+    cell_image = image[cell['top']: cell['bottom']+1, cell['left']: cell['right']+1]
+    text, confidence = model.apply(cell_image)
+    cell_output['text'] = text
+    cell_output['confidence'] = confidence
+    return cell_output
 
 

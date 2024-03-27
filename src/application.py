@@ -14,7 +14,7 @@ PREPROCESSOR_SIZE = (128, 32)
 
 class TrainedModel:
 
-    def __init__(self, model_directory: str):
+    def __init__(self, model_directory):
         self.model_directory = model_directory
         self.model = Model(self.model_directory)
         self.preprocessor = Preprocessor(PREPROCESSOR_SIZE)

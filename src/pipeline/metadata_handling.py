@@ -23,15 +23,15 @@ def yes_boolean(yesno: str) -> bool:
     return yesno.strip().lower().startswith('y')
 
 
-def extract_integer(type_name: str) -> int:
+def extract_number(type_name: str) -> str:
     """
     Convert 'Type 3' to the int 3.
     """
     int_str = INTEGER.search(type_name)
     if int_str:
-        result = int(int_str.group(0))
+        result = int_str.group(0)
     else:
-        result = 0
+        result = '0'
     return result
 
 
@@ -61,7 +61,7 @@ class Metadata:
                     "muster_date_specified": muster_date_specified,
                     "muster_date": muster_date,
                     "type_name": type_name,
-                    "type": extract_integer(type_name),
+                    "type": extract_number(type_name),
                     "bad_alignment": bad_alignment,
                     "non_standard": non_standard}
             image_filename = get_image_filename(item)

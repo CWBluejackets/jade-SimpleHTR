@@ -9,7 +9,7 @@ import os.path
 from pipeline import sheet_division
 from pipeline import template_handling
 from pipeline.metadata_handling import Metadata
-from model_nonglobal import Model
+from application import TrainedModel
 
 HERE = os.path.dirname(os.path.realpath(__file__))
 DEFAULT_CONFIG_FILE = os.path.join(HERE, 'config.json')
@@ -71,7 +71,7 @@ if __name__ == "__main__":
         workflow_id = int(workflow_str)
         model_subdirectory = os.path.join(models_directory, subdirectory)
         print(f'Loading model from {model_subdirectory}')
-        model = Model(model_subdirectory)
+        model = TrainedModel(model_subdirectory)
         workflows[workflow_id]['model'] = model
 
     templates_file = os.path.join(os.path.dirname(options.config_file),
@@ -114,4 +114,3 @@ if __name__ == "__main__":
         image_metadata = all_metadata.get_metadata(input_file)
         sheet_division.process_muster_sheet(input_file, image_metadata, output_dir, config, workflows,
                                             templates, exception_if_missing)
-        
