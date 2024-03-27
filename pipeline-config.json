@@ -1,5 +1,6 @@
 {
   "workflows": "workflows.json",
+  "models": "workflow-models.json",
   "formats": "formats.json",
   "columns": {
     "todo": "probably delete this section",
