@@ -82,7 +82,7 @@ def add_template_info(specification: dict, template_directory) -> dict:
         column['end'] = column_lines[index + 1]
     # merge adjacent columns of the same workflow (e.g., height feet + height inches
     # and determine the start and end x-values
-    output_columns = dict()
+    output_columns = []
     workflow_starts = defaultdict(set)
     workflow_ends = defaultdict(set)
     for column in specification['columns']:
@@ -98,6 +98,86 @@ def add_template_info(specification: dict, template_directory) -> dict:
     specification['output_columns'] = output_columns
     return specification
 
-# TODO adjust workflow columns
-# TODO adjust rows
-# TODO define all the cells
+
+def generate_cells(specification: dict, workflows: dict):
+    cells = []
+    for column_number, column in enumerate(specification['output_columns']):
+        workflow = column['workflow']
+        left_adj, right_adj, top_adj, bottom_adj = get_cell_adjustments(workflow, workflows)
+        left = column['start']
+        right = column['end']
+        width = right - left
+        # 0 do nothing
+        # float is a proportion
+        # 1 up is number of pixels
+        if 0 < left_adj < 1:
+            left = left - round(left_adj * width)
+        elif 1 <= left_adj:
+            left = left - left_adj
+        if 0 < right_adj < 1:
+            right = right + round(right_adj * width)
+        elif 1 <= right_adj:
+            right = right + right_adj
+        row_boundaries = specification['row_lines']
+        for row_number, (top, bottom) in enumerate(zip(row_boundaries[:-1], row_boundaries[1:])):
+            height = bottom - top
+            if 0 < top_adj < 1:
+                top = top - round(top_adj * height)
+            elif 1 <= top_adj:
+                top = top - top_adj
+            if 0 < bottom_adj < 1:
+                bottom = bottom + round(bottom_adj * height)
+            elif 1 <= bottom_adj:
+                bottom = bottom + bottom_adj
+            cell = {"workflow": workflow,
+                    "column": column_number,
+                    "row": row_number,
+                    "left": left,
+                    "right": right,
+                    "top": top,
+                    "bottom": bottom}
+            cells.append(cell)
+    specification['cells'] = cells
+    return specification
+
+
+def get_cell_adjustments(workflow, workflows: dict):
+    """
+    Get the cell expansions from the workflow file
+    """
+    adjustments = workflows[workflow].get('extras', dict())
+    left = adjustments.get('left', 0)
+    right = adjustments.get('right', 0)
+    top = adjustments.get('top', 0)
+    bottom = adjustments.get('bottom', 0)
+    return left, right, top, bottom
+
+
+def adjust_cell(coordinates: tuple, workflow, workflows: dict):
+    """
+    Adjust the cell boundaries according to the workflow
+    """
+    left, right, top, bottom = coordinates
+    width = right - left
+    height = bottom - top
+    left_adj, right_adj, top_adj, bottom_adj = get_cell_adjustments(workflow, workflows)
+    # 0 do nothing
+    # float is a proportion
+    # 1 up is number of pixels
+    if 0 < left_adj < 1:
+        left = left - round(left_adj * width)
+    elif 1 <= left_adj:
+        left = left - left_adj
+    if 0 < right_adj < 1:
+        right = right + round(right_adj * width)
+    elif 1 <= right_adj:
+        right = right + right_adj
+    if 0 < top_adj < 1:
+        top = top - round(top_adj * height)
+    elif 1 <= top_adj:
+        top = top - top_adj
+    if 0 < bottom_adj < 1:
+        bottom = bottom + round(bottom_adj * height)
+    elif 1 <= bottom_adj:
+        bottom = bottom + bottom_adj
+    return left, right, top, bottom
