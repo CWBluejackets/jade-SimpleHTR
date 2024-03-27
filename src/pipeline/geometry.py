@@ -7,6 +7,7 @@ from typing import Tuple
 import cv2
 import numpy as np
 from scipy import ndimage
+from skimage.registration import phase_cross_correlation
 
 # point = (x, y)
 # in cv2, y = 0 at the top
@@ -417,5 +418,25 @@ def get_lines_for_registration(image: np.ndarray, config: dict, cutoffs: tuple) 
         cv2.line(new_image, (line[2][0], line[2][1]), (line[2][2], line[2][3]), (0,), 3)
     return new_image
 
+
+def adjust_to_template(image: np.ndarray, template: np.ndarray, config: dict) -> np.ndarray:
+    modified_image = rotate_correct(image, config)
+    modified_image, cutoffs = erase_margins(modified_image, config)
+    # cutoffs (left, right, top, bottom)
+    adjusted_cutoffs = (cutoffs[0] + config['registration']['cutoff_adjustments']['left'],
+                        cutoffs[1] - config['registration']['cutoff_adjustments']['right'],
+                        cutoffs[2] + config['registration']['cutoff_adjustments']['top'],
+                        cutoffs[3] - config['registration']['cutoff_adjustments']['bottom'])
+    print(adjusted_cutoffs)
+    registration_image = get_lines_for_registration(modified_image, config, adjusted_cutoffs)
+    # works much better without normalization
+    shift, error, diffphase = phase_cross_correlation(template, registration_image, normalization=None)
+    # pass this shift value as argument to scipy.ndimage.shift
+    print('Registration:', shift, error, diffphase)
+    # Shift vector (in pixels) required to register moving_image with reference_image.
+    # Axis ordering is consistent with the axis order of the input array.
+    # https://scikit-image.org/docs/stable/api/skimage.registration.html#skimage.registration.phase_cross_correlation
+    shifted_image = ndimage.shift(modified_image, shift)
+    return shifted_image
 
 

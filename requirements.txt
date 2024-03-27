@@ -10,3 +10,4 @@ pillow>=9.2.0
 levenshtein>=0.20.9
 seaborn
 scipy
+scikit-image

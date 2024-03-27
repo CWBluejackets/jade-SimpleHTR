@@ -57,6 +57,12 @@
     "hough_threshold": 1,
     "hough_min_length": 50,
     "hough_max_gap": 10,
-    "deviation": 1
+    "deviation": 1,
+    "cutoff_adjustments": {
+      "left": 100,
+      "right": 195,
+      "top": 380,
+      "bottom": 25
+    }
   }
 }
