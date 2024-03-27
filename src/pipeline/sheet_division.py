@@ -16,7 +16,7 @@ def process_muster_sheet(input_jpg_file, image_metadata, output_dir, config, wor
     Process sheet...
     :param image_metadata:
     :param output_dir: directory for PNGs and control files
-    :param formats: column format specifications
+    :param templates: template specifications
     :param input_jpg_file: JPG filename
     :param config: general configuration
     :param workflows: workflow specifications
@@ -45,6 +45,8 @@ def process_muster_sheet(input_jpg_file, image_metadata, output_dir, config, wor
         print(f'Writing {output_filename}')
         with open(output_filename, 'w') as f:
             json.dump(cell_result, f)
+
+        # TODO generate image for checking if cell['confidence'] < threshold
     return
 
 
