@@ -13,15 +13,6 @@ from pipeline import sheet_division
 HERE = os.path.dirname(os.path.realpath(__file__))
 DEFAULT_CONFIG_FILE = os.path.join(HERE, 'config.json')
 
-
-def get_metadata(input_filename):
-    # TODO implement this based on accompanying information
-    metadata = {'directory': os.path.dirname(input_filename),
-                'filename': os.path.basename(input_filename),
-                'muster_date': None}
-    return metadata
-
-
 if __name__ == "__main__":
     oparser = argparse.ArgumentParser(description="Process muster sheets for ML application",
                                       formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -84,6 +75,10 @@ if __name__ == "__main__":
     with open(workflow_file, 'r') as f:
         formats = json.load(f)
 
+    metadata_file = os.path.join(os.path.dirname(options.config_file),
+                                 config)
+
+
     # output of this program is PNGs and control files
     output_dir = os.path.join(os.path.dirname(options.locations_file), locations['png_directory'])
 
@@ -107,4 +102,3 @@ if __name__ == "__main__":
         logging.info(f'Processing {input_file}')
         image_metadata = get_metadata(input_file)
         sheet_division.process_muster_sheet(input_file, image_metadata, output_dir, config, workflows, formats)
-
