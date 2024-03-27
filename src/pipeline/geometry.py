@@ -243,50 +243,6 @@ def smoothed_horizontal_medians(image: np.ndarray, config):
     return rolling_average(medians, window)
 
 
-def erase_margins(image: np.ndarray, config) -> np.ndarray:
-    """
-    Determine the left and right cutoffs off the main form and overwrite
-    the edges with the image median.
-    :param image: greyscale image
-    :param config: config file object
-    :return:
-    """
-    # set some values
-    image_median = round(np.median(image))
-    x_max = image.shape[1] - 1
-    y_max = image.shape[0] - 1
-
-    if config['verbose']:
-        print(f'Shape: {image.shape}')
-        print(f'Median: {image_median}')
-
-    # scan horizontal lines
-    top_cutoff, bottom_cutoff = get_top_bottom_cutoffs(image, config)
-    modified_image = image.copy()
-    # erase the top and bottom margins
-    for y in range(0, top_cutoff):
-        cv2.line(modified_image, (0, y), (x_max, y), image_median, 1)
-    for y in range(bottom_cutoff, y_max):
-        cv2.line(modified_image, (0, y), (x_max, y), image_median, 1)
-
-    # scan vertical lines from the MODIFIED image
-    left_median, right_median = get_edge_medians(modified_image, config)
-    if config['verbose']:
-        print(f'Side medians: left {left_median}, right {right_median}')
-    side_types = identify_image_sides(image_median, left_median, right_median, config)
-    v_medians = smoothed_vertical_medians(modified_image, config)
-    left_cutoff = get_left_cutoff(v_medians, side_types[0], image_median, config)
-    right_cutoff = get_right_cutoff(v_medians, side_types[1], image_median, config)
-    # and erase the left and right margins
-    for x in range(0, left_cutoff + 1):
-        cv2.line(modified_image, (x, 0), (x, y_max), image_median, 1)
-    for x in range(right_cutoff, image.shape[1]):
-        cv2.line(modified_image, (x, 0), (x, y_max), image_median, 1)
-    if config['verbose']:
-        print(f'Cutoffs: top {top_cutoff}, bottom {bottom_cutoff}, left {left_cutoff}, right {right_cutoff}')
-    return modified_image
-
-
 def get_top_bottom_cutoffs(image: np.ndarray, config) -> Tuple[int, int]:
     """
     Scan horizontal lines to find the top and bottom margins
@@ -326,10 +282,8 @@ def get_left_cutoff(medians, edge_type, overall_median, config) -> int:
     max_left = round(len(medians) * config['margin_detection']['left_right_limit'])
     cutoff = 0
     if edge_type == 'light':
-        h_gradient = np.gradient(medians)
-        gradient_cutoff = config['margin_detection']['gradient_cutoff']
         for x in range(max_left, 0, -1):
-            if h_gradient[x] > gradient_cutoff:
+            if medians[x] > overall_median + 5:
                 cutoff = x
                 break
     elif edge_type == 'dark':
@@ -353,10 +307,8 @@ def get_right_cutoff(medians, edge_type, overall_median, config) -> int:
     min_right = round(len(medians) * (1 - config['margin_detection']['left_right_limit']))
     cutoff = len(medians) - 1
     if edge_type == 'light':
-        h_gradient = np.gradient(medians)
-        gradient_cutoff = - config['margin_detection']['gradient_cutoff']
         for x in range(min_right, len(medians)):
-            if h_gradient[x] < gradient_cutoff:
+            if medians[x] > overall_median + 5:
                 cutoff = x
                 break
     elif edge_type == 'dark':
@@ -394,7 +346,7 @@ def rotate_correct(image: np.ndarray, config: dict) -> np.ndarray:
     return ndimage.rotate(image, angle=rotation, reshape=False)
 
 
-def erase_margins_notebook(image: np.ndarray):
+def erase_margins(image: np.ndarray, config):
     # set some values
     image_median = round(np.median(image))
     x_max = image.shape[1] - 1
@@ -403,7 +355,7 @@ def erase_margins_notebook(image: np.ndarray):
     print(f'Median: {image_median}')
 
     # scan horizontal lines
-    top_cutoff, bottom_cutoff = get_top_bottom_cutoffs(image)
+    top_cutoff, bottom_cutoff = get_top_bottom_cutoffs(image, config)
     modified_image = image.copy()
     # erase the top and bottom margins
     for y in range(0, top_cutoff):
@@ -412,12 +364,12 @@ def erase_margins_notebook(image: np.ndarray):
         cv2.line(modified_image, (0, y), (x_max, y), image_median, 1)
 
     # scan vertical lines from the MODIFIED image
-    left_median, right_median = get_edge_medians(modified_image)
+    left_median, right_median = get_edge_medians(modified_image, config)
     print(f'Side medians: left {left_median}, right {right_median}')
-    side_types = identify_image_sides(image_median, left_median, right_median)
-    v_medians = smoothed_vertical_medians(modified_image)
-    left_cutoff = get_left_cutoff(v_medians, side_types[0], image_median)
-    right_cutoff = get_right_cutoff(v_medians, side_types[1], image_median)
+    side_types = identify_image_sides(image_median, left_median, right_median, config)
+    v_medians = smoothed_vertical_medians(modified_image, config)
+    left_cutoff = get_left_cutoff(v_medians, side_types[0], image_median, config)
+    right_cutoff = get_right_cutoff(v_medians, side_types[1], image_median, config)
     # and erase the left and right margins
     for x in range(0, left_cutoff + 1):
         cv2.line(modified_image, (x, 0), (x, y_max), image_median, 1)

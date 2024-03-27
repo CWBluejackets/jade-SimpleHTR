@@ -1,5 +1,5 @@
 {
-  "workflows": "workflows.json",
+  "templates": "pipeline-templates.json",
   "models": "workflow-models.json",
   "formats": "formats.json",
   "columns": {
@@ -47,10 +47,9 @@
     "todo": "update from notebook",
     "left_right_limit": 0.20,
     "top_bottom_limit": 0.15,
-    "left_right_test": 0.10,
+    "left_right_test": 0.15,
     "smoothing_window": 10,
     "black_limit": 0.75,
-    "gradient_cutoff": 5
   },
   "registration": {
     "todo": "copy values from notebook"
