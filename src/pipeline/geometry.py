@@ -164,16 +164,14 @@ def identify_image_sides(image_median, left_median, right_median, config) -> Tup
     """
     left_result = margin_median_result(left_median, image_median, config)
     right_result = margin_median_result(right_median, image_median, config)
-    if config['verbose']:
-        print(f'Left: {left_median} {left_result}')
-        print(f'Right: {right_median} {right_result}')
+    print(f'Left: {left_median} {left_result}')
+    print(f'Right: {right_median} {right_result}')
     # The binding is hard to detect so let's fudge it
     if left_result == 'unknown' and right_result == 'dark':
         left_result = 'light'
     elif left_result == 'dark' and right_result == 'unknown':
         right_result = 'light'
-    if config['verbose']:
-        print(f'Updated: left {left_result}, right {right_result}')
+    print(f'Updated: left {left_result}, right {right_result}')
     return left_result, right_result
 
 
@@ -422,6 +420,9 @@ def get_lines_for_registration(image: np.ndarray, config: dict, cutoffs: tuple) 
 def adjust_muster_to_template(image: np.ndarray, template: np.ndarray, config: dict) -> np.ndarray:
     """
     Rotate the image; erase the margins; detect H and V lines and shift to match the template
+    :param image: muster sheet
+    :param template: template image
+    :param config: config file object
     """
     modified_image = rotate_correct(image, config)
     modified_image, cutoffs = erase_margins(modified_image, config)

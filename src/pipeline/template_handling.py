@@ -8,9 +8,6 @@ from statistics import median
 
 import utilities
 
-HERE = os.path.dirname(os.path.realpath(__file__))
-FORM_DIR = os.path.join(HERE, 'forms')
-
 
 def find_lines(scanline: np.ndarray) -> List[int]:
     """
@@ -62,13 +59,13 @@ def get_rows(form: np.ndarray, y_ref: int, x_ref: int):
     return [row + y_offset for row in shifted_rows]
 
 
-def add_template_info(specification: dict) -> dict:
+def add_template_info(specification: dict, template_directory) -> dict:
     """
     Load the template image, extract column and row information.
     :param specification: a value from pipeline-templates.json
     :return: enhanced version of the same
     """
-    form_file = os.path.join(FORM_DIR, specification['template'])
+    form_file = os.path.join(template_directory, specification['template'])
     y_ref_line = specification['y_ref_line']
     image = utilities.safe_imread(form_file, cv2.IMREAD_GRAYSCALE)
     # find the black column boundaries in the template
@@ -101,3 +98,6 @@ def add_template_info(specification: dict) -> dict:
     specification['output_columns'] = output_columns
     return specification
 
+# TODO adjust workflow columns
+# TODO adjust rows
+# TODO define all the cells
