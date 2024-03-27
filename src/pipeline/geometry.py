@@ -377,3 +377,45 @@ def erase_margins(image: np.ndarray, config):
         cv2.line(modified_image, (x, 0), (x, y_max), image_median, 1)
     print(f'Cutoffs: top {top_cutoff}, bottom {bottom_cutoff}, left {left_cutoff}, right {right_cutoff}')
     return modified_image, (left_cutoff, right_cutoff, top_cutoff, bottom_cutoff)
+
+
+def keep_horizontal_or_vertical(measured_line, tolerance, cutoffs=None):
+    # cutoffs: left, right, top, bottom
+    angle = measured_line[0]
+    # ML: degrees 90 up, length,  line (x0, y0, x1, y1)
+    x = (measured_line[2][0] + measured_line[2][2]) / 2
+    y = (measured_line[2][1] + measured_line[2][3]) / 2
+    left = min(measured_line[2][0], measured_line[2][2])
+    right = max(measured_line[2][0], measured_line[2][2])
+    top = min(measured_line[2][1], measured_line[2][3])
+    bottom = max(measured_line[2][1], measured_line[2][3])
+    if not cutoffs:
+        result = is_nearly_vertical(angle, tolerance) or is_nearly_horizontal(angle, tolerance)
+    elif is_nearly_vertical(angle, tolerance) and (cutoffs[0] < x < cutoffs[1]) and (top > cutoffs[2]) and (bottom < cutoffs[3]):
+        result = True
+    elif is_nearly_horizontal(angle, tolerance) and (cutoffs[2] < y < cutoffs[3]) and (left > cutoffs[0]) and (right < cutoffs[1]):
+        result = True
+    else:
+        result = False
+    return result
+
+
+def get_lines_for_registration(image: np.ndarray, config: dict, cutoffs: tuple) -> np.ndarray:
+    canny_min = config['registration']['canny_min']
+    canny_max = config['registration']['canny_max']
+    canny_aperture = config['registration']['canny_aperture']
+    hough_threshold = config['registration']['hough_threshold']
+    hough_min_length = config['registration']['hough_min_length']
+    hough_max_gap = config['registration']['hough_max_gap']
+    deviation = config['registration']['deviation']
+    dst = cv2.Canny(image, canny_min, canny_max, None, canny_aperture, True)
+    lines = cv2.HoughLinesP(dst, 1, np.pi / 180, hough_threshold, None, hough_min_length, hough_max_gap)
+    measured_lines = [measure(line[0]) for line in lines.tolist()]
+    keep_lines = [line for line in measured_lines if keep_horizontal_or_vertical(line, deviation, cutoffs)]
+    new_image = np.full(image.shape, 255, dtype="uint8")
+    for line in keep_lines:
+        cv2.line(new_image, (line[2][0], line[2][1]), (line[2][2], line[2][3]), (0,), 3)
+    return new_image
+
+
+

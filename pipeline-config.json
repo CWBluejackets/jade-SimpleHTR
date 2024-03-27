@@ -44,7 +44,6 @@
     "deviation": 2
   },
   "margin_detection": {
-    "todo": "update from notebook",
     "left_right_limit": 0.20,
     "top_bottom_limit": 0.15,
     "left_right_test": 0.15,
@@ -52,6 +51,12 @@
     "black_limit": 0.75,
   },
   "registration": {
-    "todo": "copy values from notebook"
+    "canny_min": 53,
+    "canny_max": 255,
+    "canny_aperture": 5,
+    "hough_threshold": 1,
+    "hough_min_length": 50,
+    "hough_max_gap": 10,
+    "deviation": 1
   }
 }

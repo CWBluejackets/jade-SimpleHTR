@@ -123,3 +123,4 @@ def get_image_rotation(image: np.ndarray, config) -> float:
     angles = [line[0] for line in horizontal_lines]
     rotation = geometry.binned_mode(angles, bins=bins, range=(-deviation, deviation))
     return rotation
+
