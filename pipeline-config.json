@@ -2,6 +2,7 @@
   "workflows": "workflows.json",
   "formats": "formats.json",
   "columns": {
+    "todo": "probably delete this section",
     "canny_aperture": 5,
     "canny_max": 150,
     "canny_min": 100,
@@ -15,6 +16,7 @@
     "merge": "mean"
   },
   "rows": {
+    "todo": "probably delete this section",
     "canny_aperture": 5,
     "canny_min": 53,
     "canny_max": 255,
@@ -41,11 +43,15 @@
     "deviation": 2
   },
   "margin_detection": {
+    "todo": "update from notebook",
     "left_right_limit": 0.20,
     "top_bottom_limit": 0.15,
     "left_right_test": 0.10,
     "smoothing_window": 10,
     "black_limit": 0.75,
     "gradient_cutoff": 5
+  },
+  "registration": {
+    "todo": "copy values from notebook"
   }
 }
