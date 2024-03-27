@@ -419,7 +419,10 @@ def get_lines_for_registration(image: np.ndarray, config: dict, cutoffs: tuple) 
     return new_image
 
 
-def adjust_to_template(image: np.ndarray, template: np.ndarray, config: dict) -> np.ndarray:
+def adjust_muster_to_template(image: np.ndarray, template: np.ndarray, config: dict) -> np.ndarray:
+    """
+    Rotate the image; erase the margins; detect H and V lines and shift to match the template
+    """
     modified_image = rotate_correct(image, config)
     modified_image, cutoffs = erase_margins(modified_image, config)
     # cutoffs (left, right, top, bottom)
@@ -438,5 +441,50 @@ def adjust_to_template(image: np.ndarray, template: np.ndarray, config: dict) ->
     # https://scikit-image.org/docs/stable/api/skimage.registration.html#skimage.registration.phase_cross_correlation
     shifted_image = ndimage.shift(modified_image, shift)
     return shifted_image
+
+
+def get_cell_adjustments(workflow, workflows: dict):
+    """
+    Get the cell expansions from the workflow file
+    """
+    adjustments = workflows[workflow].get('extras', dict())
+    left = adjustments.get('left', 0)
+    right = adjustments.get('right', 0)
+    top = adjustments.get('top', 0)
+    bottom = adjustments.get('bottom', 0)
+    return left, right, top, bottom
+
+
+def adjust_cell(coordinates: tuple, workflow, workflows: dict):
+    """
+    Adjust the cell boundaries according to the workflow
+    """
+    left, right, top, bottom = coordinates
+    width = right - left
+    height = bottom - top
+    left_adj, right_adj, top_adj, bottom_adj = get_cell_adjustments(workflow, workflows)
+    # 0 do nothing
+    # float is a proportion
+    # 1 up is number of pixels
+    if 0 < left_adj < 1:
+        left = left - round(left_adj * width)
+    elif 1 <= left_adj:
+        left = left - left_adj
+    if 0 < right_adj < 1:
+        right = right + round(right_adj * width)
+    elif 1 <= right_adj:
+        right = right + right_adj
+    if 0 < top_adj < 1:
+        top = top - round(top_adj * height)
+    elif 1 <= top_adj:
+        top = top - top_adj
+    if 0 < bottom_adj < 1:
+        bottom = bottom + round(bottom_adj * height)
+    elif 1 <= bottom_adj:
+        bottom = bottom + bottom_adj
+    return left, right, top, bottom
+
+
+
 
 

@@ -1,19 +1,32 @@
 {
   "21955": {
     "description": "Names",
-    "numeric": false
+    "numeric": false,
+    "extra": {
+      "bottom": 0.4
+    }
   },
   "21969": {
     "description": "Ratings",
-    "numeric": false
+    "numeric": false,
+    "extra": {
+      "left": 5,
+      "right": 5
+    }
   },
   "21986": {
     "description": "Where Born",
-    "numeric": false
+    "numeric": false,
+    "extra": {
+      "bottom": 0.4
+    }
   },
   "21987": {
     "description": "Occupation",
-    "numeric": false
+    "numeric": false,
+    "extra": {
+      "bottom": 0.4
+    }
   },
   "22014": {
     "description": "Age",
@@ -21,19 +34,33 @@
   },
   "22015": {
     "description": "Where Enlisted",
-    "numeric": false
+    "numeric": false,
+    "extra": {
+      "bottom": 0.4
+    }
   },
   "22016": {
     "description": "Date of Enlistment",
-    "numeric": false
+    "numeric": false,
+    "extra": {
+      "bottom": 0.3
+    }
   },
   "22031": {
     "description": "Ship's Number",
-    "numeric": true
+    "numeric": true,
+    "extra": {
+      "left": 5,
+      "right": 5
+    }
   },
   "22038": {
     "description": "Term of Enlistment",
-    "numeric": true
+    "numeric": true,
+    "extra": {
+      "left": 5,
+      "right": 5
+    }
   },
   "22039": {
     "description": "Remarks",
@@ -42,10 +69,19 @@
   },
   "22044": {
     "description": "Eyes, Hair & Complexion",
-    "numeric": false
+    "numeric": false,
+    "extra": {
+      "left": 5,
+      "right": 5,
+      "bottom": 0.4
+    }
   },
   "22045": {
     "description": "Height",
-    "numeric": true
+    "numeric": true,
+    "extra": {
+      "left": 5,
+      "right": 5
+    }
   }
 }
