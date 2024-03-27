@@ -1,6 +1,7 @@
 # library file
-
+import json
 import logging
+import os.path
 
 import cv2
 import numpy as np
@@ -24,8 +25,8 @@ def process_muster_sheet(input_jpg_file, image_metadata, output_dir, config, wor
     """
     logging.info(f'Output to {output_dir}')
     logging.info(f'Reading image from {input_jpg_file}')
-    muster_date = image_metadata.get('muster_date', 'unknown')
     format_type = image_metadata.get('format_type', '2')
+    output_prefix = os.path.splitext(os.path.basename(input_jpg_file))[0]
 
     image_raw = utilities.safe_imread(input_jpg_file, cv2.IMREAD_GRAYSCALE,
                                       exception_if_missing=exception_if_missing)
@@ -33,13 +34,17 @@ def process_muster_sheet(input_jpg_file, image_metadata, output_dir, config, wor
     template_image = template['image']
 
     registered_image = geometry.adjust_muster_to_template(image_raw, template_image, config)
-    for cell in template['cells']:
+    for sequence, cell in enumerate(template['cells']):
         wf_id = cell['workflow']
         model = workflows[wf_id]['model']
         threshold = workflows[wf_id]['confidence']
         cell_result = process_cell(registered_image, cell, model, threshold)
-
-    utilities.write_control_file(input_jpg_file, output_dir)
+        cell_result.update(image_metadata)
+        output_filename = os.path.join(output_dir,
+                                       f'{output_prefix}_{sequence:04d}.json')
+        print(f'Writing {output_filename}')
+        with open(output_filename, 'w') as f:
+            json.dump(cell_result, f)
     return
 
 
