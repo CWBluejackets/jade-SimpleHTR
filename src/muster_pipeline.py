@@ -4,11 +4,11 @@ import argparse
 import glob
 import itertools
 import json
-import logging
 import os.path
 from datetime import datetime
 
 from pipeline import sheet_division
+from pipeline.metadata_handling import Metadata
 
 HERE = os.path.dirname(os.path.realpath(__file__))
 DEFAULT_CONFIG_FILE = os.path.join(HERE, 'config.json')
@@ -48,20 +48,6 @@ if __name__ == "__main__":
     with open(options.config_file, 'r') as f:
         config = json.load(f)
         config['verbose'] = options.verbose
-        log_directory = config.get('log_directory')
-
-        if log_directory:
-            timestamp = datetime.now().isoformat(timespec='seconds')
-            logfile = os.path.join(config['log_directory'], f'{timestamp}_create.log')
-            print(f'Logfile {logfile}')
-            logging.basicConfig(filename=logfile, level=logging.INFO,
-                                format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-        else:
-            print(f'Log stdout')
-            logging.basicConfig(level=logging.INFO,
-                                format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-
-        # TODO how to pass logging options to sheet_division.py?
 
     workflow_file = os.path.join(os.path.dirname(options.config_file),
                                  config['workflows'])
@@ -75,9 +61,10 @@ if __name__ == "__main__":
     with open(workflow_file, 'r') as f:
         formats = json.load(f)
 
-    metadata_file = os.path.join(os.path.dirname(options.config_file),
-                                 config)
-
+    metadata_file = os.path.join(os.path.dirname(options.location_file),
+                                 locations['metadata_file'])
+    print(f'Loading metadata from {metadata_file}')
+    all_metadata = Metadata(metadata_file)
 
     # output of this program is PNGs and control files
     output_dir = os.path.join(os.path.dirname(options.locations_file), locations['png_directory'])
@@ -99,6 +86,8 @@ if __name__ == "__main__":
     exception_if_missing = locations['img_file_exception']
 
     for input_file in input_files:
-        logging.info(f'Processing {input_file}')
-        image_metadata = get_metadata(input_file)
-        sheet_division.process_muster_sheet(input_file, image_metadata, output_dir, config, workflows, formats)
+        print(f'Processing {input_file}')
+        image_metadata = all_metadata.get_metadata(input_file)
+        sheet_division.process_muster_sheet(input_file, image_metadata, output_dir, config, workflows,
+                                            formats, exception_if_missing)
+
