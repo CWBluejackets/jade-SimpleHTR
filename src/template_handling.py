@@ -95,8 +95,8 @@ def add_template_info(specification: dict, template_directory, workflows):
             workflow_ends[workflow].add(column['end'])
     for workflow in workflow_starts.keys():
         column = {'workflow': workflow,
-                  'start': min(workflow_starts),
-                  'end': max(workflow_ends)}
+                  'start': min(workflow_starts[workflow]),
+                  'end': max(workflow_ends[workflow])}
         output_columns.append(column)
     specification['output_columns'] = output_columns
     generate_cells(specification, workflows)
@@ -112,7 +112,7 @@ def generate_cells(specification: dict, workflows: dict):
         right = column['end']
         width = right - left
         # 0 do nothing
-        # float is a proportion of height or width
+        # 0.0 < ADJ < 1.0 is a proportion of height or width
         # 1 up is number of pixels
         if 0 < left_adj < 1:
             left = left - round(left_adj * width)
