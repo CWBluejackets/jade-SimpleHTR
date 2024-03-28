@@ -52,8 +52,8 @@ def process_muster_sheet(input_jpg_file, image_metadata, output_dir, corrections
         print(f'Writing {output_filename}')
         # some of the stuff in cell_result is not json serializable e.g., np.float32
         with open(output_filename, 'w') as f:
-            json.dump(cell_result, f, cls=NumpyJsonEncoder)
-        if config.debug:
+            json.dump(cell_result, f, cls=NumpyJsonEncoder, indent=1)
+        if config['debug']:
             cell_image_filename = os.path.join(output_dir,
                                           f'{output_prefix}_{sequence:04d}.png')
             print(f'Writing {cell_image_filename}')
@@ -104,7 +104,7 @@ def safe_imread(img_path, cv2_flags, exception_if_missing=False):
 
 class NumpyJsonEncoder(json.JSONEncoder):
     # https://stackoverflow.com/questions/27050108/convert-numpy-type-to-python
-
+    # custom encoder to get numpy types through
     def default(self, obj):
         if isinstance(obj, np.integer):
             return int(obj)

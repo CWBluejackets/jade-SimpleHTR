@@ -56,6 +56,7 @@ if __name__ == "__main__":
     with open(options.config_file, 'r') as f:
         config = json.load(f)
         config['verbose'] = options.verbose
+        config['debug'] = options.debug
 
     # workflow specifications
     workflow_file = os.path.join(os.path.dirname(options.config_file),
