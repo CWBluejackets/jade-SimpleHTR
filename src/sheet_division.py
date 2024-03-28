@@ -9,12 +9,13 @@ import geometry
 from application import TrainedModel
 
 
-def process_muster_sheet(input_jpg_file, image_metadata, output_dir, config, workflows, templates,
-                         exception_if_missing):
+def process_muster_sheet(input_jpg_file, image_metadata, output_dir, corrections_dir,
+                         config, workflows, templates, exception_if_missing):
     """
     Process sheet...
     :param image_metadata:
-    :param output_dir: directory for PNGs and control files
+    :param output_dir: directory for output files
+    :param corrections_dir: directory for corrections for Zooniverse
     :param templates: template specifications
     :param input_jpg_file: JPG filename
     :param config: general configuration

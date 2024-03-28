@@ -94,7 +94,8 @@ if __name__ == "__main__":
     all_metadata = Metadata(metadata_file)
 
     # output of this program is PNGs and control files
-    output_dir = os.path.join(os.path.dirname(options.locations_file), locations['png_directory'])
+    output_dir = os.path.join(os.path.dirname(options.locations_file), locations['output_directory'])
+    corrections_dir = os.path.join(os.path.dirname(options.locations_file), locations['corrections_directory'])
 
     # Use options.input_location if specified; otherwise fall back to config file;
     # options.input_location can be a single JPG or a directory containing them
@@ -115,5 +116,7 @@ if __name__ == "__main__":
     for input_file in input_files:
         print(f'Processing {input_file}')
         image_metadata = all_metadata.get_metadata(input_file)
-        sheet_division.process_muster_sheet(input_file, image_metadata, output_dir, config, workflows,
+        sheet_division.process_muster_sheet(input_file, image_metadata,
+                                            output_dir, corrections_dir,
+                                            config, workflows,
                                             templates, exception_if_missing)
