@@ -5,5 +5,5 @@
   "img_file_exception": false,
   "metadata_file": "path/to/Master_Sheet_Entry_Log.csv",
   "models_directory": "path/to/models",
-  "model_mapping": "workflow-models.json"
+  "model_mapping": "pipeline-models.json"
 }
