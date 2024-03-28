@@ -47,8 +47,8 @@ if __name__ == "__main__":
     options = oparser.parse_args()
 
     # machine-dependent configuration (directory and some file locations)
-    print(f'Loading {options.location_file}')
-    with open(options.location_file, 'r') as f:
+    print(f'Loading {options.locations_file}')
+    with open(options.locations_file, 'r') as f:
         locations = json.load(f)
 
     # machine-independent configuration (parameters)
@@ -90,7 +90,7 @@ if __name__ == "__main__":
     for key, specification in templates.items():
         template_handling.add_template_info(specification, templates_directory, workflows)
 
-    metadata_file = os.path.join(os.path.dirname(options.location_file),
+    metadata_file = os.path.join(os.path.dirname(options.locations_file),
                                  locations['metadata_file'])
     print(f'Loading metadata from {metadata_file}')
     all_metadata = Metadata(metadata_file)
