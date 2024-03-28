@@ -67,6 +67,7 @@ def process_cell(image: np.ndarray, cell, model, threshold: float):
     cell_output = {'threshold': threshold}
     cell_output.update(cell)
     cell_image = image[cell['top']: cell['bottom'] + 1, cell['left']: cell['right'] + 1]
+    print(f'Cell shape {cell_image.shape}')
     text, confidence = model.apply(cell_image)
     cell_output['text'] = text
     cell_output['confidence'] = confidence
