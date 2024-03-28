@@ -53,7 +53,7 @@ def process_muster_sheet(input_jpg_file, image_metadata, output_dir, corrections
         print(f'Writing {output_filename}')
         # some of the stuff in cell_result is not json serializable e.g., np.float32
         with open(output_filename, 'w') as f:
-            json.dump(cell_result, f, cls=NumpyJsonEncoder, indent=1)
+            json.dump(cell_result, f, cls=NumpyJsonEncoder, indent=1, sort_keys=True)
         if config['debug']:
             cell_image_filename = os.path.join(output_dir,
                                           f'{output_prefix}_{sequence:04d}.png')
