@@ -6,6 +6,7 @@ import cv2
 import numpy as np
 
 import geometry
+from application import TrainedModel
 
 
 def process_muster_sheet(input_jpg_file, image_metadata, output_dir, config, workflows, templates,
@@ -32,10 +33,16 @@ def process_muster_sheet(input_jpg_file, image_metadata, output_dir, config, wor
     template_image = template['image']
 
     registered_image = geometry.adjust_muster_to_template(image_raw, template_image, config)
+    previous_workflow_id = None
+    model = None
     for sequence, cell in enumerate(template['cells']):
-        wf_id = cell['workflow']
-        model = workflows[wf_id]['model']
-        threshold = workflows[wf_id]['confidence']
+        workflow_id = cell['workflow']
+        if workflow_id != previous_workflow_id:
+            model_subdirectory = workflows[workflow_id]['model_location']
+            print(f'Loading model from {model_subdirectory} for {workflow_id}')
+            model = TrainedModel(model_subdirectory)
+
+        threshold = workflows[workflow_id]['confidence']
         cell_result, cell_image = process_cell(registered_image, cell, model, threshold)
         cell_result.update(image_metadata)
         output_filename = os.path.join(output_dir,

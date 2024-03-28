@@ -75,9 +75,7 @@ if __name__ == "__main__":
     for workflow_str, subdirectory in model_mapping.items():
         workflow_id = int(workflow_str)
         model_subdirectory = os.path.join(models_directory, subdirectory)
-        print(f'Loading model from {model_subdirectory}')
-        model = TrainedModel(model_subdirectory)
-        workflows[workflow_id]['model'] = model
+        workflows[workflow_id]['model_location'] = model_subdirectory
 
     templates_file = os.path.join(os.path.dirname(options.config_file),
                                   config['templates'])
