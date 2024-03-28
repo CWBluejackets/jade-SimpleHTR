@@ -1,6 +1,5 @@
 # library file
 import json
-import logging
 import os.path
 
 import cv2
@@ -23,13 +22,13 @@ def process_muster_sheet(input_jpg_file, image_metadata, output_dir, config, wor
     :param exception_if_missing: throw exception for missing file
     :return:
     """
-    logging.info(f'Output to {output_dir}')
-    logging.info(f'Reading image from {input_jpg_file}')
+    print(f'Output to {output_dir}')
+    print(f'Reading image from {input_jpg_file}')
     format_type = image_metadata.get('format_type', '2')
     output_prefix = os.path.splitext(os.path.basename(input_jpg_file))[0]
 
-    image_raw = utilities.safe_imread(input_jpg_file, cv2.IMREAD_GRAYSCALE,
-                                      exception_if_missing=exception_if_missing)
+    image_raw = safe_imread(input_jpg_file, cv2.IMREAD_GRAYSCALE,
+                            exception_if_missing=exception_if_missing)
     template = templates[format_type]
     template_image = template['image']
 
@@ -46,10 +45,10 @@ def process_muster_sheet(input_jpg_file, image_metadata, output_dir, config, wor
         with open(output_filename, 'w') as f:
             json.dump(cell_result, f)
         if config.debug:
-            print(f'Writing {image_filename}')
-            image_filename = os.path.join(output_dir,
+            cell_image_filename = os.path.join(output_dir,
                                           f'{output_prefix}_{sequence:04d}.png')
-            cv2.imwrite(image_filename, cell_image)
+            print(f'Writing {cell_image_filename}')
+            cv2.imwrite(cell_image_filename, cell_image)
 
         # TODO generate image for checking if cell['confidence'] < threshold
         # TODO also generate metadata for Pantoptes and for reattaching
@@ -60,10 +59,34 @@ def process_muster_sheet(input_jpg_file, image_metadata, output_dir, config, wor
 def process_cell(image: np.ndarray, cell, model, threshold: float):
     cell_output = {'threshold': threshold}
     cell_output.update(cell)
-    cell_image = image[cell['top']: cell['bottom']+1, cell['left']: cell['right']+1]
+    cell_image = image[cell['top']: cell['bottom'] + 1, cell['left']: cell['right'] + 1]
     text, confidence = model.apply(cell_image)
     cell_output['text'] = text
     cell_output['confidence'] = confidence
     return cell_output, cell_image
 
 
+def write_control_file(input_path: str, output_directory: str, data: dict):
+    # not used yet
+    input_name = os.path.basename(input_path)
+    stem = os.path.splitext(input_name)[0]
+    output_path = os.path.join(output_directory, stem + '.json')
+    data['source'] = {'path': input_path,
+                      'filename': input_name}
+    print(f'Writing {output_path}')
+    with open(output_path, 'w') as f:
+        json.dump(data, f, indent=2, sort_keys=True)
+    return
+
+
+def safe_imread(img_path, cv2_flags, exception_if_missing=False):
+    if os.path.exists(img_path):
+        result = cv2.imread(img_path, cv2_flags)
+    else:
+        result = None
+        message = f'File {img_path} is missing!'
+        if exception_if_missing:
+            raise FileNotFoundError(message)
+        else:
+            print(message)
+    return result
