@@ -16,7 +16,7 @@ def get_image_filename(muster_info):
     sheet = muster_info["sheet"]
     vessel = muster_info["vessel"].lower()
     vessel = WHITESPACE.sub('_', vessel)
-    nst = 'NST' if muster_info['non_standard'] else ''
+    nst = '.NST' if muster_info['non_standard'] else ''
     return f"{volume:03d}_{vessel}_{sheet:04d}{nst}.JPG"
 
 
