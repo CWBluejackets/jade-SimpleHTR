@@ -16,7 +16,8 @@ def get_image_filename(muster_info):
     sheet = muster_info["sheet"]
     vessel = muster_info["vessel"].lower()
     vessel = WHITESPACE.sub('_', vessel)
-    return f"{volume:03d}_{vessel}_{sheet:04d}.jpg"
+    nst = 'NST' if muster_info['non_standard'] else ''
+    return f"{volume:03d}_{vessel}_{sheet:04d}{nst}.JPG"
 
 
 def yes_boolean(yesno: str) -> bool:
