@@ -237,8 +237,9 @@ class Model:
         # evaluate model
         eval_res = self.sess.run(eval_list, feed_dict)
 
-        # word beam search decoder: decoding is done in C++ function compute()
-        decoded = self.decoder.compute(eval_res[0])
+        # TF decoders: decoding already done in TF graph
+        # including BestPath
+        decoded = eval_res[0]
 
         # map labels (numbers) to character string
         texts = self.decoder_output_to_text(decoded, num_batch_elements)
