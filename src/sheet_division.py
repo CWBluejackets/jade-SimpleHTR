@@ -43,6 +43,7 @@ def process_muster_sheet(input_jpg_file, image_metadata, output_dir, corrections
             model_subdirectory = workflows[workflow_id]['model_location']
             print(f'Loading model from {model_subdirectory} for {workflow_id}')
             model = TrainedModel(model_subdirectory)
+            previous_workflow_id = workflow_id
 
         threshold = workflows[workflow_id]['confidence']
         cell_result, cell_image = process_cell(registered_image, cell, model, threshold)
