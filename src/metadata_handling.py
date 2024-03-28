@@ -74,4 +74,3 @@ class Metadata:
     def get_metadata(self, image_path):
         image_file = os.path.basename(image_path)
         return self.metadata.get(image_file, None)
-

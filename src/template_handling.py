@@ -6,7 +6,7 @@ import cv2
 import numpy as np
 from statistics import median
 
-import utilities
+import sheet_division
 
 
 def find_lines(scanline: np.ndarray) -> List[int]:
@@ -70,7 +70,7 @@ def add_template_info(specification: dict, template_directory, workflows):
     form_file = os.path.join(template_directory, specification['template'])
     y_ref_line = specification['y_ref_line']
     print(f'Loading template image from {form_file}')
-    image = utilities.safe_imread(form_file, cv2.IMREAD_GRAYSCALE)
+    image = sheet_division.safe_imread(form_file, cv2.IMREAD_GRAYSCALE)
     # find the black column boundaries in the template
     column_lines, x_ref_line = get_columns(image, y_ref_line)
     columns_needed = len(specification['columns'])

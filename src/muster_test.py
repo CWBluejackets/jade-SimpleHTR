@@ -8,7 +8,7 @@ import os
 import cv2
 
 import muster_pipeline
-from pipeline import sheet_division
+import sheet_division
 
 
 def get_filename_stem(path):

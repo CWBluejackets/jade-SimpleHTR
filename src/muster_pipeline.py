@@ -6,9 +6,9 @@ import itertools
 import json
 import os.path
 
-from pipeline import sheet_division
-from pipeline import template_handling
-from pipeline.metadata_handling import Metadata
+import sheet_division
+import template_handling
+from metadata_handling import Metadata
 from application import TrainedModel
 
 HERE = os.path.dirname(os.path.realpath(__file__))

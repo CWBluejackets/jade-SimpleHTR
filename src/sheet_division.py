@@ -6,7 +6,6 @@ import cv2
 import numpy as np
 
 import geometry
-import utilities
 
 
 def process_muster_sheet(input_jpg_file, image_metadata, output_dir, config, workflows, templates,
