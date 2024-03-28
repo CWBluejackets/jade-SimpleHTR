@@ -80,7 +80,7 @@ if __name__ == "__main__":
     templates_file = os.path.join(os.path.dirname(options.config_file),
                                   config['templates'])
     templates_directory = os.path.join(os.path.dirname(options.config_file),
-                                       config['templates_directory'])
+                                       config['template_directory'])
     print(f'Loading {templates_file}')
     with open(templates_file, 'r') as f:
         templates = json.load(f)
