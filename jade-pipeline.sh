@@ -34,8 +34,8 @@ HTR_DIR="${HOME}/bluejackets/jade-SimpleHTR"
 # -m model subdirectory
 # -w wide_mode
 
-CONFIG_FILE="$(realpath pipeline-config.json)}"
-LOCATIONS_FILE="$(realpath locations-jade.json)}"
+CONFIG_FILE="$(realpath pipeline-config.json)"
+LOCATIONS_FILE="$(realpath locations-jade.json)"
 OPTIONS="-c  ${CONFIG_FILE}  -l ${LOCATIONS_FILE}"
 
 while getopts "vdi:" option
