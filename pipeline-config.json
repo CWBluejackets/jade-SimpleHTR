@@ -16,7 +16,7 @@
     "top_bottom_limit": 0.15,
     "left_right_test": 0.15,
     "smoothing_window": 10,
-    "black_limit": 0.75,
+    "black_limit": 0.75
   },
   "registration": {
     "canny_min": 53,
