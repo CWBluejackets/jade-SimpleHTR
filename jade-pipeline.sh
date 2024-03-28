@@ -65,7 +65,7 @@ echo "environment activated"
 echo
 cd "${HTR_DIR}/src" || exit 99
 
-COMMAND="python3 muster_pipeline.py ${OPTIONS} --img_list_file ${DATA} --model_dir ${MODEL_DIR} --output_file ${OUTPUT_FILE}"
+COMMAND="python3 muster_pipeline.py ${OPTIONS}"
 echo "${COMMAND}"
 echo
 ${COMMAND}
