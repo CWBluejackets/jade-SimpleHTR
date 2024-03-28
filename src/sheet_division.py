@@ -38,6 +38,7 @@ def process_muster_sheet(input_jpg_file, image_metadata, output_dir, corrections
     model = None
     for sequence, cell in enumerate(template['cells']):
         workflow_id = cell['workflow']
+        print(f'Cell info: {cell}')
         if workflow_id != previous_workflow_id:
             model_subdirectory = workflows[workflow_id]['model_location']
             print(f'Loading model from {model_subdirectory} for {workflow_id}')
