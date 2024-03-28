@@ -34,6 +34,11 @@ if __name__ == "__main__":
                          default=False,
                          help='verbose')
 
+    oparser.add_argument('-d', dest='debug',
+                         action='store_true',
+                         default=False,
+                         help='debug (save image files)')
+
     oparser.add_argument('-i', dest='input_location',
                          type=str, default=None,
                          metavar='FILE_OR_DIR',

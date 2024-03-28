@@ -38,15 +38,22 @@ def process_muster_sheet(input_jpg_file, image_metadata, output_dir, config, wor
         wf_id = cell['workflow']
         model = workflows[wf_id]['model']
         threshold = workflows[wf_id]['confidence']
-        cell_result = process_cell(registered_image, cell, model, threshold)
+        cell_result, cell_image = process_cell(registered_image, cell, model, threshold)
         cell_result.update(image_metadata)
         output_filename = os.path.join(output_dir,
                                        f'{output_prefix}_{sequence:04d}.json')
         print(f'Writing {output_filename}')
         with open(output_filename, 'w') as f:
             json.dump(cell_result, f)
+        if config.debug:
+            print(f'Writing {image_filename}')
+            image_filename = os.path.join(output_dir,
+                                          f'{output_prefix}_{sequence:04d}.png')
+            cv2.imwrite(image_filename, cell_image)
 
         # TODO generate image for checking if cell['confidence'] < threshold
+        # TODO also generate metadata for Pantoptes and for reattaching
+        # https://panoptes.docs.apiary.io/#
     return
 
 
@@ -57,6 +64,6 @@ def process_cell(image: np.ndarray, cell, model, threshold: float):
     text, confidence = model.apply(cell_image)
     cell_output['text'] = text
     cell_output['confidence'] = confidence
-    return cell_output
+    return cell_output, cell_image
 
 

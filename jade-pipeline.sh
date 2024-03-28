@@ -38,11 +38,16 @@ CONFIG_FILE="$(realpath pipeline-config.json)}"
 LOCATIONS_FILE="$(realpath locations-jade.json)}"
 OPTIONS="-c  ${CONFIG_FILE}  -l ${LOCATIONS_FILE}"
 
-while getopts "vi:" option
+while getopts "vdi:" option
 do
   case "${option}" in
     v)
+      # verbose (not actually used yet)
       OPTIONS="${OPTIONS} -v"
+      ;;
+    d)
+      # debug: store cell images with output
+      OPTIONS="${OPTIONS} -d"
       ;;
     i)
       echo "${OPTARG}"
