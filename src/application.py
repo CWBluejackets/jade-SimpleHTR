@@ -25,5 +25,5 @@ class TrainedModel:
     def apply(self, image: np.ndarray) -> Tuple[str, float]:
         image = self.preprocessor.process_img(image)
         batch = Batch([image], None, 1)
-        text, probability = self.model.infer_batch(batch, True)
-        return text, probability
+        texts, probabilities = self.model.infer_batch(batch, True)
+        return texts[0], probabilities[0]
