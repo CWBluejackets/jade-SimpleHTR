@@ -67,10 +67,10 @@ def add_template_info(specification: dict, template_directory, workflows):
     :param template_directory: location of the templates
     :param workflows: workflow specifications
     """
-    form_file = os.path.join(template_directory, specification['template'])
+    template_file = os.path.join(template_directory, specification['template'])
     y_ref_line = specification['y_ref_line']
-    print(f'Loading template image from {form_file}')
-    image = sheet_division.safe_imread(form_file, cv2.IMREAD_GRAYSCALE)
+    print(f'Loading template image from {template_file}')
+    image = sheet_division.safe_imread(template_file, cv2.IMREAD_GRAYSCALE)
     # find the black column boundaries in the template
     column_lines, x_ref_line = get_columns(image, y_ref_line)
     columns_needed = len(specification['columns'])
