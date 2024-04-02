@@ -91,8 +91,9 @@ if __name__ == "__main__":
 
     metadata_file = os.path.join(os.path.dirname(options.locations_file),
                                  locations['metadata_file'])
-    print(f'Loading metadata from {metadata_file}')
-    all_metadata = Metadata(metadata_file)
+    inventory_file = os.path.join(os.path.dirname(options.locations_file),
+                                  locations['inventory_file'])
+    all_metadata = Metadata(metadata_file, inventory_file)
 
     # output of this program is PNGs and control files
     output_dir = os.path.join(os.path.dirname(options.locations_file), locations['output_directory'])
