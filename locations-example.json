@@ -4,6 +4,7 @@
   "corrections_directory": "path/to/corrections",
   "img_file_exception": false,
   "metadata_file": "path/to/Master_Sheet_Entry_Log.csv",
+  "inventory_file": "path/to/Muster_Roll_Inventory.csv",
   "models_directory": "path/to/models",
   "model_mapping": "pipeline-models.json"
 }
