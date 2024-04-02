@@ -4,6 +4,7 @@ import re
 
 WHITESPACE = re.compile(r'\s+')
 INTEGER = re.compile(r'\d+')
+DOUBLE_INITIAL = re.compile(r'\b([a-z])\s*([a-z])\b')
 
 
 # columns:
@@ -13,6 +14,8 @@ INTEGER = re.compile(r'\d+')
 
 def normalize_vessel(raw_vessel: str) -> str:
     vessel = raw_vessel.strip().lower()
+    vessel = vessel.replace('.','')
+    vessel = DOUBLE_INITIAL.sub(r'\1\2', vessel)
     return WHITESPACE.sub('_', vessel)
 
 
@@ -58,6 +61,7 @@ class Metadata:
     def __init__(self, metadata_file, inventory_file):
         self.metadata = dict()
         self.inventory = dict()
+        self.vessel_mismatches = set()
         with open(inventory_file, "r") as f:
             print(f'Loading inventory from {inventory_file}')
             reader = csv.DictReader(f, restval='')
@@ -66,6 +70,8 @@ class Metadata:
             print(f'Loading metadata from {metadata_file}')
             reader = csv.DictReader(f, restval='')
             self.process_metadata(reader)
+        for vessel in sorted(self.vessel_mismatches):
+            print(f'Mismatched vessel: {vessel}')
         print(f'Loaded inventory ({len(self.inventory)}) and metadata ({len(self.metadata)})')
         return
 
@@ -119,6 +125,6 @@ class Metadata:
         try:
             result = self.inventory[(vessel, volume)]
         except KeyError:
-            print(f'NARA URL missing for {vessel} {volume}')
+            self.vessel_mismatches.add(vessel)
             result = '_UNKNOWN_'
         return result
