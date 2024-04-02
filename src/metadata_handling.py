@@ -53,7 +53,7 @@ class Metadata:
             print(f'Loading metadata from {metadata_file}')
             reader = csv.DictReader(f, restval='')
             self.process_reader(reader)
-        print('Loaded inventory and metadata')
+        print(f'Loaded inventory ({len(self.inventory)}) and metadata ({len(self.metadata)})')
         return
 
     def process_reader(self, reader: csv.DictReader):
