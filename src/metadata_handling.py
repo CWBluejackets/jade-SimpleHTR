@@ -2,9 +2,9 @@ import csv
 import os.path
 import re
 
-
 WHITESPACE = re.compile(r'\s+')
 INTEGER = re.compile(r'\d+')
+
 
 # columns:
 # "Ship name","ship#","volume#","sheet#","Muster Type","Alignment issue?",
@@ -40,6 +40,19 @@ def extract_number(type_name: str) -> str:
     return result
 
 
+def force_to_int(volume_str: str) -> int:
+    try:
+        result = int(volume_str)
+    except ValueError:
+        match = INTEGER.search(volume_str)
+        if match:
+            result = int(match.group(0))
+        else:
+            result = -1
+        print(f'Invalid int: {volume_str} -> {result}')
+    return result
+
+
 class Metadata:
 
     def __init__(self, metadata_file, inventory_file):
@@ -68,7 +81,7 @@ class Metadata:
             type_name = row['Muster Type']
             raw_vessel = row['Ship name']
             vessel = normalize_vessel(raw_vessel)
-            volume = int(row['volume#'])
+            volume = force_to_int(row['volume#'])
             nara_url = self.get_nara_url(vessel, volume)
             item = {"vessel_raw": raw_vessel,
                     "vessel": vessel,
@@ -92,7 +105,8 @@ class Metadata:
     def process_inventory(self, reader: csv.DictReader):
         for row in reader:
             vessel = normalize_vessel(row['Ship Name'])
-            volume = int(row['Volume'])
+            # Wabash 519A
+            volume = force_to_int(row['Volume'])
             nara_url = row['NARA URL']
             self.inventory[(vessel, volume)] = nara_url
         return
@@ -101,5 +115,5 @@ class Metadata:
         image_file = os.path.basename(image_path)
         return self.metadata.get(image_file, None)
 
-    def get_nara_url(self, vessel:str, volume:int) -> str:
+    def get_nara_url(self, vessel: str, volume: int) -> str:
         return self.inventory[(vessel, volume)]
