@@ -30,6 +30,10 @@ class Model:
         self.snap_ID = 0
         # forcing decoder type to BestPath for simplification
 
+        # reset the graph so we can load models one after the other
+        # https://stackoverflow.com/questions/65401120/what-is-mean-to-set-reuse-true-or-reuse-tf-auto-reuse-in-varscope
+        tf.compat.v1.reset_default_graph()
+
         # Whether to use normalization over a batch or a population
         self.is_train = tf.compat.v1.placeholder(tf.bool, name='is_train')
 
