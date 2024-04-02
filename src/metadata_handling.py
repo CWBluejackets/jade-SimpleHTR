@@ -76,12 +76,12 @@ class Metadata:
         return
 
     def process_metadata(self, reader: csv.DictReader):
-        muster_date = ''
+        muster_date_running = ''
         for row in reader:
             # if the muster date is not listed, use the previous one
             muster_date_specified = row['Muster date'].strip()
-            if not muster_date_specified:
-                muster_date = muster_date_specified
+            if muster_date_specified:
+                muster_date_running = muster_date_specified
             bad_alignment = yes_boolean(row['Alignment issue?'])
             non_standard = yes_boolean(row['Non-standard?'])
             type_name = row['Muster Type']
@@ -95,7 +95,7 @@ class Metadata:
                     "volume": volume,
                     "sheet": int(row['sheet#']),
                     "muster_date_specified": muster_date_specified,
-                    "muster_date": muster_date,
+                    "muster_date": muster_date_specified or muster_date_running,
                     "type_name": type_name,
                     "type": extract_number(type_name),
                     "bad_alignment": bad_alignment,

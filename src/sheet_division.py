@@ -41,7 +41,7 @@ def process_muster_sheet(input_jpg_file, image_metadata, output_dir, corrections
         print(f'Cell info: {cell}')
         if workflow_id != previous_workflow_id:
             model_subdirectory = workflows[workflow_id]['model_location']
-            print(f'Loading model from {model_subdirectory} for {workflow_id}')
+            print(f'Loading model from {model_subdirectory} for workflow {workflow_id}')
             model = TrainedModel(model_subdirectory)
             previous_workflow_id = workflow_id
 
