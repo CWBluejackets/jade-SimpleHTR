@@ -11,7 +11,7 @@ INTEGER = re.compile(r'\d+')
 #    "Non-standard?","Muster date","Notes","date"
 
 
-def normalize_vessel(raw_vessel: str) -> str
+def normalize_vessel(raw_vessel: str) -> str:
     vessel = raw_vessel.strip().lower()
     return WHITESPACE.sub('_', vessel)
 
