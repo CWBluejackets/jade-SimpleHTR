@@ -65,11 +65,11 @@ class Metadata:
         with open(metadata_file, "r") as f:
             print(f'Loading metadata from {metadata_file}')
             reader = csv.DictReader(f, restval='')
-            self.process_reader(reader)
+            self.process_metadata(reader)
         print(f'Loaded inventory ({len(self.inventory)}) and metadata ({len(self.metadata)})')
         return
 
-    def process_reader(self, reader: csv.DictReader):
+    def process_metadata(self, reader: csv.DictReader):
         muster_date = ''
         for row in reader:
             # if the muster date is not listed, use the previous one
@@ -116,4 +116,9 @@ class Metadata:
         return self.metadata.get(image_file, None)
 
     def get_nara_url(self, vessel: str, volume: int) -> str:
-        return self.inventory[(vessel, volume)]
+        try:
+            result = self.inventory[(vessel, volume)]
+        except KeyError:
+            print(f'NARA URL missing for {vessel} {volume}')
+            result = '_UNKNOWN_'
+        return result
