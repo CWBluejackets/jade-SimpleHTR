@@ -444,6 +444,11 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray, config: d
     return shifted_image
 
 
-
+def superimpose(shifted_image: np.ndarray, form: np.ndarray) -> np.ndarray:
+    if shifted_image.shape != form.shape:
+        raise ValueError(f'Not matched: {shifted_image.shape} {form.shape}')
+    output = cv2.cvtColor(shifted_image, cv2.COLOR_GRAY2RGB)
+    output[np.where(form == 0)] = BLUE
+    return output
 
 
