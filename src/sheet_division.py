@@ -32,8 +32,11 @@ def process_muster_sheet(input_jpg_file, image_metadata, output_dir, corrections
                             exception_if_missing=exception_if_missing)
     template = templates[format_type]
     template_image = template['image']
+    print(f'Input size {image_raw.shape}; template size {template_image.shape}')
+    image_resized = geometry.resize(image_raw, template_image)
+    print(f'Resized input size {image_resized.shape}')
+    registered_image = geometry.adjust_muster_to_template(image_resized, template_image, config)
 
-    registered_image = geometry.adjust_muster_to_template(image_raw, template_image, config)
     if config['debug']:
         # superimpose the template in blue and save it for inspection
         registration_path = os.path.join(output_dir,
