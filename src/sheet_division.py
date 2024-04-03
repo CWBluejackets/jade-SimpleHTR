@@ -34,6 +34,14 @@ def process_muster_sheet(input_jpg_file, image_metadata, output_dir, corrections
     template_image = template['image']
 
     registered_image = geometry.adjust_muster_to_template(image_raw, template_image, config)
+    if config['debug']:
+        # superimpose the template in blue and save it for inspection
+        registration_path = os.path.join(output_dir,
+                                         f'{output_prefix}_registration.png')
+        registration_debug = geometry.superimpose(registered_image, template_image)
+        print(f'Writing {registration_path}')
+        cv2.imwrite(registration_path, registration_debug)
+
     previous_workflow_id = None
     model = None
     for sequence, cell in enumerate(template['cells']):
@@ -56,7 +64,7 @@ def process_muster_sheet(input_jpg_file, image_metadata, output_dir, corrections
             json.dump(cell_result, f, cls=NumpyJsonEncoder, indent=1, sort_keys=True)
         if config['debug']:
             cell_image_filename = os.path.join(output_dir,
-                                          f'{output_prefix}_{sequence:04d}.png')
+                                               f'{output_prefix}_{sequence:04d}.png')
             print(f'Writing {cell_image_filename}')
             cv2.imwrite(cell_image_filename, cell_image)
 
