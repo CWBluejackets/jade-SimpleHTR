@@ -151,7 +151,7 @@ def most_frequent_values(values, interval, end, count):
     """
     bins = range(0, end, interval)
     counts, edges = np.histogram(values, bins=bins)
-    middles = [round((edges[i] + edges[i+1])/2) for i in range(len(edges) - 1)]
+    middles = [round((edges[i] + edges[i + 1]) / 2) for i in range(len(edges) - 1)]
     d = {middles[i]: counts[i] for i in range(len(counts)) if (counts[i] > 0)}
     c = Counter(d)
     return c.most_common(count)
@@ -390,9 +390,11 @@ def keep_horizontal_or_vertical(measured_line, tolerance, cutoffs=None):
     bottom = max(measured_line[2][1], measured_line[2][3])
     if not cutoffs:
         result = is_nearly_vertical(angle, tolerance) or is_nearly_horizontal(angle, tolerance)
-    elif is_nearly_vertical(angle, tolerance) and (cutoffs[0] < x < cutoffs[1]) and (top > cutoffs[2]) and (bottom < cutoffs[3]):
+    elif is_nearly_vertical(angle, tolerance) and (cutoffs[0] < x < cutoffs[1]) and (top > cutoffs[2]) and (
+            bottom < cutoffs[3]):
         result = True
-    elif is_nearly_horizontal(angle, tolerance) and (cutoffs[2] < y < cutoffs[3]) and (left > cutoffs[0]) and (right < cutoffs[1]):
+    elif is_nearly_horizontal(angle, tolerance) and (cutoffs[2] < y < cutoffs[3]) and (left > cutoffs[0]) and (
+            right < cutoffs[1]):
         result = True
     else:
         result = False
@@ -452,3 +454,37 @@ def superimpose(shifted_image: np.ndarray, form: np.ndarray) -> np.ndarray:
     return output
 
 
+def resize_image(source: np.ndarray, to_match: np.ndarray) -> np.ndarray:
+    # typically (3744, 5616)
+    if source.shape == to_match.shape:
+        return source
+    # TODO
+    output = source
+    target_height, target_width = to_match.shape
+    source_height, source_width = source.shape
+    # Crop the image by deleting from the ends;
+    # expand the image by duplicating the right or bottom line
+    if source_height > target_height:
+        i = round((source_height - target_height) / 2)
+        j = i + target_height
+        output = output[i:j, :]
+    elif source_height < target_height:
+        output = dup_rows(output, target_height - source_height)
+    if source_width > target_width:
+        i = round((source_width - target_width) / 2)
+        j = i + target_width
+        output = output[:, i:j]
+    elif source_width < target_width:
+        output = dup_cols(output, target_width - source_width)
+    return output
+
+
+# https://stackoverflow.com/questions/43870647/how-to-duplicate-a-row-or-column-in-a-numpy-array
+def dup_rows(a, number=1):
+    index = a.shape[0] - 1
+    return np.insert(a, [index + 1] * number, a[index], axis=0)
+
+
+def dup_cols(a, number=1):
+    index = a.shape[1] - 1
+    return np.insert(a, [index + 1] * number, a[:, [index]], axis=1)
