@@ -33,7 +33,7 @@ def process_muster_sheet(input_jpg_file, image_metadata, output_dir, corrections
     template = templates[format_type]
     template_image = template['image']
     print(f'Input size {image_raw.shape}; template size {template_image.shape}')
-    image_resized = geometry.resize(image_raw, template_image)
+    image_resized = geometry.resize_image(image_raw, template_image)
     print(f'Resized input size {image_resized.shape}')
     registered_image = geometry.adjust_muster_to_template(image_resized, template_image, config)
 
