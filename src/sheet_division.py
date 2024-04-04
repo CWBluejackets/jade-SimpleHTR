@@ -65,6 +65,8 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, corre
             save_cell_for_correction(corrections_dir, output_prefix, sequence, cell_spec, cell_result, registered_image)
             # TODO also generate metadata for Pantoptes and for reattaching
             # https://panoptes.docs.apiary.io/#
+
+        # TODO assemble and save a CSV for the whole sheet
     return
 
 
