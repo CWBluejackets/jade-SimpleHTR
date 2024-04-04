@@ -452,6 +452,12 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray, config: d
 
 
 def superimpose(shifted_image: np.ndarray, form: np.ndarray) -> np.ndarray:
+    """
+    Superimpose the form in blue on the image
+    :param shifted_image: grayscale image
+    :param form: template to add
+    :return: merged RGB image
+    """
     if shifted_image.shape != form.shape:
         raise ValueError(f'Not matched: {shifted_image.shape} {form.shape}')
     output = cv2.cvtColor(shifted_image, cv2.COLOR_GRAY2RGB)
@@ -459,16 +465,18 @@ def superimpose(shifted_image: np.ndarray, form: np.ndarray) -> np.ndarray:
     return output
 
 
-def generate_image_for_correction(image: np.ndarray, cell, ml_output: str):
-    inner_left, inner_right, inner_top, inner_bottom = cell['left'], cell['right'], cell['top'], cell['bottom']
-    outer_left, outer_right = cell['expanded']['left'], cell['expanded']['right']
-    outer_top, outer_bottom = cell['expanded']['top'], cell['expanded']['bottom']
+def generate_image_for_correction(image: np.ndarray, cell_spec, ml_output: str):
+    inner_left, inner_right = cell_spec['left'], cell_spec['right']
+    inner_top, inner_bottom = cell_spec['top'], cell_spec['bottom']
+    outer_left, outer_right = cell_spec['expanded']['left'], cell_spec['expanded']['right']
+    outer_top, outer_bottom = cell_spec['expanded']['top'], cell_spec['expanded']['bottom']
     extracted_image = image[outer_top: outer_bottom, outer_left: outer_right]
     # calculate text size and expand image as needed
     # https://lindevs.com/get-text-size-using-opencv
     (text_width, text_height), _ = cv2.getTextSize(ml_output, FONT, FONT_SCALE, FONT_THICKNESS)
     text_width += 10
     # add white strip at the bottom to accommodate the text
+    # https://stackoverflow.com/questions/3881453/numpy-add-row-to-array
     add_height = text_height * 2
     add_bottom = np.full((add_height, extracted_image.shape[1]), 255, dtype=extracted_image.dtype)
     extracted_image = np.vstack((extracted_image, add_bottom))
