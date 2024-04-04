@@ -61,7 +61,7 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, corre
         cell_result['input'] = image_metadata.copy()
         save_processed_cell(config, output_prefix, sequence, cell_result, output_dir, cell_image)
 
-        if cell_result['confidence'] < config['threshold']:
+        if cell_result['confidence'] < cell_result['threshold']:
             save_cell_for_correction(corrections_dir, output_prefix, sequence, cell_spec, cell_result, registered_image)
             # TODO also generate metadata for Pantoptes and for reattaching
             # https://panoptes.docs.apiary.io/#
