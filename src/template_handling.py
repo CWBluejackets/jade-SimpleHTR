@@ -117,7 +117,7 @@ def generate_cells(specification: dict, workflows: dict):
         left_adj, right_adj, top_adj, bottom_adj = get_cell_adjustments(workflow, workflows)
         left = column_details['start']
         right = column_details['end']
-        expanded_left, expanded_right = get_expanded_x_values(column_number, column_details)
+        expanded_left, expanded_right = get_expanded_x_values(column_number, specification['output_columns'])
         width = right - left
         # 0 do nothing
         # 0.0 < ADJ < 1.0 is a proportion of height or width
