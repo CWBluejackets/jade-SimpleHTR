@@ -1,6 +1,6 @@
 import os
 from collections import defaultdict
-from typing import List
+from typing import List, Tuple
 
 import cv2
 import numpy as np
@@ -106,12 +106,18 @@ def add_template_info(specification: dict, template_directory, workflows):
 
 
 def generate_cells(specification: dict, workflows: dict):
+    """
+    Add all the individual cell details to the template specification.
+    :param specification: the template to be updated
+    :param workflows: workflow specifications
+    """
     cells = []
-    for column_number, column in enumerate(specification['output_columns']):
-        workflow = column['workflow']
+    for column_number, column_details in enumerate(specification['output_columns']):
+        workflow = column_details['workflow']
         left_adj, right_adj, top_adj, bottom_adj = get_cell_adjustments(workflow, workflows)
-        left = column['start']
-        right = column['end']
+        left = column_details['start']
+        right = column_details['end']
+        expanded_left, expanded_right = get_expanded_x_values(column_number, column_details)
         width = right - left
         # 0 do nothing
         # 0.0 < ADJ < 1.0 is a proportion of height or width
@@ -126,6 +132,7 @@ def generate_cells(specification: dict, workflows: dict):
             right = right + right_adj
         row_boundaries = specification['row_lines']
         for row_number, (top, bottom) in enumerate(zip(row_boundaries[:-1], row_boundaries[1:])):
+            expanded_top, expanded_bottom = get_expanded_y_values(row_number, row_boundaries)
             height = bottom - top
             if 0 < top_adj < 1:
                 top = top - round(top_adj * height)
@@ -141,7 +148,13 @@ def generate_cells(specification: dict, workflows: dict):
                     "left": left,
                     "right": right,
                     "top": top,
-                    "bottom": bottom}
+                    "bottom": bottom,
+                    "expanded": {"top": expanded_top,
+                                 "bottom": expanded_bottom,
+                                 "left": expanded_left,
+                                 "right": expanded_right
+                                 }
+                    }
             cells.append(cell)
     specification['cells'] = cells
     return
@@ -149,7 +162,8 @@ def generate_cells(specification: dict, workflows: dict):
 
 def get_cell_adjustments(workflow, workflows: dict):
     """
-    Get the cell expansions from the workflow file
+    Get the cell expansions from the workflow file. Use 0 wherever
+    nothing is specified.
     """
     adjustments = workflows[workflow].get('extras', dict())
     left = adjustments.get('left', 0)
@@ -158,3 +172,38 @@ def get_cell_adjustments(workflow, workflows: dict):
     bottom = adjustments.get('bottom', 0)
     return left, right, top, bottom
 
+
+def get_expanded_x_values(column_index: int, columns_info) -> Tuple[int, int]:
+    """
+    Get x-values to cover one column left and right of the specified one, or
+    just some pixels at the ends.
+    """
+    if column_index == 0:
+        left = columns_info[column_index]['start'] - 100
+    else:
+        left = columns_info[column_index - 1]['start']
+    if column_index == len(columns_info) - 1:
+        right = columns_info[column_index]['end'] + 100
+    else:
+        right = columns_info[column_index + 1]['end']
+    return left, right
+
+
+def get_expanded_y_values(row_index: int, row_boundaries: List[int]) -> Tuple[int, int]:
+    """
+    Get y-values to cover two rows above and below the specified row, or just some pixels
+    when there are not two rows to get.
+    """
+    if row_index == 0:
+        top = row_boundaries[0] - 120
+    elif row_index == 1:
+        top = row_boundaries[0] -100
+    else:
+        top = row_boundaries[row_index - 2]
+    if row_index == len(row_boundaries) - 1:
+        bottom = row_boundaries[-1] + 120
+    elif row_index == len(row_boundaries) - 2:
+        bottom = row_boundaries[-1] + 100
+    else:
+        bottom = row_boundaries[row_index + 2]
+    return top, bottom
