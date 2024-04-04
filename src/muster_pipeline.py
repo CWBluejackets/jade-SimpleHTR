@@ -96,7 +96,7 @@ if __name__ == "__main__":
             del output['image']
             print(f'Writing {debug_template_file}')
             with open(debug_template_file, 'w') as f:
-                json.dump(output, f)
+                json.dump(output, f, indent=1, sort_keys=True, cls=sheet_division.NumpyJsonEncoder)
 
     print()
     metadata_file = os.path.join(os.path.dirname(options.locations_file),
