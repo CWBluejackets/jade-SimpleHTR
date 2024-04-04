@@ -23,7 +23,6 @@ def process_muster_sheet(input_jpg_file, image_metadata, output_dir, corrections
     :param exception_if_missing: throw exception for missing file
     :return:
     """
-    print(f'Output to {output_dir}')
     print(f'Reading image from {input_jpg_file}')
     format_type = image_metadata.get('format_type', '2')
     output_prefix = os.path.splitext(os.path.basename(input_jpg_file))[0]
@@ -51,6 +50,7 @@ def process_muster_sheet(input_jpg_file, image_metadata, output_dir, corrections
         workflow_id = cell['workflow']
         print(f'Cell info: {cell}')
         if workflow_id != previous_workflow_id:
+            print()
             model_subdirectory = workflows[workflow_id]['model_location']
             print(f'Loading model from {model_subdirectory} for workflow {workflow_id}')
             model = TrainedModel(model_subdirectory)

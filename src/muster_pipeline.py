@@ -82,6 +82,7 @@ if __name__ == "__main__":
                                   config['templates'])
     templates_directory = os.path.join(os.path.dirname(options.config_file),
                                        config['template_directory'])
+    print()
     print(f'Loading {templates_file}')
     with open(templates_file, 'r') as f:
         templates = json.load(f)
@@ -97,6 +98,7 @@ if __name__ == "__main__":
             with open(debug_template_file, 'w') as f:
                 json.dump(output, f)
 
+    print()
     metadata_file = os.path.join(os.path.dirname(options.locations_file),
                                  locations['metadata_file'])
     inventory_file = os.path.join(os.path.dirname(options.locations_file),
@@ -124,6 +126,7 @@ if __name__ == "__main__":
     exception_if_missing = locations['img_file_exception']
 
     for input_file in input_files:
+        print()
         print(f'Processing {input_file}')
         image_metadata = all_metadata.get_metadata(input_file)
         if image_metadata['bad_alignment']:
