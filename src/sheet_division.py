@@ -61,7 +61,6 @@ def process_muster_sheet(input_jpg_file, image_metadata, output_dir, corrections
         cell_result.update(image_metadata)
         output_filename = os.path.join(output_dir,
                                        f'{output_prefix}_{sequence:04d}.json')
-        cell_result['output_image'] = output_filename
         print(f'Writing {output_filename}')
         # some of the stuff in cell_result is not json serializable e.g., np.float32
         with open(output_filename, 'w') as f:
@@ -69,6 +68,7 @@ def process_muster_sheet(input_jpg_file, image_metadata, output_dir, corrections
         if config['debug']:
             cell_image_filename = os.path.join(output_dir,
                                                f'{output_prefix}_{sequence:04d}.png')
+            cell_result['output_image'] = output_filename
             print(f'Writing {cell_image_filename}')
             cv2.imwrite(cell_image_filename, cell_image)
 

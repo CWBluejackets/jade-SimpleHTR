@@ -23,6 +23,9 @@ GREEN = (0, 128, 0)
 BLUE = (255, 0, 0)
 
 
+font = cv2.FONT_HERSHEY_SIMPLEX
+
+
 def solve_line(point0, point1) -> Tuple[float, float]:
     """
     Solve y = ax + b from two points
@@ -460,8 +463,16 @@ def generate_image_for_correction(image: np.ndarray, cell, ml_output: str):
     outer_top, outer_bottom = cell['expanded']['top'], cell['expanded']['bottom'] + 1
     extracted_image = image[outer_top: outer_bottom, outer_left: outer_right]
     output_image = cv2.cvtColor(extracted_image, cv2.COLOR_GRAY2RGB)
-    # TODO inner lines
+    cv2.line(output_image, (inner_left, inner_top), (inner_left, inner_bottom), RED, 1)
+    cv2.line(output_image, (inner_right, inner_top), (inner_right, inner_bottom), RED, 1)
+    cv2.line(output_image, (inner_left, inner_top), (inner_right, inner_top), RED, 1)
+    cv2.line(output_image, (inner_left, inner_bottom), (inner_right, inner_bottom), RED, 1)
+
     # TODO extra space and text
+    # https://lindevs.com/get-text-size-using-opencv
+    # size, _ = cv2.getTextSize('Test', font, fontScale, thickness)
+    # width, height = size
+    # cv2.putText(output_image, str(dx), p2, font, 4, red, 2, cv2.LINE_AA)
     return output_image
 
 
