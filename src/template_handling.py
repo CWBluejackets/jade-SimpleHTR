@@ -81,6 +81,8 @@ def add_template_info(specification: dict, template_directory, workflows):
     row_lines = [y_ref_line] + get_rows(image, y_ref_line, x_ref_line)
     specification['image'] = image
     specification['row_lines'] = row_lines
+    specification['max_y'] = image.shape[0] - 1
+    specification['max_x'] = image.shape[1] - 1
     # These pre-specified columns are more numerous than our workflows
     for index, column in enumerate(specification['columns']):
         column['start'] = column_lines[index]
@@ -149,10 +151,10 @@ def generate_cells(specification: dict, workflows: dict):
                     "right": right,
                     "top": top,
                     "bottom": bottom,
-                    "expanded": {"top": expanded_top,
-                                 "bottom": expanded_bottom,
-                                 "left": expanded_left,
-                                 "right": expanded_right
+                    "expanded": {"top": max(expanded_top, 0),
+                                 "bottom": min(expanded_bottom, specification['y_max']),
+                                 "left": max(expanded_left, 0),
+                                 "right": min(expanded_right, specification['x_max'])
                                  }
                     }
             cells.append(cell)

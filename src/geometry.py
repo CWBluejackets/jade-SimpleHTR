@@ -21,9 +21,11 @@ from skimage.registration import phase_cross_correlation
 RED = (0, 0, 255)
 GREEN = (0, 128, 0)
 BLUE = (255, 0, 0)
+BLACK = (0, 0, 0)
 
-
-font = cv2.FONT_HERSHEY_SIMPLEX
+FONT = cv2.FONT_HERSHEY_COMPLEX
+FONT_SCALE = 1
+FONT_THICKNESS = 3
 
 
 def solve_line(point0, point1) -> Tuple[float, float]:
@@ -459,20 +461,31 @@ def superimpose(shifted_image: np.ndarray, form: np.ndarray) -> np.ndarray:
 
 def generate_image_for_correction(image: np.ndarray, cell, ml_output: str):
     inner_left, inner_right, inner_top, inner_bottom = cell['left'], cell['right'], cell['top'], cell['bottom']
-    outer_left, outer_right = cell['expanded']['left'], cell['expanded']['right'] + 1
-    outer_top, outer_bottom = cell['expanded']['top'], cell['expanded']['bottom'] + 1
+    outer_left, outer_right = cell['expanded']['left'], cell['expanded']['right']
+    outer_top, outer_bottom = cell['expanded']['top'], cell['expanded']['bottom']
     extracted_image = image[outer_top: outer_bottom, outer_left: outer_right]
+    # calculate text size and expand image as needed
+    # https://lindevs.com/get-text-size-using-opencv
+    (text_width, text_height), _ = cv2.getTextSize(ml_output, FONT, FONT_SCALE, FONT_THICKNESS)
+    text_width += 10
+    # add white strip at the bottom to accommodate the text
+    add_height = text_height * 2
+    add_bottom = np.full((add_height, extracted_image.shape[1]), 255, dtype=extracted_image.dtype)
+    extracted_image = np.vstack((extracted_image, add_bottom))
+    # add white strip on the right if needed to accommodate the text
+    if text_width > extracted_image.shape[0]:
+        add_width = extracted_image.shape[0]
+        add_right = np.full((extracted_image.shape[0], add_width), 255, dtype=extracted_image.dtype)
+        extracted_image = np.hstack((extracted_image, add_right))
+    # add the red box
     output_image = cv2.cvtColor(extracted_image, cv2.COLOR_GRAY2RGB)
     cv2.line(output_image, (inner_left, inner_top), (inner_left, inner_bottom), RED, 1)
     cv2.line(output_image, (inner_right, inner_top), (inner_right, inner_bottom), RED, 1)
     cv2.line(output_image, (inner_left, inner_top), (inner_right, inner_top), RED, 1)
     cv2.line(output_image, (inner_left, inner_bottom), (inner_right, inner_bottom), RED, 1)
-
-    # TODO extra space and text
-    # https://lindevs.com/get-text-size-using-opencv
-    # size, _ = cv2.getTextSize('Test', font, fontScale, thickness)
-    # width, height = size
-    # cv2.putText(output_image, str(dx), p2, font, 4, red, 2, cv2.LINE_AA)
+    # add the text
+    point = (5, extracted_image.shape[0] - 10)
+    cv2.putText(output_image, ml_output, point, FONT, FONT_SCALE, BLACK)
     return output_image
 
 
