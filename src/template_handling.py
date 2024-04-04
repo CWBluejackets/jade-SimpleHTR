@@ -152,9 +152,9 @@ def generate_cells(specification: dict, workflows: dict):
                     "top": top,
                     "bottom": bottom,
                     "expanded": {"top": max(expanded_top, 0),
-                                 "bottom": min(expanded_bottom, specification['y_max']),
+                                 "bottom": min(expanded_bottom, specification['max_y']),
                                  "left": max(expanded_left, 0),
-                                 "right": min(expanded_right, specification['x_max'])
+                                 "right": min(expanded_right, specification['max_x'])
                                  }
                     }
             cells.append(cell)
