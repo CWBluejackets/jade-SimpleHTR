@@ -78,9 +78,18 @@ def process_muster_sheet(input_jpg_file, image_metadata, output_dir, corrections
 
 
 def process_cell(image: np.ndarray, cell, model, threshold: float):
+    """
+    Extract the cell from the image and send the small image through the model.
+    :param image: registered image of the whole sheet
+    :param cell: specification for one cell
+    :param model: trained model
+    :param threshold: confidence score required for the workflow
+    """
     cell_output = {'threshold': threshold}
     cell_output.update(cell)
-    cell_image = image[cell['top']: cell['bottom'] + 1, cell['left']: cell['right'] + 1]
+    top, bottom = cell['top'], cell['bottom'] + 1
+    left, right = cell['left'], cell['right'] + 1
+    cell_image = image[top: bottom, left: right]
     print(f'Cell shape {cell_image.shape}')
     text, confidence = model.apply(cell_image)
     cell_output['text'] = text

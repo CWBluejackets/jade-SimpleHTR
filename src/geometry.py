@@ -454,6 +454,17 @@ def superimpose(shifted_image: np.ndarray, form: np.ndarray) -> np.ndarray:
     return output
 
 
+def generate_image_for_correction(image: np.ndarray, cell, ml_output: str):
+    inner_left, inner_right, inner_top, inner_bottom = cell['left'], cell['right'], cell['top'], cell['bottom']
+    outer_left, outer_right = cell['expanded']['left'], cell['expanded']['right'] + 1
+    outer_top, outer_bottom = cell['expanded']['top'], cell['expanded']['bottom'] + 1
+    extracted_image = image[outer_top: outer_bottom, outer_left: outer_right]
+    output_image = cv2.cvtColor(extracted_image, cv2.COLOR_GRAY2RGB)
+    # TODO inner lines
+    # TODO extra space and text
+    return output_image
+
+
 def resize_image(source: np.ndarray, to_match: np.ndarray) -> np.ndarray:
     # typically (3744, 5616)
     if source.shape == to_match.shape:
