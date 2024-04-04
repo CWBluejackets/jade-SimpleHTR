@@ -88,6 +88,14 @@ if __name__ == "__main__":
 
     for key, specification in templates.items():
         template_handling.add_template_info(specification, templates_directory, workflows)
+        if config['debug']:
+            debug_template_file = os.path.join(locations['output_directory'], f'template_{key}.json')
+            output = specification.copy()
+            # Do not save the big image array
+            del output['image']
+            print(f'Writing {debug_template_file}')
+            with open(debug_template_file, 'w') as f:
+                json.dump(output, f)
 
     metadata_file = os.path.join(os.path.dirname(options.locations_file),
                                  locations['metadata_file'])

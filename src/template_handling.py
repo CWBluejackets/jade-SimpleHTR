@@ -37,7 +37,7 @@ def get_columns(form: np.ndarray, y_ref: int):
     Find the black column lines in the first writing row of the form
     :param form: form image
     :param y_ref: y-value of the line at the top of the first writing row
-    :return: list of x-values of black lines, x-value of the middle of the first column
+    :return: list of x-values of black lines AND x-value of the middle of the first column
     """
     scanline = form[y_ref + 10, :]
     middles = find_lines(scanline)
@@ -76,15 +76,17 @@ def add_template_info(specification: dict, template_directory, workflows):
     columns_needed = len(specification['columns'])
     if columns_needed != len(column_lines) - 1:
         raise ValueError(f'Mismatch! specified columns = {columns_needed}; boundaries found = {len(column_lines)}')
-    # find the black row lines (starting with the bottom of the first writing row)
+    # find the black row lines (starting with the bottom of the first writing row
+    # because y_ref_line, the top of the first writing row, is given)
     row_lines = [y_ref_line] + get_rows(image, y_ref_line, x_ref_line)
     specification['image'] = image
     specification['row_lines'] = row_lines
+    # These pre-specified columns are more numerous than our workflows
     for index, column in enumerate(specification['columns']):
         column['start'] = column_lines[index]
         column['end'] = column_lines[index + 1]
-    # merge adjacent columns of the same workflow (e.g., height feet + height inches
-    # and determine the start and end x-values
+    # Merge adjacent columns of the same workflow (e.g., height feet + height inches
+    # and determine the start and end x-values (this code assumes adjacency of workflow parts)
     output_columns = []
     workflow_starts = defaultdict(set)
     workflow_ends = defaultdict(set)
