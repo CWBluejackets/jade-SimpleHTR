@@ -130,10 +130,10 @@ def binned_mode(values, bins=10, range=None) -> float:
     """
     # TODO maybe implement the proper histogram mode formula
     # https://www.statology.org/histogram-mode/
-    if not range:
-        range0 = (min(values), max(values))
-    else:
+    if range:
         range0 = range
+    else:
+        range0 = (min(values), max(values))
     counts, lefts = np.histogram(values, bins=bins, range=range0)
     i = counts.argmax()
     return (lefts[i] + lefts[i + 1]) / 2.0

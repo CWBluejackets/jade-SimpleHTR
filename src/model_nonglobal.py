@@ -28,9 +28,9 @@ class Model:
         self.char_list = load_char_list(self.model_dir)
         self.must_restore = True
         self.snap_ID = 0
-        # forcing decoder type to BestPath for simplification
+        # Forcing decoder type to BestPath (the only one we've used) to simplify the code.
 
-        # reset the graph so we can load models one after the other
+        # Reset the graph so we can load another model.
         # https://stackoverflow.com/questions/65401120/what-is-mean-to-set-reuse-true-or-reuse-tf-auto-reuse-in-varscope
         tf.compat.v1.reset_default_graph()
 
