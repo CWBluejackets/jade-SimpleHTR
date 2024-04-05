@@ -1,6 +1,8 @@
 # library file
+import csv
 import json
 import os.path
+from collections import defaultdict
 
 import cv2
 import numpy as np
@@ -36,6 +38,9 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, corre
     print(f'Resized input size {image_resized.shape}')
     registered_image = geometry.adjust_muster_to_template(image_resized, template_image, config)
 
+    csv_header = ['row'] + [str(column['workflow']) for column in template['output_columns']]
+    csv_table = defaultdict(lambda: [str()] * len(template['output_columns']))
+
     if config['debug']:
         # superimpose the template in blue and save it for inspection
         registration_path = os.path.join(output_dir,
@@ -60,13 +65,21 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, corre
         cell_result, cell_image = process_cell(registered_image, cell_spec, model, threshold)
         cell_result['input'] = image_metadata.copy()
         save_processed_cell(config, output_prefix, sequence, cell_result, output_dir, cell_image)
+        csv_table[cell_result['row']][cell_result['column']] = cell_result['text']
 
         if cell_result['confidence'] < cell_result['threshold']:
-            save_cell_for_correction(corrections_dir, output_prefix, sequence, cell_spec, cell_result, registered_image)
+            save_cell_for_correction(corrections_dir, output_prefix, sequence, cell_spec,
+                                     cell_result, registered_image)
             # TODO also generate metadata for Pantoptes and for reattaching
             # https://panoptes.docs.apiary.io/#
 
-        # TODO assemble and save a CSV for the whole sheet
+    csv_file = os.path.join(output_dir, f'{output_prefix}.csv')
+    print(f'Writing {csv_file}')
+    with open(csv_file, 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(csv_header)
+        for row_no in range(max(csv_table.keys())):
+            writer.writerow([row_no] + csv_table[row_no])
     return
 
 
