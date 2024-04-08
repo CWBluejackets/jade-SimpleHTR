@@ -65,13 +65,12 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, corre
             model = TrainedModel(model_subdirectory)
             previous_workflow_id = workflow_id
 
-        threshold = workflows[workflow_id]['confidence']
-        cell_result, cell_image = process_cell(registered_image, cell_spec, model, threshold)
+        cell_result, cell_image = process_cell(registered_image, cell_spec, model)
         cell_result['input'] = image_metadata.copy()
         save_processed_cell(config, filename_base, cell_result, output_dir, cell_image)
         csv_table[cell_result['row']][cell_result['column']] = cell_result['text']
 
-        if cell_result['confidence'] < cell_result['threshold']:
+        if cell_result['confidence'] < cell_result['confidence_threshold']:
             save_cell_for_correction(corrections_dir, filename_base, cell_spec,
                                      cell_result, registered_image)
             # TODO also generate metadata for Pantoptes and for reattaching
@@ -113,22 +112,20 @@ def save_processed_cell(config: dict, filename_base: str, cell_result: dict,
     return
 
 
-def process_cell(image: np.ndarray, cell, model, threshold: float):
+def process_cell(image: np.ndarray, cell, model):
     """
     Extract the cell from the image and send the small image through the model.
     :param image: registered image of the whole sheet
     :param cell: specification for one cell
     :param model: trained model
-    :param threshold: confidence score required for the workflow
     """
-    cell_output = {'threshold': threshold}
-    cell_output.update(cell)
     top, bottom = cell['top'], cell['bottom'] + 1
     left, right = cell['left'], cell['right'] + 1
     cell_image = image[top: bottom, left: right]
     text, confidence = model.apply(cell_image)
-    cell_output['text'] = text
-    cell_output['confidence'] = confidence
+    cell_output = {'text': text, 'confidence': confidence}
+    cell_output.update(cell)
+    threshold = cell['confidence_threshold']
     print(f'Cell shape {cell_image.shape} confidence {confidence:.3f} / {threshold:.3f} text "{text}"')
     return cell_output, cell_image
 

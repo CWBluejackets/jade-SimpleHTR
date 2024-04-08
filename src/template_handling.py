@@ -116,6 +116,7 @@ def generate_cells(specification: dict, workflows: dict):
     cells = []
     for column_number, column_details in enumerate(specification['output_columns']):
         workflow = column_details['workflow']
+        threshold = workflows[workflow]['confidence']
         left_adj, right_adj, top_adj, bottom_adj = get_cell_adjustments(workflow, workflows)
         left = column_details['start']
         right = column_details['end']
@@ -145,6 +146,7 @@ def generate_cells(specification: dict, workflows: dict):
             elif 1 <= bottom_adj:
                 bottom = bottom + bottom_adj
             cell = {"workflow": workflow,
+                    "confidence_threshold": threshold,
                     "column": column_number,
                     "row": row_number,
                     "left": left,
