@@ -51,9 +51,13 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, corre
 
     previous_workflow_id = None
     model = None
-    for sequence, cell_spec in enumerate(template['cells']):
+    for cell_spec in template['cells']:
         workflow_id = cell_spec['workflow']
         print(f'Cell info: {cell_spec}')
+        row = cell_spec['row']
+        column = cell_spec['column']
+        filename_base = f'{output_prefix}_{row:02d}_{column:02d}'
+
         if workflow_id != previous_workflow_id:
             print()
             model_subdirectory = workflows[workflow_id]['model_location']
@@ -64,11 +68,11 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, corre
         threshold = workflows[workflow_id]['confidence']
         cell_result, cell_image = process_cell(registered_image, cell_spec, model, threshold)
         cell_result['input'] = image_metadata.copy()
-        save_processed_cell(config, output_prefix, sequence, cell_result, output_dir, cell_image)
+        save_processed_cell(config, filename_base, cell_result, output_dir, cell_image)
         csv_table[cell_result['row']][cell_result['column']] = cell_result['text']
 
         if cell_result['confidence'] < cell_result['threshold']:
-            save_cell_for_correction(corrections_dir, output_prefix, sequence, cell_spec,
+            save_cell_for_correction(corrections_dir, filename_base, cell_spec,
                                      cell_result, registered_image)
             # TODO also generate metadata for Pantoptes and for reattaching
             # https://panoptes.docs.apiary.io/#
@@ -83,26 +87,26 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, corre
     return
 
 
-def save_cell_for_correction(correction_dir: str, output_prefix: str, sequence: int,
+def save_cell_for_correction(correction_dir: str, filename_base: str,
                              cell_spec: dict, cell_result: dict, big_image: np.ndarray):
-    output_path = os.path.join(correction_dir, f'{output_prefix}_{sequence:04d}.png')
+    output_path = os.path.join(correction_dir, f'{filename_base}.png')
     output_image = geometry.generate_image_for_correction(big_image, cell_spec, cell_result['text'])
     print(f'Writing for correction {output_path}')
     cv2.imwrite(output_path, output_image)
     return
 
 
-def save_processed_cell(config: dict, output_prefix: str, sequence:int, cell_result: dict,
+def save_processed_cell(config: dict, filename_base: str, cell_result: dict,
                         output_dir: str, cell_image: np.ndarray):
     output_filename = os.path.join(output_dir,
-                                   f'{output_prefix}_{sequence:04d}.json')
+                                   f'{filename_base}.json')
     print(f'Writing {output_filename}')
     # some of the stuff in cell_result is not json serializable e.g., np.float32
     with open(output_filename, 'w') as f:
         json.dump(cell_result, f, cls=NumpyJsonEncoder, indent=1, sort_keys=True)
     if config['debug']:
         cell_image_filename = os.path.join(output_dir,
-                                           f'{output_prefix}_{sequence:04d}.png')
+                                           f'{filename_base}.png')
         cell_result['output_image'] = output_filename
         print(f'Writing {cell_image_filename}')
         cv2.imwrite(cell_image_filename, cell_image)
