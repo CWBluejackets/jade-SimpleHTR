@@ -424,7 +424,8 @@ def get_lines_for_registration(image: np.ndarray, config: dict, cutoffs: tuple) 
     return new_image
 
 
-def adjust_muster_to_template(image: np.ndarray, template: np.ndarray, config: dict) -> np.ndarray:
+def adjust_muster_to_template(image: np.ndarray, template: np.ndarray, config: dict) -> (
+        Tuple[np.ndarray, np.ndarray]):
     """
     Rotate the image; erase the margins; detect H and V lines and shift to match the template
     :param image: muster sheet
@@ -439,6 +440,7 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray, config: d
                         cutoffs[2] + config['registration']['cutoff_adjustments']['top'],
                         cutoffs[3] - config['registration']['cutoff_adjustments']['bottom'])
     print(adjusted_cutoffs)
+    margin_image = mark_cutoffs(modified_image, cutoffs, adjusted_cutoffs)
     registration_image = get_lines_for_registration(modified_image, config, adjusted_cutoffs)
     # works much better without normalization
     shift, error, diffphase = phase_cross_correlation(template, registration_image, normalization=None)
@@ -448,7 +450,7 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray, config: d
     # Axis ordering is consistent with the axis order of the input array.
     # https://scikit-image.org/docs/stable/api/skimage.registration.html#skimage.registration.phase_cross_correlation
     shifted_image = ndimage.shift(modified_image, shift)
-    return shifted_image
+    return shifted_image, margin_image
 
 
 def superimpose(shifted_image: np.ndarray, form: np.ndarray) -> np.ndarray:
@@ -462,6 +464,28 @@ def superimpose(shifted_image: np.ndarray, form: np.ndarray) -> np.ndarray:
         raise ValueError(f'Not matched: {shifted_image.shape} {form.shape}')
     output = cv2.cvtColor(shifted_image, cv2.COLOR_GRAY2RGB)
     output[np.where(form == 0)] = BLUE
+    return output
+
+
+def mark_cutoffs(image: np.ndarray, outer: tuple, inner:tuple) -> np.ndarray:
+    """
+    Superimpose the form in blue on the image
+    :param image: grayscale image
+    :param outer: (left, right, top, bottom)
+    :param inner: (left, right, top, bottom)
+    :return: merged RGB image
+    """
+    output = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+    # mark the margins
+    cv2.line(output, (outer[0], outer[2]), (outer[1], outer[2]), RED, 1)
+    cv2.line(output, (outer[0], outer[3]), (outer[1], outer[3]), RED, 1)
+    cv2.line(output, (outer[0], outer[2]), (outer[0], outer[2]), RED, 1)
+    cv2.line(output, (outer[1], outer[2]), (outer[1], outer[2]), RED, 1)
+    # mark the adjusted ones
+    cv2.line(output, (inner[0], inner[2]), (inner[1], inner[2]), RED, 1)
+    cv2.line(output, (inner[0], inner[3]), (inner[1], inner[3]), RED, 1)
+    cv2.line(output, (inner[0], inner[2]), (inner[0], inner[2]), RED, 1)
+    cv2.line(output, (inner[1], inner[2]), (inner[1], inner[2]), RED, 1)
     return output
 
 
