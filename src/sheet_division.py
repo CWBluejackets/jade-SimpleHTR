@@ -11,7 +11,7 @@ import geometry
 from application import TrainedModel
 
 
-def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, corrections_dir,
+def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts_dir, corrections_dir,
                          config, workflows, templates, exception_if_missing):
     """
     Process sheet...
@@ -74,7 +74,7 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, corre
 
         cell_result, cell_image = process_cell(registered_image, cell_spec, model)
         cell_result['input'] = image_metadata.copy()
-        save_processed_cell(config, filename_base, cell_result, output_dir, cell_image)
+        save_processed_cell(config, filename_base, cell_result, parts_dir, cell_image)
         csv_table[cell_result['row']][cell_result['column']] = cell_result['text']
 
         if cell_result['confidence'] < cell_result['confidence_threshold']:

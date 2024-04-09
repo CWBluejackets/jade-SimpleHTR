@@ -9,7 +9,6 @@ import os.path
 import sheet_division
 import template_handling
 from metadata_handling import Metadata
-from application import TrainedModel
 
 HERE = os.path.dirname(os.path.realpath(__file__))
 DEFAULT_CONFIG_FILE = os.path.join(HERE, 'config.json')
@@ -111,6 +110,8 @@ if __name__ == "__main__":
 
     # output of this program is PNGs and control files
     output_dir = os.path.join(os.path.dirname(options.locations_file), locations['output_directory'])
+    parts_dir = os.path.join(output_dir, 'parts')
+    os.makedirs(parts_dir, exist_ok=True)
     corrections_dir = os.path.join(os.path.dirname(options.locations_file), locations['corrections_directory'])
 
     # Use options.input_location if specified; otherwise fall back to config file;
@@ -139,6 +140,6 @@ if __name__ == "__main__":
             print(f'Skipping {input_file} = non standard')
         else:
             sheet_division.process_muster_sheet(input_file, image_metadata,
-                                                output_dir, corrections_dir,
+                                                output_dir, parts_dir, corrections_dir,
                                                 config, workflows,
                                                 templates, exception_if_missing)
