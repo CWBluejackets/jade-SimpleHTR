@@ -49,8 +49,10 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
     registered_image = geometry.adjust_muster_to_template(image_resized, template_image,
                                                           config, debug_image_path)
 
-    csv_header = ['row'] + [str(column['workflow']) for column in template['output_columns']]
-    csv_table = defaultdict(lambda: [str()] * len(template['output_columns']))
+    csv_header = ['row']
+    for column in template['ouptut_columns']:
+        csv_header.extend([str(column['workflow']), 'conf'])
+    csv_table = defaultdict(lambda: [str()] * len(template['output_columns'] * 2))
 
     if config['debug']:
         # superimpose the template in blue and save it for inspection
@@ -79,7 +81,8 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
         cell_result, cell_image = process_cell(registered_image, cell_spec, model)
         cell_result['input'] = image_metadata.copy()
         save_processed_cell(config, filename_base, cell_result, parts_dir, cell_image)
-        csv_table[cell_result['row']][cell_result['column']] = cell_result['text']
+        csv_table[cell_result['row']][cell_result['column'] * 2] = cell_result['text']
+        csv_table[cell_result['row']][cell_result['column'] * 2 + 1] = cell_result['confidence']
 
         if cell_result['confidence'] < cell_result['confidence_threshold']:
             save_cell_for_correction(corrections_dir, filename_base, cell_spec,
