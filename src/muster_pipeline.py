@@ -132,12 +132,12 @@ if __name__ == "__main__":
 
     for input_file in input_files:
         print()
-        print(f'Processing {input_file}')
+        print(f'SUMMARY: Processing {input_file}')
         image_metadata = all_metadata.get_metadata(input_file)
         if image_metadata['bad_alignment']:
-            print(f'Skipping {input_file} = bad alignment')
+            print(f'SUMMARY: Skipping {input_file} = bad alignment')
         elif image_metadata['non_standard']:
-            print(f'Skipping {input_file} = non standard')
+            print(f'SUMMARY: Skipping {input_file} = non standard')
         else:
             sheet_division.process_muster_sheet(input_file, image_metadata,
                                                 output_dir, parts_dir, corrections_dir,

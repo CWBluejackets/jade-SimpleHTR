@@ -28,9 +28,9 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
     print(f'Reading image from {input_jpg_file}')
     try:
         form_type = image_metadata['type']
-        print(f'Format type is {form_type}')
+        print(f'SUMMARY: Format type is {form_type}')
     except KeyError:
-        print(f'Missing format_type!')
+        print(f'SUMMARY: Missing format_type!')
         return
 
     output_prefix = os.path.splitext(os.path.basename(input_jpg_file))[0]
