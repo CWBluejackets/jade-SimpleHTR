@@ -5,7 +5,7 @@
     "extra": {
       "bottom": 0.4
     },
-    "confidence": 0.8
+    "confidence": 0.7
   },
   "21969": {
     "description": "Ratings",
@@ -14,7 +14,7 @@
       "left": 5,
       "right": 5
     },
-    "confidence": 0.8
+    "confidence": 0.7
   },
   "21986": {
     "description": "Where Born",
@@ -22,7 +22,7 @@
     "extra": {
       "bottom": 0.4
     },
-    "confidence": 0.8
+    "confidence": 0.7
   },
   "21987": {
     "description": "Occupation",
@@ -30,12 +30,12 @@
     "extra": {
       "bottom": 0.4
     },
-    "confidence": 0.8
+    "confidence": 0.7
   },
   "22014": {
     "description": "Age",
     "numeric": true,
-    "confidence": 0.8
+    "confidence": 0.7
   },
   "22015": {
     "description": "Where Enlisted",
@@ -43,7 +43,7 @@
     "extra": {
       "bottom": 0.4
     },
-    "confidence": 0.8
+    "confidence": 0.7
   },
   "22016": {
     "description": "Date of Enlistment",
@@ -51,7 +51,7 @@
     "extra": {
       "bottom": 0.3
     },
-    "confidence": 0.8
+    "confidence": 0.7
   },
   "22031": {
     "description": "Ship's Number",
@@ -60,7 +60,7 @@
       "left": 5,
       "right": 5
     },
-    "confidence": 0.8
+    "confidence": 0.7
   },
   "22038": {
     "description": "Term of Enlistment",
@@ -69,7 +69,7 @@
       "left": 5,
       "right": 5
     },
-    "confidence": 0.8
+    "confidence": 0.7
   },
   "22039": {
     "description": "Remarks",
@@ -84,7 +84,7 @@
       "right": 5,
       "bottom": 0.4
     },
-    "confidence": 0.8
+    "confidence": 0.7
   },
   "22045": {
     "description": "Height",
@@ -93,6 +93,6 @@
       "left": 5,
       "right": 5
     },
-    "confidence": 0.8
+    "confidence": 0.7
   }
 }
