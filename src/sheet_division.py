@@ -26,7 +26,11 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
     :return:
     """
     print(f'Reading image from {input_jpg_file}')
-    format_type = image_metadata.get('format_type', '2')
+    try:
+        format_type = image_metadata['format_type']
+        print(f'Format type is {format_type}')
+    except KeyError:
+        print(f'Missing format_type!')
     output_prefix = os.path.splitext(os.path.basename(input_jpg_file))[0]
 
     image_raw = safe_imread(input_jpg_file, cv2.IMREAD_GRAYSCALE,
@@ -35,7 +39,6 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
     template_image = template['image']
     print(f'Input size {image_raw.shape}; template size {template_image.shape}')
     image_resized = geometry.resize_image(image_raw, template_image)
-    print(f'Resized input size {image_resized.shape}')
     registered_image, margin_debug_image = geometry.adjust_muster_to_template(image_resized,
                                                                               template_image, config)
 

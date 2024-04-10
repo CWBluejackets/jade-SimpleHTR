@@ -355,7 +355,6 @@ def erase_margins(image: np.ndarray, config):
     image_median = round(np.median(image))
     x_max = image.shape[1] - 1
     y_max = image.shape[0] - 1
-    print(f'Shape: {image.shape}')
     print(f'Median: {image_median}')
 
     # scan horizontal lines
@@ -545,6 +544,7 @@ def resize_image(source: np.ndarray, to_match: np.ndarray) -> np.ndarray:
         output = output[:, i:j]
     elif source_width < target_width:
         output = dup_cols(output, target_width - source_width)
+    print(f'Resized to {output.shape}')
     return output
 
 
