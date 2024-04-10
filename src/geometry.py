@@ -490,11 +490,13 @@ def mark_cutoffs(image: np.ndarray, outer: tuple, inner:tuple) -> np.ndarray:
 
 
 def generate_image_for_correction(image: np.ndarray, cell_spec, ml_output: str):
-    inner_left, inner_right = cell_spec['left'], cell_spec['right']
-    inner_top, inner_bottom = cell_spec['top'], cell_spec['bottom']
+    # crop image to outer bounds
     outer_left, outer_right = cell_spec['expanded']['left'], cell_spec['expanded']['right']
     outer_top, outer_bottom = cell_spec['expanded']['top'], cell_spec['expanded']['bottom']
     extracted_image = image[outer_top: outer_bottom, outer_left: outer_right]
+    # calculate box  within cropped image
+    inner_left, inner_right = cell_spec['left'] - outer_left, cell_spec['right'] - outer_left
+    inner_top, inner_bottom = cell_spec['top'] - outer_top, cell_spec['bottom'] - outer_top
     # calculate text size and expand image as needed
     # https://lindevs.com/get-text-size-using-opencv
     (text_width, text_height), _ = cv2.getTextSize(ml_output, FONT, FONT_SCALE, FONT_THICKNESS)
