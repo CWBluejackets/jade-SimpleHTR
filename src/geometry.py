@@ -176,6 +176,10 @@ def identify_image_sides(image_median, left_median, right_median, config) -> Tup
         left_result = 'light'
     elif left_result == 'dark' and right_result == 'unknown':
         right_result = 'light'
+    elif left_result == 'unknown' and right_result == 'light':
+        left_result = 'dark'
+    elif left_result == 'light' and right_result == 'unknown':
+        right_result = 'dark'
     print(f'Updated: left {left_result}, right {right_result}')
     return left_result, right_result
 
