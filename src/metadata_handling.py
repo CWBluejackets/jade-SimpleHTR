@@ -31,9 +31,9 @@ def yes_boolean(yesno: str) -> bool:
     return yesno.strip().lower().startswith('y')
 
 
-def extract_number(type_name: str) -> str:
+def extract_type(type_name: str) -> str:
     """
-    Convert 'Type 3' to the int 3.
+    Convert 'Type 3' to '3''.
     """
     int_str = INTEGER.search(type_name)
     if int_str:
@@ -97,7 +97,7 @@ class Metadata:
                     "muster_date_specified": muster_date_specified,
                     "muster_date": muster_date_specified or muster_date_running,
                     "type_name": type_name,
-                    "type": extract_number(type_name),
+                    "type": extract_type(type_name),
                     "bad_alignment": bad_alignment,
                     "non_standard": non_standard,
                     "nara_url": nara_url

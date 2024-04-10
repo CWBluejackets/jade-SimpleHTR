@@ -27,15 +27,16 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
     """
     print(f'Reading image from {input_jpg_file}')
     try:
-        format_type = image_metadata['format_type']
-        print(f'Format type is {format_type}')
+        form_type = image_metadata['type']
+        print(f'Format type is {form_type}')
     except KeyError:
         print(f'Missing format_type!')
-    output_prefix = os.path.splitext(os.path.basename(input_jpg_file))[0]
+        return
 
+    output_prefix = os.path.splitext(os.path.basename(input_jpg_file))[0]
     image_raw = safe_imread(input_jpg_file, cv2.IMREAD_GRAYSCALE,
                             exception_if_missing=exception_if_missing)
-    template = templates[format_type]
+    template = templates[form_type]
     template_image = template['image']
     print(f'Input size {image_raw.shape}; template size {template_image.shape}')
     image_resized = geometry.resize_image(image_raw, template_image)

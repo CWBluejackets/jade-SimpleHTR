@@ -474,17 +474,19 @@ def mark_cutoffs(image: np.ndarray, outer: tuple, inner:tuple) -> np.ndarray:
     :param inner: (left, right, top, bottom)
     :return: merged RGB image
     """
+    left0, right0, top0, bottom0 = outer
+    left1, right1, top1, bottom1 = inner
     output = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
     # mark the margins
-    cv2.line(output, (outer[0], outer[2]), (outer[1], outer[2]), RED, 1)
-    cv2.line(output, (outer[0], outer[3]), (outer[1], outer[3]), RED, 1)
-    cv2.line(output, (outer[0], outer[2]), (outer[0], outer[2]), RED, 1)
-    cv2.line(output, (outer[1], outer[2]), (outer[1], outer[2]), RED, 1)
+    cv2.line(output, (left0, top0), (right0, top0), RED, 3)
+    cv2.line(output, (right0, top0), (right0, bottom0), RED, 3)
+    cv2.line(output, (right0, bottom0), (left0, bottom0), RED, 3)
+    cv2.line(output, (left0, bottom0), (left0, top0), RED, 3)
     # mark the adjusted ones
-    cv2.line(output, (inner[0], inner[2]), (inner[1], inner[2]), RED, 1)
-    cv2.line(output, (inner[0], inner[3]), (inner[1], inner[3]), RED, 1)
-    cv2.line(output, (inner[0], inner[2]), (inner[0], inner[2]), RED, 1)
-    cv2.line(output, (inner[1], inner[2]), (inner[1], inner[2]), RED, 1)
+    cv2.line(output, (left1, top1), (right1, top1), RED, 3)
+    cv2.line(output, (right1, top1), (right1, bottom1), RED, 3)
+    cv2.line(output, (right1, bottom1), (left1, bottom1), RED, 3)
+    cv2.line(output, (left1, bottom1), (left1, top1), RED, 3)
     return output
 
 
