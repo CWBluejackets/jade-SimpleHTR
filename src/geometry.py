@@ -362,7 +362,9 @@ def erase_margins(image: np.ndarray, config):
         cv2.line(modified_image, (0, y), (x_max, y), image_median, 1)
 
     # scan vertical lines from the MODIFIED image
-    left_median, right_median = get_edge_medians(modified_image, config)
+    # left_median, right_median = get_edge_medians(modified_image, config)
+    # try using vertical lines from the ORIGINAL
+    left_median, right_median = get_edge_medians(image, config)
     print(f'Side medians: left {left_median}, right {right_median}')
     side_types = identify_image_sides(image_median, left_median, right_median, config)
     v_medians = smoothed_vertical_medians(modified_image, config)
@@ -373,7 +375,7 @@ def erase_margins(image: np.ndarray, config):
         cv2.line(modified_image, (x, 0), (x, y_max), image_median, 1)
     for x in range(right_cutoff, image.shape[1]):
         cv2.line(modified_image, (x, 0), (x, y_max), image_median, 1)
-    print(f'Cutoffs: top {top_cutoff}, bottom {bottom_cutoff}, left {left_cutoff}, right {right_cutoff}')
+    print(f'Cutoffs: left {left_cutoff}, right {right_cutoff}, top {top_cutoff}, bottom {bottom_cutoff}')
     return modified_image, (left_cutoff, right_cutoff, top_cutoff, bottom_cutoff)
 
 
