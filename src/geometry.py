@@ -323,16 +323,6 @@ def get_right_cutoff(medians, edge_type, overall_median, config) -> int:
     return cutoff
 
 
-def generate_test_image(image, horizontal_lines, vertical_lines, debug):
-    if not debug:
-        return None
-    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    for measured_line in horizontal_lines + vertical_lines:
-        line = measured_line[2]
-        cv2.line(image_rgb, (line[0], line[1]), (line[2], line[3]), BLUE, 1)
-    return image_rgb
-
-
 def rotate_correct(image: np.ndarray, config: dict) -> np.ndarray:
     canny_min = config['rotation']['canny_min']
     canny_max = config['rotation']['canny_max']
@@ -347,6 +337,7 @@ def rotate_correct(image: np.ndarray, config: dict) -> np.ndarray:
     h_lines = [d for d in measured_lines if is_nearly_horizontal(d[0], deviation)]
     angles = [d[0] for d in h_lines]
     rotation = binned_mode(angles, bins=21, range=(-deviation, deviation))
+    print(f'Rotation = {rotation}')
     return ndimage.rotate(image, angle=rotation, reshape=False)
 
 
@@ -423,13 +414,14 @@ def get_lines_for_registration(image: np.ndarray, config: dict, cutoffs: tuple) 
     return new_image
 
 
-def adjust_muster_to_template(image: np.ndarray, template: np.ndarray, config: dict) -> (
-        Tuple[np.ndarray, np.ndarray]):
+def adjust_muster_to_template(image: np.ndarray, template: np.ndarray, config: dict,
+                              debug_image_path: str) -> np.ndarray:
     """
     Rotate the image; erase the margins; detect H and V lines and shift to match the template
     :param image: muster sheet
     :param template: template image
     :param config: config file object
+    :param debug_image_path: save the margin debugging
     """
     modified_image = rotate_correct(image, config)
     modified_image, cutoffs = erase_margins(modified_image, config)
@@ -438,8 +430,8 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray, config: d
                         cutoffs[1] - config['registration']['cutoff_adjustments']['right'],
                         cutoffs[2] + config['registration']['cutoff_adjustments']['top'],
                         cutoffs[3] - config['registration']['cutoff_adjustments']['bottom'])
-    print(adjusted_cutoffs)
-    margin_image = mark_cutoffs(modified_image, cutoffs, adjusted_cutoffs)
+    print(f'Inner cutoffs: {adjusted_cutoffs}')
+
     registration_image = get_lines_for_registration(modified_image, config, adjusted_cutoffs)
     # works much better without normalization
     shift, error, diffphase = phase_cross_correlation(template, registration_image, normalization=None)
@@ -449,7 +441,13 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray, config: d
     # Axis ordering is consistent with the axis order of the input array.
     # https://scikit-image.org/docs/stable/api/skimage.registration.html#skimage.registration.phase_cross_correlation
     shifted_image = ndimage.shift(modified_image, shift)
-    return shifted_image, margin_image
+
+    if debug_image_path:
+        debug_image = mark_cutoffs(modified_image, cutoffs, adjusted_cutoffs, registration_image)
+        print(f'Writing {debug_image_path}')
+        cv2.imwrite(debug_image_path, debug_image)
+
+    return shifted_image
 
 
 def superimpose(shifted_image: np.ndarray, form: np.ndarray) -> np.ndarray:
@@ -466,12 +464,14 @@ def superimpose(shifted_image: np.ndarray, form: np.ndarray) -> np.ndarray:
     return output
 
 
-def mark_cutoffs(image: np.ndarray, outer: tuple, inner:tuple) -> np.ndarray:
+def mark_cutoffs(image: np.ndarray, outer: tuple, inner:tuple,
+                 registration_image: np.ndarray) -> np.ndarray:
     """
     Superimpose the form in blue on the image
     :param image: grayscale image
     :param outer: (left, right, top, bottom)
     :param inner: (left, right, top, bottom)
+    :param registration_image: H & V lines detected
     :return: merged RGB image
     """
     left0, right0, top0, bottom0 = outer
@@ -487,6 +487,8 @@ def mark_cutoffs(image: np.ndarray, outer: tuple, inner:tuple) -> np.ndarray:
     cv2.line(output, (right1, top1), (right1, bottom1), RED, 3)
     cv2.line(output, (right1, bottom1), (left1, bottom1), RED, 3)
     cv2.line(output, (left1, bottom1), (left1, top1), RED, 3)
+    # copy the H & V lines detected
+    output[np.where(registration_image == 0)] = BLUE
     return output
 
 

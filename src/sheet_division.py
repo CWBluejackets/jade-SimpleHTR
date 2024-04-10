@@ -40,19 +40,19 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
     template_image = template['image']
     print(f'Input size {image_raw.shape}; template size {template_image.shape}')
     image_resized = geometry.resize_image(image_raw, template_image)
-    registered_image, margin_debug_image = geometry.adjust_muster_to_template(image_resized,
-                                                                              template_image, config)
+
+    if config['debug']:
+        debug_image_path = os.path.join(output_dir, f'{output_prefix}_cutoffs.png')
+    else:
+        debug_image_path = None
+
+    registered_image = geometry.adjust_muster_to_template(image_resized, template_image,
+                                                          config, debug_image_path)
 
     csv_header = ['row'] + [str(column['workflow']) for column in template['output_columns']]
     csv_table = defaultdict(lambda: [str()] * len(template['output_columns']))
 
     if config['debug']:
-        # save the margin image for inspection
-        margin_path = os.path.join(output_dir,
-                                   f'{output_prefix}_cutoffs.png')
-        print(f'Writing {margin_path}')
-        cv2.imwrite(margin_path, margin_debug_image)
-
         # superimpose the template in blue and save it for inspection
         registration_path = os.path.join(output_dir,
                                          f'{output_prefix}_registration.png')
