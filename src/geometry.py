@@ -342,7 +342,7 @@ def rotate_correct(image: np.ndarray, config: dict, output_dir: str, output_pref
     h_lines = [line for line in measured_lines if is_nearly_horizontal(line[0], deviation)]
     # debug: save the hlines image
     if config['debug']:
-        debug_image_path = os.path.join(output_dir, f'{output_prefix}_hlines.png')
+        debug_image_path = os.path.join(output_dir, f'{output_prefix}_0_hlines.png')
         hline_image = generate_hlines_image(image, h_lines)
         print(f'Writing {debug_image_path}')
         cv2.imwrite(debug_image_path, hline_image)
@@ -458,7 +458,7 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray, config: d
     shifted_image = ndimage.shift(modified_image, shift)
 
     if config['debug']:
-        debug_image_path = os.path.join(output_dir, f'{output_prefix}_cutoffs.png')
+        debug_image_path = os.path.join(output_dir, f'{output_prefix}_1_cutoffs.png')
         debug_image = mark_cutoffs(modified_image, cutoffs, adjusted_cutoffs, registration_image)
         print(f'Writing {debug_image_path}')
         cv2.imwrite(debug_image_path, debug_image)

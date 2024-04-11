@@ -51,7 +51,7 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
     if config['debug']:
         # superimpose the template in blue and save it for inspection
         registration_path = os.path.join(output_dir,
-                                         f'{output_prefix}_registration.png')
+                                         f'{output_prefix}_2_registration.png')
         registration_debug = geometry.superimpose(registered_image, template_image)
         print(f'Writing {registration_path}')
         cv2.imwrite(registration_path, registration_debug)
