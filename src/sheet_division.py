@@ -109,7 +109,7 @@ def save_cell_for_correction(correction_dir: str, filename_base: str,
     output_json_path = os.path.join(correction_dir, f'{filename_base}.json')
     print(f'Writing for correction {output_json_path}')
     with open(output_json_path, 'w', encoding='utf-8') as f:
-        json.dump(cell_result, f, indent=1, sort_keys=True)
+        json.dump(cell_result, f, cls=NumpyJsonEncoder, indent=1, sort_keys=True)
     return
 
 
@@ -157,7 +157,7 @@ def write_control_file(input_path: str, output_directory: str, data: dict):
                       'filename': input_name}
     print(f'Writing {output_path}')
     with open(output_path, 'w') as f:
-        json.dump(data, f, indent=2, sort_keys=True)
+        json.dump(data, f, cls=NumpyJsonEncoder, indent=2, sort_keys=True)
     return
 
 
