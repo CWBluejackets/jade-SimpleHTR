@@ -40,13 +40,8 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
     template_image = template['image']
     print(f'Input size {image_raw.shape}; template size {template_image.shape}')
     image_resized = geometry.resize_image(image_raw, template_image)
-
-    if config['debug']:
-        debug_image_path = os.path.join(output_dir, f'{output_prefix}_cutoffs.png')
-    else:
-        debug_image_path = None
-
-    registered_image = geometry.adjust_muster_to_template(image_resized, template_image, config)
+    registered_image = geometry.adjust_muster_to_template(image_resized, template_image, config,
+                                                          output_dir, output_prefix)
 
     csv_header = ['row']
     for column in template['output_columns']:
