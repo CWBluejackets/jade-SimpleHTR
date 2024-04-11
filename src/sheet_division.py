@@ -50,7 +50,7 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
                                                           config, debug_image_path)
 
     csv_header = ['row']
-    for column in template['ouptut_columns']:
+    for column in template['output_columns']:
         csv_header.extend([str(column['workflow']), 'conf'])
     csv_table = defaultdict(lambda: [str()] * len(template['output_columns'] * 2))
 
