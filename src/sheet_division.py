@@ -91,7 +91,7 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
             # https://panoptes.docs.apiary.io/#
 
     csv_file = os.path.join(output_dir, f'{output_prefix}.csv')
-    print(f'Writing {csv_file}')
+    print(f'SUMMARY: Writing {csv_file}')
     with open(csv_file, 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerow(csv_header)
