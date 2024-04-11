@@ -46,8 +46,7 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
     else:
         debug_image_path = None
 
-    registered_image = geometry.adjust_muster_to_template(image_resized, template_image,
-                                                          config, debug_image_path)
+    registered_image = geometry.adjust_muster_to_template(image_resized, template_image, config)
 
     csv_header = ['row']
     for column in template['output_columns']:

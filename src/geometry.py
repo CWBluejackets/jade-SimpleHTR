@@ -1,6 +1,7 @@
 # library file
 
 import math
+import os
 from collections import Counter
 from typing import Tuple
 
@@ -327,7 +328,7 @@ def get_right_cutoff(medians, edge_type, overall_median, config) -> int:
     return cutoff
 
 
-def rotate_correct(image: np.ndarray, config: dict) -> np.ndarray:
+def rotate_correct(image: np.ndarray, config: dict, output_dir: str, output_prefix: str) -> np.ndarray:
     canny_min = config['rotation']['canny_min']
     canny_max = config['rotation']['canny_max']
     canny_aperture = config['rotation']['canny_aperture']
@@ -338,7 +339,14 @@ def rotate_correct(image: np.ndarray, config: dict) -> np.ndarray:
     dst = cv2.Canny(image, canny_min, canny_max, None, canny_aperture, True)
     lines = cv2.HoughLinesP(dst, 1, np.pi / 180, hough_threshold, None, hough_min_length, hough_max_gap)
     measured_lines = [measure(line[0]) for line in lines.tolist()]
-    h_lines = [d for d in measured_lines if is_nearly_horizontal(d[0], deviation)]
+    h_lines = [line for line in measured_lines if is_nearly_horizontal(line[0], deviation)]
+    # debug: save the hlines image
+    if config['debug']:
+        debug_image_path = os.path.join(output_dir, f'{output_prefix}_hlines.png')
+        hline_image = generate_hlines_image(image, h_lines)
+        print(f'Writing {debug_image_path}')
+        cv2.imwrite(debug_image_path, hline_image)
+    # find the binned mode of angles and rotate
     angles = [d[0] for d in h_lines]
     rotation = binned_mode(angles, bins=21, range=(-deviation, deviation))
     print(f'Rotation = {rotation}')
@@ -421,15 +429,16 @@ def get_lines_for_registration(image: np.ndarray, config: dict, cutoffs: tuple) 
 
 
 def adjust_muster_to_template(image: np.ndarray, template: np.ndarray, config: dict,
-                              debug_image_path: str) -> np.ndarray:
+                              output_dir: str, output_prefix: str) -> np.ndarray:
     """
     Rotate the image; erase the margins; detect H and V lines and shift to match the template
     :param image: muster sheet
     :param template: template image
     :param config: config file object
-    :param debug_image_path: save the margin debugging
+    :param output_dir: used for debugging
+    :param output_prefix: used for debugging
     """
-    modified_image = rotate_correct(image, config)
+    modified_image = rotate_correct(image, config, output_dir, output_prefix)
     modified_image, cutoffs = erase_margins(modified_image, config)
     # cutoffs (left, right, top, bottom)
     adjusted_cutoffs = (cutoffs[0] + config['registration']['cutoff_adjustments']['left'],
@@ -448,7 +457,8 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray, config: d
     # https://scikit-image.org/docs/stable/api/skimage.registration.html#skimage.registration.phase_cross_correlation
     shifted_image = ndimage.shift(modified_image, shift)
 
-    if debug_image_path:
+    if config['debug']:
+        debug_image_path = os.path.join(output_dir, f'{output_prefix}_cutoffs.png')
         debug_image = mark_cutoffs(modified_image, cutoffs, adjusted_cutoffs, registration_image)
         print(f'Writing {debug_image_path}')
         cv2.imwrite(debug_image_path, debug_image)
@@ -470,7 +480,7 @@ def superimpose(shifted_image: np.ndarray, form: np.ndarray) -> np.ndarray:
     return output
 
 
-def mark_cutoffs(image: np.ndarray, outer: tuple, inner:tuple,
+def mark_cutoffs(image: np.ndarray, outer: tuple, inner: tuple,
                  registration_image: np.ndarray) -> np.ndarray:
     """
     Superimpose the form in blue on the image
@@ -495,6 +505,22 @@ def mark_cutoffs(image: np.ndarray, outer: tuple, inner:tuple,
     cv2.line(output, (left1, bottom1), (left1, top1), RED, 3)
     # copy the H & V lines detected
     output[np.where(registration_image == 0)] = BLUE
+    return output
+
+
+def generate_hlines_image(image: np.ndarray, hlines: list) -> np.ndarray:
+    """
+    Superimpose the near-horizontal lines on the image
+    :param image: grayscale image
+    :param hlines: list of measured lines
+    :return: merged RGB image
+    """
+    # angle, length, [x0, y0, x1, y1]
+    output = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+    for line in hlines:
+        p0 = (line[2][0], line[2][1])
+        p1 = (line[2][2], line[2][3])
+        cv2.line(output, p0, p1, BLUE, 1)
     return output
 
 
