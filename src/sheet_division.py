@@ -65,20 +65,20 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
         column = cell_spec['column']
         filename_base = f'{output_prefix}_{row:02d}_{column:02d}'
 
-        if workflow_id != previous_workflow_id:
+        if config['htr'] and (workflow_id != previous_workflow_id):
             print()
             model_subdirectory = workflows[workflow_id]['model_location']
             print(f'Loading model from {model_subdirectory} for workflow {workflow_id}')
             model = TrainedModel(model_subdirectory)
             previous_workflow_id = workflow_id
 
-        cell_result, cell_image = process_cell(registered_image, cell_spec, model)
+        cell_result, cell_image = process_cell(registered_image, cell_spec, model, config)
         cell_result['input'] = image_metadata.copy()
         save_processed_cell(config, filename_base, cell_result, parts_dir, cell_image)
         csv_table[cell_result['row']][cell_result['column'] * 2] = cell_result['text']
         csv_table[cell_result['row']][cell_result['column'] * 2 + 1] = cell_result['confidence']
 
-        if cell_result['confidence'] < cell_result['confidence_threshold']:
+        if config['htr'] and (cell_result['confidence'] < cell_result['confidence_threshold']):
             save_cell_for_correction(corrections_dir, filename_base, cell_spec,
                                      cell_result, registered_image)
             # TODO also generate metadata for Pantoptes and for reattaching
@@ -124,21 +124,24 @@ def save_processed_cell(config: dict, filename_base: str, cell_result: dict,
     return
 
 
-def process_cell(image: np.ndarray, cell, model):
+def process_cell(image: np.ndarray, cell, model, config: dict):
     """
     Extract the cell from the image and send the small image through the model.
     :param image: registered image of the whole sheet
     :param cell: specification for one cell
     :param model: trained model
+    :config: configuration dictionary
     """
     top, bottom = cell['top'], cell['bottom'] + 1
     left, right = cell['left'], cell['right'] + 1
     cell_image = image[top: bottom, left: right]
-    text, confidence = model.apply(cell_image)
-    cell_output = {'text': text, 'confidence': confidence}
+    cell_output = dict()
+    if config['htr']:
+        text, confidence = model.apply(cell_image)
+        cell_output.update({'text': text, 'confidence': confidence})
+        threshold = cell['confidence_threshold']
+        print(f'Cell shape {cell_image.shape} confidence {confidence:.3f} / {threshold:.3f} text "{text}"')
     cell_output.update(cell)
-    threshold = cell['confidence_threshold']
-    print(f'Cell shape {cell_image.shape} confidence {confidence:.3f} / {threshold:.3f} text "{text}"')
     return cell_output, cell_image
 
 

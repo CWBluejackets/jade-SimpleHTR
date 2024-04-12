@@ -38,6 +38,11 @@ if __name__ == "__main__":
                          default=False,
                          help='debug (save image files)')
 
+    oparser.add_argument('-r', dest='registration_only',
+                         action='store_true',
+                         default=False,
+                         help='registration only (no HTR)')
+
     oparser.add_argument('-i', dest='input_location',
                          type=str, default=None,
                          metavar='FILE_OR_DIR',
@@ -54,8 +59,14 @@ if __name__ == "__main__":
     print(f'Loading {options.config_file}')
     with open(options.config_file, 'r') as f:
         config = json.load(f)
-        config['verbose'] = options.verbose
+    config['verbose'] = options.verbose
+    if options.registration_only:
+        config['registration_only'] = True
+        config['debug'] = True
+    else:
+        config['registration_only'] = False
         config['debug'] = options.debug
+    config['htr'] = not config['registration_only']
 
     # workflow specifications
     workflow_file = os.path.join(os.path.dirname(options.config_file),
