@@ -33,7 +33,7 @@ def yes_boolean(yesno: str) -> bool:
 
 def extract_type(type_name: str) -> str:
     """
-    Convert 'Type 3' to '3''.
+    Convert 'Type 3' to '3'.
     """
     int_str = INTEGER.search(type_name)
     if int_str:
