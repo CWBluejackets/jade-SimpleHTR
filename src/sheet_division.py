@@ -75,8 +75,9 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
         cell_result, cell_image = process_cell(registered_image, cell_spec, model, config)
         cell_result['input'] = image_metadata.copy()
         save_processed_cell(config, filename_base, cell_result, parts_dir, cell_image)
-        csv_table[cell_result['row']][cell_result['column'] * 2] = cell_result['text']
-        csv_table[cell_result['row']][cell_result['column'] * 2 + 1] = cell_result['confidence']
+        if config['htr']:
+            csv_table[cell_result['row']][cell_result['column'] * 2] = cell_result['text']
+            csv_table[cell_result['row']][cell_result['column'] * 2 + 1] = cell_result['confidence']
 
         if config['htr'] and (cell_result['confidence'] < cell_result['confidence_threshold']):
             save_cell_for_correction(corrections_dir, filename_base, cell_spec,
@@ -84,13 +85,14 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
             # TODO also generate metadata for Pantoptes and for reattaching
             # https://panoptes.docs.apiary.io/#
 
-    csv_file = os.path.join(output_dir, f'{output_prefix}.csv')
-    print(f'SUMMARY: Writing {csv_file}')
-    with open(csv_file, 'w', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerow(csv_header)
-        for row_no in range(max(csv_table.keys())):
-            writer.writerow([row_no] + csv_table[row_no])
+    if config['htr']:
+        csv_file = os.path.join(output_dir, f'{output_prefix}.csv')
+        print(f'SUMMARY: Writing {csv_file}')
+        with open(csv_file, 'w', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(csv_header)
+            for row_no in range(max(csv_table.keys())):
+                writer.writerow([row_no] + csv_table[row_no])
     return
 
 
