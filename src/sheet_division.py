@@ -33,7 +33,7 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
         print(f'SUMMARY: Missing format_type!')
         return
     if form_type not in templates:
-        print(f'SUMMAMRY: Form type {form_type} is not supported')
+        print(f'SUMMARY: Form type {form_type} is not supported')
         return
 
     output_prefix = os.path.splitext(os.path.basename(input_jpg_file))[0]
