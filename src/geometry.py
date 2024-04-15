@@ -349,7 +349,7 @@ def rotate_correct(image: np.ndarray, config: dict, output_dir: str, output_pref
     # find the binned mode of angles and rotate
     angles = [d[0] for d in h_lines]
     rotation = binned_mode(angles, bins=21, range=(-deviation, deviation))
-    print(f'Rotation = {rotation}')
+    print(f'Rotation = {rotation:.3f}')
     return ndimage.rotate(image, angle=rotation, reshape=False)
 
 
