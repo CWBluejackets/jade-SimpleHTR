@@ -347,9 +347,11 @@ def rotate_correct(image: np.ndarray, config: dict, output_dir: str, output_pref
     hough_min_length = config['rotation']['hough_min_length']
     hough_max_gap = config['rotation']['hough_max_gap']
     deviation = config['rotation']['deviation']
+    hough_theta = config['rotation']['hough_resolution_degrees'] * np.pi / 180
+    hough_rho = config['rotation']['hough_resolution_pixels']
     dst = cv2.Canny(image, threshold1=canny_min, threshold2=canny_max,
                     apertureSize=canny_aperture, L2gradient=True)
-    lines = cv2.HoughLinesP(dst, rho=1, theta=np.pi / 180, threshold=hough_threshold,
+    lines = cv2.HoughLinesP(dst, rho=hough_rho, theta=hough_theta, threshold=hough_threshold,
                             minLineLength=hough_min_length, maxLineGap=hough_max_gap)
     measured_lines = [measure(line[0]) for line in lines.tolist()]
     h_lines = [line for line in measured_lines if is_nearly_horizontal(line[0], deviation)]
@@ -439,10 +441,12 @@ def get_lines_for_registration(image: np.ndarray, config: dict, cutoffs: tuple) 
     hough_threshold = config['registration']['hough_threshold']
     hough_min_length = config['registration']['hough_min_length']
     hough_max_gap = config['registration']['hough_max_gap']
+    hough_theta = config['registration']['hough_resolution_degrees'] * np.pi / 180
+    hough_rho = config['registration']['hough_resolution_pixels']
     deviation = config['registration']['deviation']
     dst = cv2.Canny(image, threshold1=canny_min, threshold2=canny_max,
                     apertureSize=canny_aperture, L2gradient=True)
-    lines = cv2.HoughLinesP(dst, rho=1, theta=np.pi / 180, threshold=hough_threshold,
+    lines = cv2.HoughLinesP(dst, rho=hough_rho, theta=hough_theta, threshold=hough_threshold,
                             minLineLength=hough_min_length, maxLineGap=hough_max_gap)
     measured_lines = [measure(line[0]) for line in lines.tolist()]
     keep_lines = [line for line in measured_lines if keep_horizontal_or_vertical(line, deviation, cutoffs)]
