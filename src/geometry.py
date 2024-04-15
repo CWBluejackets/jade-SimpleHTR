@@ -193,7 +193,7 @@ def identify_image_sides(image_median, left_median, right_median,
     return left_result, right_result
 
 
-def get_edge_medians(image: np.ndarray, config) -> Tuple[int, int]:
+def get_edge_medians(image: np.ndarray, config) -> Tuple[int, int, int, int]:
     """
     Get medians for the whole image and the left and right parts.
     Note that the array has shape (vertical, horizontal)
@@ -347,8 +347,10 @@ def rotate_correct(image: np.ndarray, config: dict, output_dir: str, output_pref
     hough_min_length = config['rotation']['hough_min_length']
     hough_max_gap = config['rotation']['hough_max_gap']
     deviation = config['rotation']['deviation']
-    dst = cv2.Canny(image, canny_min, canny_max, None, canny_aperture, True)
-    lines = cv2.HoughLinesP(dst, 1, np.pi / 180, hough_threshold, None, hough_min_length, hough_max_gap)
+    dst = cv2.Canny(image, threshold1=canny_min, threshold2=canny_max,
+                    apertureSize=canny_aperture, L2gradient=True)
+    lines = cv2.HoughLinesP(dst, rho=1, theta=np.pi / 180, threshold=hough_threshold,
+                            minLineLength=hough_min_length, maxLineGap=hough_max_gap)
     measured_lines = [measure(line[0]) for line in lines.tolist()]
     h_lines = [line for line in measured_lines if is_nearly_horizontal(line[0], deviation)]
     # debug: save the hlines image
@@ -438,8 +440,10 @@ def get_lines_for_registration(image: np.ndarray, config: dict, cutoffs: tuple) 
     hough_min_length = config['registration']['hough_min_length']
     hough_max_gap = config['registration']['hough_max_gap']
     deviation = config['registration']['deviation']
-    dst = cv2.Canny(image, canny_min, canny_max, None, canny_aperture, True)
-    lines = cv2.HoughLinesP(dst, 1, np.pi / 180, hough_threshold, None, hough_min_length, hough_max_gap)
+    dst = cv2.Canny(image, threshold1=canny_min, threshold2=canny_max,
+                    apertureSize=canny_aperture, L2gradient=True)
+    lines = cv2.HoughLinesP(dst, rho=1, theta=np.pi / 180, threshold=hough_threshold,
+                            minLineLength=hough_min_length, maxLineGap=hough_max_gap)
     measured_lines = [measure(line[0]) for line in lines.tolist()]
     keep_lines = [line for line in measured_lines if keep_horizontal_or_vertical(line, deviation, cutoffs)]
     new_image = np.full(image.shape, 255, dtype="uint8")
