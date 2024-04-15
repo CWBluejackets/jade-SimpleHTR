@@ -28,9 +28,9 @@
     "hough_max_gap": 10,
     "deviation": 1,
     "cutoff_adjustments": {
-      "left": 100,
+      "left": 90,
       "right": 195,
-      "top": 200,
+      "top": 190,
       "bottom": 25
     }
   }
