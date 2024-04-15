@@ -12,9 +12,9 @@
     "deviation": 2
   },
   "margin_detection": {
-    "left_right_limit": 0.20,
-    "top_bottom_limit": 0.15,
-    "left_right_test": 0.15,
+    "left_right_limit": 0.25,
+    "top_bottom_limit": 0.20,
+    "left_right_test": 0.10,
     "smoothing_window": 10,
     "black_limit": 0.75
   },
