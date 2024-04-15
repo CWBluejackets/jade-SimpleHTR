@@ -166,7 +166,8 @@ def most_frequent_values(values, interval, end, count):
     return c.most_common(count)
 
 
-def identify_image_sides(image_median, left_median, right_median, config) -> Tuple[str, str]:
+def identify_image_sides(image_median, left_median, right_median,
+                         very_left_median, very_right_median, config) -> Tuple[str, str]:
     """
     Identify left and right ends of image as 'light', 'dark', or 'unknown'
     :return: left and right 'light' or 'dark'
@@ -175,6 +176,10 @@ def identify_image_sides(image_median, left_median, right_median, config) -> Tup
     right_result = margin_median_result(right_median, image_median, config)
     print(f'Left: {left_median} {left_result}')
     print(f'Right: {right_median} {right_result}')
+    # fallback for narrow margins
+    if (left_result == 'unknown') and (right_result == 'unknown'):
+        left_result = margin_median_result(very_left_median, image_median, config)
+        right_result = margin_median_result(very_right_median, image_median, config)
     # The binding is hard to detect so let's fudge it
     if left_result == 'unknown' and right_result == 'dark':
         left_result = 'light'
@@ -197,9 +202,12 @@ def get_edge_medians(image: np.ndarray, config) -> Tuple[int, int]:
     :return: overall, left, right
     """
     left = round(image.shape[1] * config['margin_detection']['left_right_test'])
+    very_left = config['margin_detection']['fallback_side_test']
     left_median = round(np.median(image[:, :left]))
-    right_median = round(np.median(image[:, -left:]))
-    return left_median, right_median
+    very_left_median = round(np.median(image[:, :very_left]))
+    right_median = round(np.median(image[:, - left:]))
+    very_right_median = round(np.median(image[:, - very_left:]))
+    return left_median, right_median, very_left_median, very_right_median
 
 
 def margin_median_result(test_median, overall_median, config) -> str:
@@ -382,9 +390,11 @@ def erase_margins(image: np.ndarray, config):
     # scan vertical lines from the MODIFIED image
     # left_median, right_median = get_edge_medians(modified_image, config)
     # try using vertical lines from the ORIGINAL
-    left_median, right_median = get_edge_medians(image, config)
-    print(f'Side medians: left {left_median}, right {right_median}')
-    side_types = identify_image_sides(image_median, left_median, right_median, config)
+    left_median, right_median, very_left_median, very_right_median = get_edge_medians(image, config)
+    print(f'Medians: left {left_median}, very left {very_left_median}, '
+          f'right {right_median}, very right {very_right_median}')
+    side_types = identify_image_sides(image_median, left_median, right_median,
+                                      very_left_median, very_right_median, config)
     v_medians = smoothed_vertical_medians(modified_image, config)
     left_cutoff = get_left_cutoff(v_medians, side_types[0], image_median, config)
     right_cutoff = get_right_cutoff(v_medians, side_types[1], image_median, config)

@@ -15,6 +15,7 @@
     "left_right_limit": 0.25,
     "top_bottom_limit": 0.20,
     "left_right_test": 0.10,
+    "fallback_side_test": 100,
     "smoothing_window": 10,
     "black_limit": 0.75
   },
