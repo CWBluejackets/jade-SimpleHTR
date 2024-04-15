@@ -28,6 +28,9 @@ FONT = cv2.FONT_HERSHEY_COMPLEX
 FONT_SCALE = 1
 FONT_THICKNESS = 3
 
+# smallest rotation that will actually change the image
+MIN_ROTATION = math.degrees(math.atan(2/5616))
+
 
 def solve_line(point0, point1) -> Tuple[float, float]:
     """
@@ -349,8 +352,15 @@ def rotate_correct(image: np.ndarray, config: dict, output_dir: str, output_pref
     # find the binned mode of angles and rotate
     angles = [d[0] for d in h_lines]
     rotation = binned_mode(angles, bins=21, range=(-deviation, deviation))
-    print(f'Rotation = {rotation:.3f}')
-    return ndimage.rotate(image, angle=rotation, reshape=False)
+    if abs(rotation) > MIN_ROTATION:
+        print(f'Rotating {rotation:.3f} degrees')
+        # ndimage angle in degrees
+        # https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.rotate.html#scipy.ndimage.rotate
+        output = ndimage.rotate(image, angle=rotation, reshape=False)
+    else:
+        print(f'Ignoring {rotation:.3f} degrees')
+        output = image
+    return output
 
 
 def erase_margins(image: np.ndarray, config):
