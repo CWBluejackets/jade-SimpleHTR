@@ -3,47 +3,53 @@
     "description": "Names",
     "numeric": false,
     "extra": {
-      "bottom": 0.4
+      "bottom": 0.35
     },
-    "confidence": 0.7
+    "confidence": 0.6
   },
   "21969": {
     "description": "Ratings",
     "numeric": false,
     "extra": {
-      "left": 5,
-      "right": 5
+      "left": 10,
+      "right": 10
     },
-    "confidence": 0.7
+    "confidence": 0.6
   },
   "21986": {
     "description": "Where Born",
     "numeric": false,
     "extra": {
-      "bottom": 0.4
+      "bottom": 0.35
     },
-    "confidence": 0.7
+    "confidence": 0.6
   },
   "21987": {
     "description": "Occupation",
     "numeric": false,
     "extra": {
-      "bottom": 0.4
+      "left": 10,
+      "right": 10,
+      "bottom": 0.35
     },
-    "confidence": 0.7
+    "confidence": 0.6
   },
   "22014": {
     "description": "Age",
     "numeric": true,
-    "confidence": 0.7
+    "extra": {
+      "left": 10,
+      "right": 10
+    },
+    "confidence": 0.6
   },
   "22015": {
     "description": "Where Enlisted",
     "numeric": false,
     "extra": {
-      "bottom": 0.4
+      "bottom": 0.35
     },
-    "confidence": 0.7
+    "confidence": 0.6
   },
   "22016": {
     "description": "Date of Enlistment",
@@ -51,25 +57,25 @@
     "extra": {
       "bottom": 0.3
     },
-    "confidence": 0.7
+    "confidence": 0.6
   },
   "22031": {
     "description": "Ship's Number",
     "numeric": true,
     "extra": {
-      "left": 5,
-      "right": 5
+      "left": 10,
+      "right": 10
     },
-    "confidence": 0.7
+    "confidence": 0.6
   },
   "22038": {
     "description": "Term of Enlistment",
     "numeric": true,
     "extra": {
-      "left": 5,
-      "right": 5
+      "left": 10,
+      "right": 10
     },
-    "confidence": 0.7
+    "confidence": 0.6
   },
   "22039": {
     "description": "Remarks",
@@ -80,19 +86,19 @@
     "description": "Eyes, Hair & Complexion",
     "numeric": false,
     "extra": {
-      "left": 5,
-      "right": 5,
-      "bottom": 0.4
+      "left": 10,
+      "right": 10,
+      "bottom": 0.35
     },
-    "confidence": 0.7
+    "confidence": 0.6
   },
   "22045": {
     "description": "Height",
     "numeric": true,
     "extra": {
-      "left": 5,
-      "right": 5
+      "left": 10,
+      "right": 10
     },
-    "confidence": 0.7
+    "confidence": 0.6
   }
 }
