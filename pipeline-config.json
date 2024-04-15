@@ -20,8 +20,8 @@
     "black_limit": 0.75
   },
   "registration": {
-    "canny_min": 53,
-    "canny_max": 255,
+    "canny_min": 30,
+    "canny_max": 100,
     "canny_aperture": 5,
     "hough_threshold": 1,
     "hough_min_length": 25,
@@ -30,7 +30,7 @@
     "cutoff_adjustments": {
       "left": 90,
       "right": 195,
-      "top": 190,
+      "top": 180,
       "bottom": 25
     }
   }
