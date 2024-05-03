@@ -29,7 +29,7 @@ FONT_SCALE = 1
 FONT_THICKNESS = 3
 
 # smallest rotation that will actually change the image
-MIN_ROTATION = math.degrees(math.atan(2/5616))
+MIN_ROTATION = math.degrees(math.atan(2 / 5616))
 
 
 def solve_line(point0, point1) -> Tuple[float, float]:
@@ -411,7 +411,7 @@ def erase_margins(image: np.ndarray, config):
     return modified_image, (left_cutoff, right_cutoff, top_cutoff, bottom_cutoff)
 
 
-def keep_horizontal_or_vertical(measured_line, tolerance, cutoffs=None):
+def keep_horizontal_or_vertical(measured_line, tolerance, line_type: str, cutoffs=None):
     # cutoffs: left, right, top, bottom
     angle = measured_line[0]
     # ML: degrees 90 up, length,  line (x0, y0, x1, y1)
@@ -434,26 +434,36 @@ def keep_horizontal_or_vertical(measured_line, tolerance, cutoffs=None):
     return result
 
 
-def get_lines_for_registration(image: np.ndarray, config: dict, cutoffs: tuple) -> np.ndarray:
-    canny_min = config['registration']['canny_min']
-    canny_max = config['registration']['canny_max']
-    canny_aperture = config['registration']['canny_aperture']
-    hough_threshold = config['registration']['hough_threshold']
-    hough_min_length = config['registration']['hough_min_length']
-    hough_max_gap = config['registration']['hough_max_gap']
-    hough_theta = config['registration']['hough_resolution_degrees'] * np.pi / 180
-    hough_rho = config['registration']['hough_resolution_pixels']
-    deviation = config['registration']['deviation']
+def get_lined_image_for_registration(image: np.ndarray, config: dict, cutoffs: tuple) -> np.ndarray:
+    horizontal_lines = get_lines_for_registration(image, config, cutoffs, 'horizontal')
+    vertical_lines = get_lines_for_registration(image, config, cutoffs, 'vertical')
+    new_image = np.full(image.shape, 255, dtype="uint8")
+    for line in horizontal_lines + vertical_lines:
+        cv2.line(new_image, (line[2][0], line[2][1]), (line[2][2], line[2][3]), (0,), 3)
+    return new_image
+
+
+def get_lines_for_registration(image: np.ndarray, config: dict, cutoffs: tuple, line_type: str) -> list:
+    if line_type not in ['horizontal', 'vertical']:
+        raise ValueError(f'Type {line_type} is not horizontal or vertical!')
+    # get specific parameters
+    canny_min = config['registration'][line_type]['canny_min']
+    canny_max = config['registration'][line_type]['canny_max']
+    canny_aperture = config['registration'][line_type]['canny_aperture']
+    hough_threshold = config['registration'][line_type]['hough_threshold']
+    hough_min_length = config['registration'][line_type]['hough_min_length']
+    hough_max_gap = config['registration'][line_type]['hough_max_gap']
+    hough_theta = config['registration'][line_type]['hough_resolution_degrees'] * np.pi / 180
+    hough_rho = config['registration'][line_type]['hough_resolution_pixels']
+    deviation = config['registration'][line_type]['deviation']
     dst = cv2.Canny(image, threshold1=canny_min, threshold2=canny_max,
                     apertureSize=canny_aperture, L2gradient=True)
     lines = cv2.HoughLinesP(dst, rho=hough_rho, theta=hough_theta, threshold=hough_threshold,
                             minLineLength=hough_min_length, maxLineGap=hough_max_gap)
     measured_lines = [measure(line[0]) for line in lines.tolist()]
-    keep_lines = [line for line in measured_lines if keep_horizontal_or_vertical(line, deviation, cutoffs)]
-    new_image = np.full(image.shape, 255, dtype="uint8")
-    for line in keep_lines:
-        cv2.line(new_image, (line[2][0], line[2][1]), (line[2][2], line[2][3]), (0,), 3)
-    return new_image
+    keep_lines = [line for line in measured_lines if keep_horizontal_or_vertical(line, deviation,
+                                                                                 line_type, cutoffs)]
+    return keep_lines
 
 
 def adjust_muster_to_template(image: np.ndarray, template: np.ndarray, config: dict,
@@ -475,7 +485,7 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray, config: d
                         cutoffs[3] - config['registration']['cutoff_adjustments']['bottom'])
     print(f'Inner cutoffs: {adjusted_cutoffs}')
 
-    registration_image = get_lines_for_registration(modified_image, config, adjusted_cutoffs)
+    registration_image = get_lined_image_for_registration(modified_image, config, adjusted_cutoffs)
     # works much better without normalization
     shift, error, diffphase = phase_cross_correlation(template, registration_image, normalization=None)
     # pass this shift value as argument to scipy.ndimage.shift
