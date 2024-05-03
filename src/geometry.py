@@ -411,7 +411,7 @@ def erase_margins(image: np.ndarray, config):
     return modified_image, (left_cutoff, right_cutoff, top_cutoff, bottom_cutoff)
 
 
-def keep_horizontal_or_vertical(measured_line, tolerance, line_type: str, cutoffs=None):
+def keep_horizontal_or_vertical(measured_line, tolerance, line_type: str, cutoffs):
     # cutoffs: left, right, top, bottom
     angle = measured_line[0]
     # ML: degrees 90 up, length,  line (x0, y0, x1, y1)
@@ -421,20 +421,26 @@ def keep_horizontal_or_vertical(measured_line, tolerance, line_type: str, cutoff
     right = max(measured_line[2][0], measured_line[2][2])
     top = min(measured_line[2][1], measured_line[2][3])
     bottom = max(measured_line[2][1], measured_line[2][3])
-    if not cutoffs:
-        result = is_nearly_vertical(angle, tolerance) or is_nearly_horizontal(angle, tolerance)
-    elif is_nearly_vertical(angle, tolerance) and (cutoffs[0] < x < cutoffs[1]) and (top > cutoffs[2]) and (
-            bottom < cutoffs[3]):
-        result = True
-    elif is_nearly_horizontal(angle, tolerance) and (cutoffs[2] < y < cutoffs[3]) and (left > cutoffs[0]) and (
-            right < cutoffs[1]):
-        result = True
+    if line_type == 'horizontal':
+        result = (is_nearly_horizontal(angle, tolerance) and (cutoffs[2] < y < cutoffs[3]) and
+                  (left > cutoffs[0]) and (right < cutoffs[1]))
+    elif line_type == 'vertical':
+        result = (is_nearly_vertical(angle, tolerance) and (cutoffs[0] < x < cutoffs[1]) and
+                  (top > cutoffs[2]) and (bottom < cutoffs[3]))
     else:
-        result = False
+        raise ValueError(f'Unrecognized line type: {line_type}')
     return result
 
 
 def get_lined_image_for_registration(image: np.ndarray, config: dict, cutoffs: tuple) -> np.ndarray:
+    """
+    Generate a black on white image of horizontal and vertical lines for registration by
+    phase cross correlation.
+    :param image: input image
+    :param config: configuration parameters
+    :param cutoffs: tuple of horizontal and vertical lines coordinates
+    :return: b/w image
+    """
     horizontal_lines = get_lines_for_registration(image, config, cutoffs, 'horizontal')
     vertical_lines = get_lines_for_registration(image, config, cutoffs, 'vertical')
     new_image = np.full(image.shape, 255, dtype="uint8")
@@ -444,6 +450,14 @@ def get_lined_image_for_registration(image: np.ndarray, config: dict, cutoffs: t
 
 
 def get_lines_for_registration(image: np.ndarray, config: dict, cutoffs: tuple, line_type: str) -> list:
+    """
+    Get horizontal or vertical lines using the specific configuration parameters.
+    :param image: input image
+    :param config: configuration parameters
+    :param cutoffs: tuple of horizontal and vertical lines coordinates
+    :param line_type: 'horizontal' or 'vertical'
+    :return: list of measured lines
+    """
     if line_type not in ['horizontal', 'vertical']:
         raise ValueError(f'Type {line_type} is not horizontal or vertical!')
     # get specific parameters
