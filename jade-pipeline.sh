@@ -27,13 +27,6 @@ HTR_DIR="${HOME}/bluejackets/jade-SimpleHTR"
 # https://www.golinuxcloud.com/bash-getopts/
 # https://www.computerhope.com/unix/bash/getopts.htm
 
-# OPTIONS passed to SimpleHTR
-# required
-# -c convert fractions
-# -d data control file
-# -m model subdirectory
-# -w wide_mode
-
 CONFIG_FILE="${HTR_DIR}/pipeline-config.json"
 LOCATIONS_FILE="${HTR_DIR}/locations-jade.json"
 OPTIONS="-c  ${CONFIG_FILE}  -l ${LOCATIONS_FILE}"
