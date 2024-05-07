@@ -64,7 +64,18 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
         print(f'Writing {registration_path}')
         cv2.imwrite(registration_path, registration_debug)
 
-    # TODO produce median data for rows and cells, probably adjusted inward
+    # produce median data for rows
+    row_data = dict()
+    for row_number, row_spec in template['rows'].items():
+        row_info = row_spec.copy()
+        row_key = f'{row_number:02d}'
+        row_info['median'] = np.median(registered_image[row_spec['top']: row_spec['bottom'],
+                                       row_spec['left']: row_spec['right']])
+        row_data[row_key] = row_info
+    row_file = os.path.join(output_dir, f'{output_prefix}_rows.json')
+    print(f'SUMMARY: Writing {row_file}')
+    with open(row_file, 'w') as f:
+        json.dump(row_data, f, indent=1, sort_keys=True)
 
     previous_workflow_id = None
     model = None
