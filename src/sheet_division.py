@@ -12,17 +12,17 @@ from application import TrainedModel
 
 
 def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts_dir, corrections_dir,
-                         config, workflows, templates, exception_if_missing):
+                         config, workflows, templates):
     """
     Process sheet...
     :param image_metadata:
     :param output_dir: directory for output files
+    :param parts_dir: directory for parts files
     :param corrections_dir: directory for corrections for Zooniverse
     :param templates: template specifications
     :param input_jpg_file: JPG filename
     :param config: general configuration
     :param workflows: workflow specifications
-    :param exception_if_missing: throw exception for missing file
     :return:
     """
     print(f'Reading image from {input_jpg_file}')
@@ -30,15 +30,20 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
         form_type = image_metadata['type']
         print(f'SUMMARY: Form type is {form_type}')
     except KeyError:
-        print(f'SUMMARY: Missing format_type!')
+        print(f'SUMMARY: Missing form type!')
         return
     if form_type not in templates:
         print(f'SUMMARY: Form type {form_type} is not supported')
         return
 
+    try:
+        image_raw = safe_imread(input_jpg_file, cv2.IMREAD_GRAYSCALE,
+                                exception_if_missing=True)
+    except FileNotFoundError:
+        print(f'SUMMARY: File {input_jpg_file} not found')
+        return
+
     output_prefix = os.path.splitext(os.path.basename(input_jpg_file))[0]
-    image_raw = safe_imread(input_jpg_file, cv2.IMREAD_GRAYSCALE,
-                            exception_if_missing=exception_if_missing)
     template = templates[form_type]
     template_image = template['image']
     print(f'Input size {image_raw.shape}; template size {template_image.shape}')
@@ -58,6 +63,8 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
         registration_debug = geometry.superimpose(registered_image, template_image)
         print(f'Writing {registration_path}')
         cv2.imwrite(registration_path, registration_debug)
+
+    # TODO produce median data for rows and cells, probably adjusted inward
 
     previous_workflow_id = None
     model = None

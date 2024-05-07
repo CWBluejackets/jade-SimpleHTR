@@ -139,8 +139,6 @@ if __name__ == "__main__":
     else:
         raise ValueError(f'Input location {input_location} is not a valid file or directory!')
 
-    exception_if_missing = locations['img_file_exception']
-
     for input_file in input_files:
         print()
         print(f'SUMMARY: Processing {input_file}')
@@ -153,4 +151,4 @@ if __name__ == "__main__":
             sheet_division.process_muster_sheet(input_file, image_metadata,
                                                 output_dir, parts_dir, corrections_dir,
                                                 config, workflows,
-                                                templates, exception_if_missing)
+                                                templates)
