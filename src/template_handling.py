@@ -32,7 +32,7 @@ def find_lines(scanline: np.ndarray) -> List[int]:
     return middles
 
 
-def get_columns(form: np.ndarray, y_ref: int):
+def get_column_separators(form: np.ndarray, y_ref: int):
     """
     Find the black column lines in the first writing row of the form
     :param form: form image
@@ -45,7 +45,7 @@ def get_columns(form: np.ndarray, y_ref: int):
     return middles, x_ref
 
 
-def get_rows(form: np.ndarray, y_ref: int, x_ref: int):
+def get_row_separators(form: np.ndarray, y_ref: int, x_ref: int):
     """
     Find the black row lines after the top of the first writing row of the form
     :param form: form image
@@ -73,13 +73,13 @@ def add_template_info(specification: dict, template_directory, workflows):
     print(f'Loading template image from {template_path}')
     image = sheet_division.safe_imread(template_path, cv2.IMREAD_GRAYSCALE)
     # find the black column boundaries in the template
-    column_lines, x_ref_line = get_columns(image, y_ref_line)
+    column_lines, x_ref_line = get_column_separators(image, y_ref_line)
     columns_needed = len(specification['columns'])
     if columns_needed != len(column_lines) - 1:
         raise ValueError(f'Mismatch! specified columns = {columns_needed}; boundaries found = {len(column_lines)}')
     # find the black row lines (starting with the bottom of the first writing row
     # because y_ref_line, the top of the first writing row, is given)
-    row_lines = [y_ref_line] + get_rows(image, y_ref_line, x_ref_line)
+    row_lines = [y_ref_line] + get_row_separators(image, y_ref_line, x_ref_line)
     specification['image'] = image
     specification['row_lines'] = row_lines
     specification['max_y'] = image.shape[0] - 1
@@ -105,7 +105,22 @@ def add_template_info(specification: dict, template_directory, workflows):
         output_columns.append(column)
     specification['output_columns'] = output_columns
     generate_cells(specification, workflows)
+    generate_rows(specification)
     return
+
+
+def generate_rows(specification: dict):
+    row_boundaries = specification['row_lines']
+    left = specification['output_columns'][0]['start'] + 1
+    right = specification['output_columns'][-1]['end'] - 1
+    row_data = {}
+    for row_number, (top, bottom) in enumerate(zip(row_boundaries[:-1], row_boundaries[1:])):
+        row_data[row_number] = {"top": top,
+                                "bottom": bottom,
+                                "left": left,
+                                "right": right}
+    specification['rows'] = row_data
+    pass
 
 
 def generate_cells(specification: dict, workflows: dict):
@@ -119,7 +134,9 @@ def generate_cells(specification: dict, workflows: dict):
         workflow = column_details['workflow']
         threshold = workflows[workflow]['confidence']
         left_adj, right_adj, top_adj, bottom_adj = get_cell_adjustments(workflow, workflows)
+        original_left = column_details['start']
         left = column_details['start']
+        original_right = column_details['end']
         right = column_details['end']
         expanded_left, expanded_right = get_expanded_x_values(column_number, specification['output_columns'])
         width = right - left
@@ -136,6 +153,8 @@ def generate_cells(specification: dict, workflows: dict):
             right = right + right_adj
         row_boundaries = specification['row_lines']
         for row_number, (top, bottom) in enumerate(zip(row_boundaries[:-1], row_boundaries[1:])):
+            original_top = top
+            original_bottom = bottom
             expanded_top, expanded_bottom = get_expanded_y_values(row_number, row_boundaries)
             height = bottom - top
             if 0 < top_adj < 1:
@@ -154,6 +173,11 @@ def generate_cells(specification: dict, workflows: dict):
                     "right": right,
                     "top": top,
                     "bottom": bottom,
+                    "original": {"left": original_left,
+                                 "right": original_right,
+                                 "top": original_top,
+                                 "bottom": original_bottom
+                                 },
                     "expanded": {"top": max(expanded_top, 0),
                                  "bottom": min(expanded_bottom, specification['max_y']),
                                  "left": max(expanded_left, 0),
@@ -191,7 +215,7 @@ def get_expanded_x_values(column_index: int, columns_info) -> Tuple[int, int]:
         right = columns_info[column_index]['end'] + 100
     else:
         right = columns_info[column_index + 1]['end']
-    return left, right
+    return left, right + 1
 
 
 def get_expanded_y_values(row_index: int, row_boundaries: List[int]) -> Tuple[int, int]:
@@ -211,4 +235,4 @@ def get_expanded_y_values(row_index: int, row_boundaries: List[int]) -> Tuple[in
         bottom = row_boundaries[-1] + 100
     else:
         bottom = row_boundaries[row_index + 2]
-    return top, bottom
+    return top, bottom + 1

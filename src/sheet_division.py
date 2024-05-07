@@ -135,10 +135,13 @@ def process_cell(image: np.ndarray, cell, model, config: dict):
     :param image: registered image of the whole sheet
     :param cell: specification for one cell
     :param model: trained model
-    :config: configuration dictionary
+    :param config: configuration dictionary
     """
-    top, bottom = cell['top'], cell['bottom'] + 1
-    left, right = cell['left'], cell['right'] + 1
+    inner_top, inner_bottom = cell['original']['top'], cell['original']['bottom']
+    inner_left, inner_right = cell['original']['left'], cell['original']['right']
+    top, bottom = cell['top'], cell['bottom']
+    left, right = cell['left'], cell['right']
+    inner_cell_image = image[inner_top:inner_bottom, inner_left:inner_right]
     cell_image = image[top: bottom, left: right]
     cell_output = dict()
     if config['htr']:
@@ -147,6 +150,8 @@ def process_cell(image: np.ndarray, cell, model, config: dict):
         threshold = cell['confidence_threshold']
         print(f'Cell shape {cell_image.shape} confidence {confidence:.3f} / {threshold:.3f} text "{text}"')
     cell_output.update(cell)
+    cell_output['median_full'] = np.median(cell_image)
+    cell_output['median_inner'] = np.median(inner_cell_image)
     return cell_output, cell_image
 
 
