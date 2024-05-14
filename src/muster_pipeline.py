@@ -104,8 +104,9 @@ if __name__ == "__main__":
             print(f'Sum {specification["image"].sum()}')
             debug_template_file = os.path.join(locations['output_directory'], f'template_{key}.json')
             output = specification.copy()
-            # Do not save the big image array
+            # Do not save the big image arrays
             del output['image']
+            del output['image_top']
             print(f'Writing {debug_template_file}')
             with open(debug_template_file, 'w') as f:
                 json.dump(output, f, indent=1, sort_keys=True, cls=sheet_division.NumpyJsonEncoder)

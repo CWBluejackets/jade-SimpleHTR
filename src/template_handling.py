@@ -68,7 +68,9 @@ def add_template_info(specification: dict, template_directory, workflows):
     :param workflows: workflow specifications
     """
     template_path = os.path.join(template_directory, specification['template'])
+    template_top_path = os.path.join(template_directory, specification['template_top'])
     specification['template_path'] = template_path
+    specification['template_top_path'] = template_top_path
     y_ref_line = specification['y_ref_line']
     print(f'Loading template image from {template_path}')
     image = sheet_division.safe_imread(template_path, cv2.IMREAD_GRAYSCALE)
@@ -106,6 +108,9 @@ def add_template_info(specification: dict, template_directory, workflows):
     specification['output_columns'] = output_columns
     generate_cells(specification, workflows)
     generate_rows(specification)
+    print(f'Loading template top image from {template_top_path}')
+    image_top = sheet_division.safe_imread(template_top_path, cv2.IMREAD_GRAYSCALE)
+    specification['image_top'] = image_top
     return
 
 

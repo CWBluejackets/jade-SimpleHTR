@@ -110,6 +110,7 @@
       "USN 1862"
     ],
     "template": "type-2-outline.png",
+    "template_top": "type-2-outline-top.png",
     "y_ref_line": 804,
     "type_name": "1862/C20"
   },
@@ -223,6 +224,7 @@
       "BoER 1864 (alt)"
     ],
     "template": "type-3-outline.png",
+    "template_top": "type-3-outline-top.png",
     "y_ref_line": 764,
     "type_name": "1863-1864/C20"
   }
