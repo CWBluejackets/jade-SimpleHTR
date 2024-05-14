@@ -99,19 +99,11 @@ if __name__ == "__main__":
 
     for key, specification in templates.items():
         print(f'Processing template {key}')
-        template_handling.add_template_info(specification, templates_directory, workflows)
         if config['debug']:
-            print(f'Sum {specification["image"].sum()}')
-            debug_template_file = os.path.join(locations['output_directory'], f'template_{key}.json')
-            output = specification.copy()
-            # Do not save the big image arrays
-            del output['image']
-            del output['image_top']
-            print(f'Writing {debug_template_file}')
-            with open(debug_template_file, 'w') as f:
-                json.dump(output, f, indent=1, sort_keys=True, cls=sheet_division.NumpyJsonEncoder)
-            # double-check the image
-            print(f'Sum {specification["image"].sum()}')
+            debug_template_path = os.path.join(locations['output_directory'], f'template_{key}.json')
+        else:
+            debug_template_path = None
+        template_handling.add_template_info(specification, templates_directory, workflows, debug_template_path)
 
     print()
     metadata_file = os.path.join(os.path.dirname(options.locations_file),

@@ -1,3 +1,4 @@
+import json
 import os
 from collections import defaultdict
 from typing import List, Tuple
@@ -59,7 +60,7 @@ def get_row_separators(form: np.ndarray, y_ref: int, x_ref: int):
     return [row + y_offset for row in shifted_rows]
 
 
-def add_template_info(specification: dict, template_directory, workflows):
+def add_template_info(specification: dict, template_directory, workflows, debug_template_path):
     """
     Load the template image; derive row and column information; derive cell boundaries
     :param specification: a value from pipeline-templates.json
@@ -74,6 +75,8 @@ def add_template_info(specification: dict, template_directory, workflows):
     y_ref_line = specification['y_ref_line']
     print(f'Loading template image from {template_path}')
     image = sheet_division.safe_imread(template_path, cv2.IMREAD_GRAYSCALE)
+    print(f'Loading template top image from {template_top_path}')
+    image_top = sheet_division.safe_imread(template_top_path, cv2.IMREAD_GRAYSCALE)
     # find the black column boundaries in the template
     column_lines, x_ref_line = get_column_separators(image, y_ref_line)
     columns_needed = len(specification['columns'])
@@ -82,7 +85,6 @@ def add_template_info(specification: dict, template_directory, workflows):
     # find the black row lines (starting with the bottom of the first writing row
     # because y_ref_line, the top of the first writing row, is given)
     row_lines = [y_ref_line] + get_row_separators(image, y_ref_line, x_ref_line)
-    specification['image'] = image
     specification['row_lines'] = row_lines
     specification['max_y'] = image.shape[0] - 1
     specification['max_x'] = image.shape[1] - 1
@@ -108,8 +110,13 @@ def add_template_info(specification: dict, template_directory, workflows):
     specification['output_columns'] = output_columns
     generate_cells(specification, workflows)
     generate_rows(specification)
-    print(f'Loading template top image from {template_top_path}')
-    image_top = sheet_division.safe_imread(template_top_path, cv2.IMREAD_GRAYSCALE)
+    # save the debug info WITHOUT the big image arrays
+    if debug_template_path:
+        print(f'Writing {debug_template_path}')
+        with open(debug_template_path, 'w') as f:
+            json.dump(specification, f, indent=1, sort_keys=True, cls=sheet_division.NumpyJsonEncoder)
+    # now add the arrays
+    specification['image'] = image
     specification['image_top'] = image_top
     return
 
