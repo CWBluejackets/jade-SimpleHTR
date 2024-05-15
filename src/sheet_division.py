@@ -45,7 +45,8 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
 
     output_prefix = os.path.splitext(os.path.basename(input_jpg_file))[0]
     template = templates[form_type]
-    template_image = template['image']
+    # now trying the top of the form
+    template_image = template['image_top']
     print(f'Input size {image_raw.shape}; template size {template_image.shape}')
     image_resized = geometry.resize_image(image_raw, template_image)
     registered_image = geometry.adjust_muster_to_template(image_resized, template_image, config,

@@ -31,6 +31,9 @@ FONT_THICKNESS = 3
 # smallest rotation that will actually change the image
 MIN_ROTATION = math.degrees(math.atan(2 / 5616))
 
+# https://docs.opencv.org/3.4/dd/d1a/group__imgproc__feature.html#ga26413521fde978c0c97f11149336f6e1
+LSD = cv2.createLineSegmentDetector()
+
 
 def solve_line(point0, point1) -> Tuple[float, float]:
     """
@@ -460,20 +463,11 @@ def get_lines_for_registration(image: np.ndarray, config: dict, cutoffs: tuple, 
     """
     if line_type not in ['horizontal', 'vertical']:
         raise ValueError(f'Type {line_type} is not horizontal or vertical!')
-    # get specific parameters
-    canny_min = config['registration'][line_type]['canny_min']
-    canny_max = config['registration'][line_type]['canny_max']
-    canny_aperture = config['registration'][line_type]['canny_aperture']
-    hough_threshold = config['registration'][line_type]['hough_threshold']
-    hough_min_length = config['registration'][line_type]['hough_min_length']
-    hough_max_gap = config['registration'][line_type]['hough_max_gap']
-    hough_theta = config['registration'][line_type]['hough_resolution_degrees'] * np.pi / 180
-    hough_rho = config['registration'][line_type]['hough_resolution_pixels']
+    # TODO investigate parameters
+    lines_and_stuff = LSD.detect(image)
+    # TODO see if the other stuff is useful
+    lines = lines_and_stuff[0]
     deviation = config['registration'][line_type]['deviation']
-    dst = cv2.Canny(image, threshold1=canny_min, threshold2=canny_max,
-                    apertureSize=canny_aperture, L2gradient=True)
-    lines = cv2.HoughLinesP(dst, rho=hough_rho, theta=hough_theta, threshold=hough_threshold,
-                            minLineLength=hough_min_length, maxLineGap=hough_max_gap)
     measured_lines = [measure(line[0]) for line in lines.tolist()]
     keep_lines = [line for line in measured_lines if keep_horizontal_or_vertical(line, deviation,
                                                                                  line_type, cutoffs)]
@@ -498,6 +492,9 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray, config: d
                         cutoffs[2] + config['registration']['cutoff_adjustments']['top'],
                         cutoffs[3] - config['registration']['cutoff_adjustments']['bottom'])
     print(f'Inner cutoffs: {adjusted_cutoffs}')
+    # temporary for testing
+    adjusted_cutoffs[4] = adjusted_cutoffs[3] + 250
+    print(f'Inner cutoffs (TEST): {adjusted_cutoffs}')
 
     registration_image = get_lined_image_for_registration(modified_image, config, adjusted_cutoffs)
     # works much better without normalization
