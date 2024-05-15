@@ -94,14 +94,15 @@ def measure(line0):
     Note: because in opencv y increases down the image, the angles
     are backwards from usual trigonometric convention.
     :param line0: (x0, y0, x1, y1) format returned by HoughLinesP
-    :return: degrees, length, line (repeated in same format)
+    :return: degrees, length, line (rounded to int)
     """
+    line1 = [round(item) for item in line0]
     dy = line0[3] - line0[1]
     dx = line0[2] - line0[0]
     angle = math.degrees(math.atan2(dy, dx))
     # Pythagoras
     length = math.sqrt(dy * dy + dx * dx)
-    return angle, length, line0
+    return angle, length, line1
 
 
 def normalize_angle(angle):
