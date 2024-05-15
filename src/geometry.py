@@ -490,11 +490,10 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray, config: d
     adjusted_cutoffs = (cutoffs[0] + config['registration']['cutoff_adjustments']['left'],
                         cutoffs[1] - config['registration']['cutoff_adjustments']['right'],
                         cutoffs[2] + config['registration']['cutoff_adjustments']['top'],
-                        cutoffs[3] - config['registration']['cutoff_adjustments']['bottom'])
+                        cutoffs[2] + config['registration']['cutoff_adjustments']['top'] + 250,
+                        # cutoffs[3] - config['registration']['cutoff_adjustments']['bottom']
+                        )
     print(f'Inner cutoffs: {adjusted_cutoffs}')
-    # temporary for testing
-    adjusted_cutoffs[4] = adjusted_cutoffs[3] + 250
-    print(f'Inner cutoffs (TEST): {adjusted_cutoffs}')
 
     registration_image = get_lined_image_for_registration(modified_image, config, adjusted_cutoffs)
     # works much better without normalization
