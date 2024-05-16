@@ -64,7 +64,7 @@
     "numeric": true,
     "extra": {
       "left": 10,
-      "right": 10
+      "right": 15
     },
     "confidence": 0.6
   },
