@@ -491,7 +491,7 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray, config: d
     adjusted_cutoffs = (cutoffs[0] + config['registration']['cutoff_adjustments']['left'],
                         cutoffs[1] - config['registration']['cutoff_adjustments']['right'],
                         cutoffs[2] + config['registration']['cutoff_adjustments']['top'],
-                        cutoffs[2] + config['registration']['cutoff_adjustments']['top'] + 250,
+                        cutoffs[2] + config['registration']['cutoff_adjustments']['top'] + 500,
                         # cutoffs[3] - config['registration']['cutoff_adjustments']['bottom']
                         )
     print(f'Inner cutoffs: {adjusted_cutoffs}')

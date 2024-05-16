@@ -64,6 +64,12 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
         registration_debug = geometry.superimpose(registered_image, template_image)
         print(f'Writing {registration_path}')
         cv2.imwrite(registration_path, registration_debug)
+        registration_path = os.path.join(output_dir,
+                                         f'{output_prefix}_3_registration.png')
+        full_template_image = template['image']
+        registration_debug = geometry.superimpose(registered_image, full_template_image)
+        print(f'Writing {registration_path}')
+        cv2.imwrite(registration_path, registration_debug)
 
     # produce median data for rows
     row_data = dict()
