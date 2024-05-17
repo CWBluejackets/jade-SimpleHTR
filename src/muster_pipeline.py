@@ -137,7 +137,9 @@ if __name__ == "__main__":
         print(f'SUMMARY: Processing {input_file}')
         index_key = make_index_key_from_filename(input_file)
         image_metadata = all_metadata.get_metadata(index_key)
-        if image_metadata['bad_alignment']:
+        if image_metadata is None:
+            print(f'SUMMARY: no metadata for {index_key}')
+        elif image_metadata['bad_alignment']:
             print(f'SUMMARY: Skipping {input_file} = bad alignment')
         elif image_metadata['non_standard']:
             print(f'SUMMARY: Skipping {input_file} = non standard')

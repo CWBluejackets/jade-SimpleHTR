@@ -144,9 +144,8 @@ class Metadata:
             self.inventory[(vessel, volume)] = nara_url
         return
 
-    def get_metadata(self, image_path):
-        image_file = os.path.basename(image_path)
-        return self.metadata.get(image_file, None)
+    def get_metadata(self, index_key):
+        return self.metadata.get(index_key, None)
 
     def get_nara_url(self, vessel: str, volume: int) -> str:
         try:
