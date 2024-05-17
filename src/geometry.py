@@ -579,8 +579,8 @@ def generate_image_for_correction(image: np.ndarray, cell_spec, ml_output: str):
     outer_top, outer_bottom = cell_spec['expanded']['top'], cell_spec['expanded']['bottom']
     extracted_image = image[outer_top: outer_bottom, outer_left: outer_right]
     # calculate box  within cropped image
-    inner_left, inner_right = cell_spec['left'] - outer_left, cell_spec['right'] - outer_left
-    inner_top, inner_bottom = cell_spec['top'] - outer_top, cell_spec['bottom'] - outer_top
+    inner_left, inner_right = cell_spec['htr']['left'] - outer_left, cell_spec['htr']['right'] - outer_left
+    inner_top, inner_bottom = cell_spec['htr']['top'] - outer_top, cell_spec['htr']['bottom'] - outer_top
     # calculate text size and expand image as needed
     # https://lindevs.com/get-text-size-using-opencv
     (text_width, text_height), _ = cv2.getTextSize(ml_output, FONT, FONT_SCALE, FONT_THICKNESS)
@@ -602,12 +602,16 @@ def generate_image_for_correction(image: np.ndarray, cell_spec, ml_output: str):
     cv2.line(output_image, (inner_left, inner_top), (inner_right, inner_top), RED, 1)
     cv2.line(output_image, (inner_left, inner_bottom), (inner_right, inner_bottom), RED, 1)
     # add the text
+    # TODO center the text
     point = (5, extracted_image.shape[0] - 10)
     cv2.putText(output_image, ml_output, point, FONT, FONT_SCALE, BLACK)
     return output_image
 
 
 def resize_image(source: np.ndarray, to_match: np.ndarray) -> np.ndarray:
+    """
+    Change the size of the matrix WITHOUT rescaling.
+    """
     # typically (3744, 5616)
     if source.shape == to_match.shape:
         return source

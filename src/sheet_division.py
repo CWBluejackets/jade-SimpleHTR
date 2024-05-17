@@ -164,8 +164,8 @@ def process_cell(image: np.ndarray, cell, model, config: dict):
     """
     inner_top, inner_bottom = cell['original']['top'], cell['original']['bottom']
     inner_left, inner_right = cell['original']['left'], cell['original']['right']
-    top, bottom = cell['top'], cell['bottom']
-    left, right = cell['left'], cell['right']
+    top, bottom = cell['htr']['top'], cell['htr']['bottom']
+    left, right = cell['htr']['left'], cell['htr']['right']
     inner_cell_image = image[inner_top:inner_bottom, inner_left:inner_right]
     cell_image = image[top: bottom, left: right]
     cell_output = dict()

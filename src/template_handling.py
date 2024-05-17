@@ -93,8 +93,8 @@ def add_template_info(specification: dict, template_directory, workflows, debug_
         column['start'] = column_lines[index]
         column['end'] = column_lines[index + 1]
     # Merge adjacent columns of the same workflow (e.g., height feet + height inches
-    # and determine the start and end x-values (this code assumes adjacency of workflow parts)
-    output_columns = []
+    # and determine the start and end x-values (this code relies on the adjacency of parts
+    # of the same workflow)
     workflow_starts = defaultdict(set)
     workflow_ends = defaultdict(set)
     for column in specification['columns']:
@@ -102,11 +102,12 @@ def add_template_info(specification: dict, template_directory, workflows, debug_
             workflow = column['workflow']
             workflow_starts[workflow].add(column['start'])
             workflow_ends[workflow].add(column['end'])
+    output_columns = []
     for workflow in workflow_starts.keys():
-        column = {'workflow': workflow,
-                  'start': min(workflow_starts[workflow]),
-                  'end': max(workflow_ends[workflow])}
-        output_columns.append(column)
+        output_column = {'workflow': workflow,
+                         'start': min(workflow_starts[workflow]),
+                         'end': max(workflow_ends[workflow])}
+        output_columns.append(output_column)
     specification['output_columns'] = output_columns
     generate_cells(specification, workflows)
     generate_rows(specification)
@@ -147,44 +148,48 @@ def generate_cells(specification: dict, workflows: dict):
         threshold = workflows[workflow]['confidence']
         left_adj, right_adj, top_adj, bottom_adj = get_cell_adjustments(workflow, workflows)
         original_left = column_details['start']
-        left = column_details['start']
+        htr_left = column_details['start']
         original_right = column_details['end']
-        right = column_details['end']
+        htr_right = column_details['end']
         expanded_left, expanded_right = get_expanded_x_values(column_number, specification['output_columns'])
-        width = right - left
+        width = htr_right - htr_left
         # 0 do nothing
         # 0.0 < ADJ < 1.0 is a proportion of height or width
         # 1 up is number of pixels
         if 0 < left_adj < 1:
-            left = left - round(left_adj * width)
+            htr_left = htr_left - round(left_adj * width)
         elif 1 <= left_adj:
-            left = left - left_adj
+            htr_left = htr_left - left_adj
         if 0 < right_adj < 1:
-            right = right + round(right_adj * width)
+            htr_right = htr_right + round(right_adj * width)
         elif 1 <= right_adj:
-            right = right + right_adj
+            htr_right = htr_right + right_adj
         row_boundaries = specification['row_lines']
         for row_number, (top, bottom) in enumerate(zip(row_boundaries[:-1], row_boundaries[1:])):
             original_top = top
+            htr_top = top
             original_bottom = bottom
+            htr_bottom = bottom
             expanded_top, expanded_bottom = get_expanded_y_values(row_number, row_boundaries)
-            height = bottom - top
+            height = htr_bottom - htr_top
             if 0 < top_adj < 1:
-                top = top - round(top_adj * height)
+                htr_top = htr_top - round(top_adj * height)
             elif 1 <= top_adj:
-                top = top - top_adj
+                htr_top = htr_top - top_adj
             if 0 < bottom_adj < 1:
-                bottom = bottom + round(bottom_adj * height)
+                htr_bottom = htr_bottom + round(bottom_adj * height)
             elif 1 <= bottom_adj:
-                bottom = bottom + bottom_adj
+                htr_bottom = htr_bottom + bottom_adj
             cell = {"workflow": workflow,
                     "confidence_threshold": threshold,
                     "column": column_number,
                     "row": row_number,
-                    "left": left,
-                    "right": right,
-                    "top": top,
-                    "bottom": bottom,
+                    "htr": {
+                        "left": htr_left,
+                        "right": htr_right,
+                        "top": htr_top,
+                        "bottom": htr_bottom,
+                    },
                     "original": {"left": original_left,
                                  "right": original_right,
                                  "top": original_top,
@@ -238,7 +243,7 @@ def get_expanded_y_values(row_index: int, row_boundaries: List[int]) -> Tuple[in
     if row_index == 0:
         top = row_boundaries[0] - 120
     elif row_index == 1:
-        top = row_boundaries[0] -100
+        top = row_boundaries[0] - 100
     else:
         top = row_boundaries[row_index - 2]
     if row_index == len(row_boundaries) - 1:
