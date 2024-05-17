@@ -5,6 +5,7 @@ import re
 WHITESPACE = re.compile(r'\s+')
 INTEGER = re.compile(r'\d+')
 DOUBLE_INITIAL = re.compile(r'\b([a-z])\s*([a-z])\b')
+INDEX = re.compile(r'\d\d\d_\S+_\d\d\d\d')
 
 
 # columns:
@@ -27,11 +28,33 @@ def get_image_filename(muster_info):
     return f"{volume:03d}_{vessel}_{sheet:04d}{nst}.JPG"
 
 
+def make_index_key_from_metadata(muster_info) -> str:
+    """
+    Key to match part of filename, e.g., '117_essex_0058'
+    """
+    volume = muster_info["volume"]
+    sheet = muster_info["sheet"]
+    vessel = muster_info["vessel"]
+    return f"{volume:03d}_{vessel}_{sheet:04d}"
+
+
+def make_index_key_from_filename(path: str) -> str:
+    filename = os.path.basename(path)
+    # 117_essex_0058.jpg
+    # 120_estrella_0005.JPG
+    index_match = INDEX.match(filename)
+    if index_match:
+        result = index_match.group(0).lower()
+    else:
+        result = None
+    return result
+
+
 def yes_boolean(yesno: str) -> bool:
     return yesno.strip().lower().startswith('y')
 
 
-def extract_type(type_name: str) -> str:
+def extract_form_type(type_name: str) -> str:
     """
     Convert 'Type 3' to '3'.
     """
@@ -43,16 +66,16 @@ def extract_type(type_name: str) -> str:
     return result
 
 
-def force_to_int(volume_str: str) -> int:
+def force_to_int(str_containing_int: str) -> int:
     try:
-        result = int(volume_str)
+        result = int(str_containing_int)
     except ValueError:
-        match = INTEGER.search(volume_str)
+        match = INTEGER.search(str_containing_int)
         if match:
             result = int(match.group(0))
         else:
             result = -1
-        print(f'Invalid int: {volume_str} -> {result}')
+        print(f'Invalid int: {str_containing_int} -> {result}')
     return result
 
 
@@ -97,18 +120,22 @@ class Metadata:
                     "muster_date_specified": muster_date_specified,
                     "muster_date": muster_date_specified or muster_date_running,
                     "type_name": type_name,
-                    "type": extract_type(type_name),
+                    "type": extract_form_type(type_name),
                     "bad_alignment": bad_alignment,
                     "non_standard": non_standard,
                     "nara_url": nara_url
                     }
             image_filename = get_image_filename(item)
+            key = make_index_key_from_metadata(item)
             item['image_filename'] = image_filename
             item['good'] = not (bad_alignment or non_standard)
-            self.metadata[image_filename] = item
+            self.metadata[key] = item
         return
 
     def process_inventory(self, reader: csv.DictReader):
+        """
+        Build the database of NARA URLs (for Zooniverse metadata)
+        """
         for row in reader:
             vessel = normalize_vessel(row['Ship Name'])
             # Wabash 519A

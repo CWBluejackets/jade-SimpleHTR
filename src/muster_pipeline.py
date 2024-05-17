@@ -8,7 +8,7 @@ import os.path
 
 import sheet_division
 import template_handling
-from metadata_handling import Metadata
+from metadata_handling import Metadata, make_index_key_from_filename
 
 HERE = os.path.dirname(os.path.realpath(__file__))
 DEFAULT_CONFIG_FILE = os.path.join(HERE, 'config.json')
@@ -135,7 +135,8 @@ if __name__ == "__main__":
     for input_file in input_files:
         print()
         print(f'SUMMARY: Processing {input_file}')
-        image_metadata = all_metadata.get_metadata(input_file)
+        index_key = make_index_key_from_filename(input_file)
+        image_metadata = all_metadata.get_metadata(index_key)
         if image_metadata['bad_alignment']:
             print(f'SUMMARY: Skipping {input_file} = bad alignment')
         elif image_metadata['non_standard']:
