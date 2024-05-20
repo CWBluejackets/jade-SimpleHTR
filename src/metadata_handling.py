@@ -5,7 +5,8 @@ import re
 WHITESPACE = re.compile(r'\s+')
 INTEGER = re.compile(r'\d+')
 DOUBLE_INITIAL = re.compile(r'\b([a-z])\s*([a-z])\b')
-INDEX = re.compile(r'\d\d\d_\S+_\d\d\d\d')
+INDEX = re.compile(r'(\d\d\d)_(\S+)_(\d\d\d\d)')
+NON_LETTER = re.compile(r'[^a-z]')
 
 
 # columns:
@@ -15,9 +16,8 @@ INDEX = re.compile(r'\d\d\d_\S+_\d\d\d\d')
 
 def normalize_vessel(raw_vessel: str) -> str:
     vessel = raw_vessel.strip().lower()
-    vessel = vessel.replace('.','')
-    vessel = DOUBLE_INITIAL.sub(r'\1\2', vessel)
-    return WHITESPACE.sub('_', vessel)
+    vessel = NON_LETTER.sub('', vessel)
+    return vessel
 
 
 def get_image_filename(muster_info):
@@ -38,13 +38,17 @@ def make_index_key_from_metadata(muster_info) -> str:
     return f"{volume:03d}_{vessel}_{sheet:04d}"
 
 
-def make_index_key_from_filename(path: str) -> str:
+def make_index_key_from_pathname(path: str) -> str:
     filename = os.path.basename(path)
     # 117_essex_0058.jpg
     # 120_estrella_0005.JPG
+    # 114_e_b_hale_0023
     index_match = INDEX.match(filename)
     if index_match:
-        result = index_match.group(0).lower()
+        volume = index_match.group(1)
+        vessel = normalize_vessel(index_match.group(2))
+        sheet = index_match.group(3)
+        result = f'{volume}_{vessel}_{sheet}'
     else:
         result = None
     return result
