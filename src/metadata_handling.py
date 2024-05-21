@@ -34,6 +34,7 @@ def make_index_key_from_metadata(muster_info) -> str:
     """
     volume = muster_info["volume"]
     sheet = muster_info["sheet"]
+    # this is the normalized vessel name
     vessel = muster_info["vessel"]
     return f"{volume:03d}_{vessel}_{sheet:04d}"
 
@@ -42,7 +43,7 @@ def make_index_key_from_pathname(path: str) -> str:
     filename = os.path.basename(path)
     # 117_essex_0058.jpg
     # 120_estrella_0005.JPG
-    # 114_e_b_hale_0023
+    # 114_e_b_hale_0023.JPG -> 114_ebhale_0025
     index_match = INDEX.match(filename)
     if index_match:
         volume = index_match.group(1)
