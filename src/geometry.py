@@ -491,8 +491,8 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray, config: d
     adjusted_cutoffs = (cutoffs[0] + config['registration']['cutoff_adjustments']['left'],
                         cutoffs[1] - config['registration']['cutoff_adjustments']['right'],
                         cutoffs[2] + config['registration']['cutoff_adjustments']['top'],
-                        cutoffs[2] + config['registration']['cutoff_adjustments']['top'] + 500,
-                        # cutoffs[3] - config['registration']['cutoff_adjustments']['bottom']
+                        cutoffs[2] + config['registration']['cutoff_adjustments']['top'] +
+                        config['registration']['cutoff_adjustments']['top_band'],
                         )
     print(f'Inner cutoffs: {adjusted_cutoffs}')
 
@@ -667,7 +667,7 @@ def clipped_zoom(img: np.ndarray, zoom_factor: float, **kwargs) -> np.ndarray:
 
         # Zero-padding
         out = np.zeros_like(img)
-        out[top:top+zh, left:left+zw] = ndimage.zoom(img, zoom_tuple, **kwargs)
+        out[top:top + zh, left:left + zw] = ndimage.zoom(img, zoom_tuple, **kwargs)
 
     # Zooming in
     elif zoom_factor > 1:
@@ -678,16 +678,15 @@ def clipped_zoom(img: np.ndarray, zoom_factor: float, **kwargs) -> np.ndarray:
         top = (h - zh) // 2
         left = (w - zw) // 2
 
-        out = ndimage.zoom(img[top:top+zh, left:left+zw], zoom_tuple, **kwargs)
+        out = ndimage.zoom(img[top:top + zh, left:left + zw], zoom_tuple, **kwargs)
 
         # `out` might still be slightly larger than `img` due to rounding, so
         # trim off any extra pixels at the edges
         trim_top = ((out.shape[0] - h) // 2)
         trim_left = ((out.shape[1] - w) // 2)
-        out = out[trim_top:trim_top+h, trim_left:trim_left+w]
+        out = out[trim_top:trim_top + h, trim_left:trim_left + w]
 
     # If zoom_factor == 1, just return the input array
     else:
         out = img.copy()
     return out
-
