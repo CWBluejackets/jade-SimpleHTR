@@ -476,7 +476,7 @@ def get_lines_for_registration(image: np.ndarray, config: dict, cutoffs: tuple, 
 
 
 def adjust_muster_to_template(image: np.ndarray, template: np.ndarray, config: dict,
-                              output_dir: str, output_prefix: str) -> np.ndarray:
+                              output_dir: str, output_prefix: str) -> Tuple[np.ndarray, tuple]:
     """
     Rotate the image; erase the margins; detect H and V lines and shift to match the template
     :param image: muster sheet
@@ -512,7 +512,7 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray, config: d
         print(f'Writing {debug_image_path}')
         cv2.imwrite(debug_image_path, debug_image)
 
-    return shifted_image
+    return shifted_image, (shift, error, diffphase)
 
 
 def superimpose(shifted_image: np.ndarray, form: np.ndarray) -> np.ndarray:

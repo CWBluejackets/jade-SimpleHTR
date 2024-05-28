@@ -49,8 +49,8 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
     template_image = template['image_top']
     print(f'Input size {image_raw.shape}; template size {template_image.shape}')
     image_resized = geometry.resize_image(image_raw, template_image)
-    registered_image = geometry.adjust_muster_to_template(image_resized, template_image, config,
-                                                          output_dir, output_prefix)
+    registered_image, pcc_info = geometry.adjust_muster_to_template(image_resized, template_image,
+                                                                    config, output_dir, output_prefix)
 
     csv_header = ['row']
     for column in template['output_columns']:
@@ -102,6 +102,7 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
 
         cell_result, cell_image = process_cell(registered_image, cell_spec, model, config)
         cell_result['input'] = image_metadata.copy()
+        cell_result['pcc'] = pcc_info
         save_processed_cell(config, filename_base, cell_result, parts_dir, cell_image)
         if config['htr']:
             csv_table[cell_result['row']][cell_result['column'] * 2] = cell_result['text']
