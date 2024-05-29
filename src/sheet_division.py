@@ -47,11 +47,12 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
     template = templates[form_type]
     # now trying the top of the form
     template_image = template['image_top']
+    template_form_width = template['form_width']
     print(f'Input size {image_raw.shape}; template size {template_image.shape}')
     image_resized = geometry.resize_image(image_raw, template_image)
     registered_image, pcc_info = geometry.adjust_muster_to_template(image_resized, template_image,
+                                                                    template_form_width,
                                                                     config, output_dir, output_prefix)
-
     csv_header = ['row']
     for column in template['output_columns']:
         csv_header.extend([str(column['workflow']), 'conf'])
