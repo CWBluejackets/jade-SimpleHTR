@@ -10,12 +10,13 @@ from statistics import median
 import sheet_division
 
 
-def find_lines(scanline: np.ndarray) -> List[int]:
+def find_lines(scanline: np.ndarray) -> Tuple[List[int], int]:
     """
     Scan a row/column for contiguous black (0) bits and return the middle position of each
     group.
     :param scanline: array of rank 1
-    :return: list of middle positions of black lines
+    :return: list of middle positions of black lines AND overall width for rescaling (ignore
+    this for row)
     """
     black = np.where(scanline == 0)[0]
     groups = []
@@ -30,7 +31,8 @@ def find_lines(scanline: np.ndarray) -> List[int]:
         previous = pixel
     groups.append(group)
     middles = [round(median(group)) for group in groups]
-    return middles
+    form_width = max(black) - min(black)
+    return middles, form_width
 
 
 def get_column_separators(form: np.ndarray, y_ref: int):
@@ -38,12 +40,14 @@ def get_column_separators(form: np.ndarray, y_ref: int):
     Find the black column lines in the first writing row of the form
     :param form: form image
     :param y_ref: y-value of the line at the top of the first writing row
-    :return: list of x-values of black lines AND x-value of the middle of the first column
+    :return: list of x-values of black column separator lines
+    AND x-value of the middle of the first column
+    AND overall width of the form
     """
     scanline = form[y_ref + 10, :]
-    middles = find_lines(scanline)
+    middles, form_width = find_lines(scanline)
     x_ref = round((middles[0] + middles[1]) / 2)
-    return middles, x_ref
+    return middles, x_ref, form_width
 
 
 def get_row_separators(form: np.ndarray, y_ref: int, x_ref: int):
@@ -56,7 +60,7 @@ def get_row_separators(form: np.ndarray, y_ref: int, x_ref: int):
     """
     y_offset = y_ref + 10
     scanline = form[y_offset:, x_ref]
-    shifted_rows = find_lines(scanline)
+    shifted_rows, _ = find_lines(scanline)
     return [row + y_offset for row in shifted_rows]
 
 
@@ -78,7 +82,8 @@ def add_template_info(specification: dict, template_directory, workflows, debug_
     print(f'Loading template top image from {template_top_path}')
     image_top = sheet_division.safe_imread(template_top_path, cv2.IMREAD_GRAYSCALE)
     # find the black column boundaries in the template
-    column_lines, x_ref_line = get_column_separators(image, y_ref_line)
+    column_lines, x_ref_line, form_width = get_column_separators(image, y_ref_line)
+    specification['form_width'] = form_width
     columns_needed = len(specification['columns'])
     if columns_needed != len(column_lines) - 1:
         raise ValueError(f'Mismatch! specified columns = {columns_needed}; boundaries found = {len(column_lines)}')
