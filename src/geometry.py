@@ -495,9 +495,12 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray, config: d
                         config['registration']['cutoff_adjustments']['top_band'],
                         )
     print(f'Inner cutoffs: {adjusted_cutoffs}')
-
+    # Detect H & V lines for the dark boxes at the top of the form
     registration_image = get_lined_image_for_registration(modified_image, config, adjusted_cutoffs)
-    # works much better without normalization
+    header_box_width = get_registration_width(registration_image)
+    # TODO rescale muster image horizontally only to match the template
+
+    # PCC works much better without normalization
     shift, error, diffphase = phase_cross_correlation(template, registration_image, normalization=None)
     # pass this shift value as argument to scipy.ndimage.shift
     print('Registration:', shift, error, diffphase)
