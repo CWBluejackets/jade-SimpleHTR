@@ -516,8 +516,8 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray,
     muster_box_width = get_registration_width(registration_image)
     rescale_factor = template_form_width / muster_box_width
     print(f'Template box width {template_form_width} vs muster {muster_box_width} -> rescale {rescale_factor:.3f}')
-    # TODO rescale muster image horizontally only to match the template
-    # modified_image = rescale_horizontally(modified_image, rescale_factor)
+    # rescale muster image but only horizontally to match the template
+    modified_image = clipped_zoom(modified_image, rescale_factor, horizontal_only=True)
 
     # PCC works much better without normalization
     shift, error, diffphase = phase_cross_correlation(template, registration_image, normalization=None)
@@ -670,13 +670,16 @@ def dup_cols(a, number=1):
     return np.insert(a, [index + 1] * number, a[:, [index]], axis=1)
 
 
-def clipped_zoom(img: np.ndarray, zoom_factor: float, **kwargs) -> np.ndarray:
+def clipped_zoom(img: np.ndarray, zoom_factor: float, horizontal_only=False, **kwargs) -> np.ndarray:
     # https://stackoverflow.com/questions/37119071/scipy-rotate-and-zoom-an-image-without-changing-its-dimensions
     h, w = img.shape[:2]
     # For multichannel images we don't want to apply the zoom factor to the RGB
     # dimension, so instead we create a tuple of zoom factors, one per array
     # dimension, with 1's for any trailing dimensions after the width and height.
-    zoom_tuple = (zoom_factor,) * 2 + (1,) * (img.ndim - 2)
+    if horizontal_only:
+        zoom_tuple = (1, zoom_factor) + (1,) * (img.ndim - 2)
+    else:
+        zoom_tuple = (zoom_factor, zoom_factor)  + (1,) * (img.ndim - 2)
 
     # Zooming out
     if zoom_factor < 1:
