@@ -525,7 +525,9 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray,
     rescale_factor = template_form_width / muster_box_width
     print(f'Template box width {template_form_width} vs muster {muster_box_width} -> rescale {rescale_factor:.3f}')
     # rescale muster image but only horizontally to match the template
+    print(f'Before clipped_zoom {modified_image.shape}')
     modified_image = clipped_zoom(modified_image, rescale_factor, horizontal_only=True)
+    print(f'After clipped_zoom {modified_image.shape}')
 
     # PCC works much better without normalization
     shift, error, diffphase = phase_cross_correlation(template, registration_image, normalization=None)
