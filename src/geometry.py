@@ -526,7 +526,8 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray,
     print(f'Template box width {template_form_width} vs muster {muster_box_width} -> rescale {rescale_factor:.3f}')
     # rescale muster image but only horizontally to match the template
     print(f'Before clipped_zoom {modified_image.shape}')
-    modified_image = clipped_zoom(modified_image, rescale_factor, horizontal_only=True)
+    # modified_image = clipped_zoom(modified_image, rescale_factor, horizontal_only=True)
+    modified_image = cv2_clipped_zoom(modified_image, rescale_factor, horizontal_only=True)
     print(f'After clipped_zoom {modified_image.shape}')
 
     # PCC works much better without normalization
@@ -681,6 +682,43 @@ def dup_cols(a, number=1):
     return np.insert(a, [index + 1] * number, a[:, [index]], axis=1)
 
 
+def cv2_clipped_zoom(image: np.ndarray, zoom_factor: float, horizontal_only=False) -> np.ndarray:
+    """
+    Center zoom in/out of the given image and returning an enlarged/shrinked view of
+    the image without changing dimensions
+    """
+    if zoom_factor == 1.0:
+        return image
+
+    horizontal_zoom = zoom_factor
+    vertical_zoom = 1.0 if horizontal_only else zoom_factor
+
+    height, width = image.shape[:2]  # It's also the final desired shape
+    new_height, new_width = int(height * vertical_zoom), int(width * horizontal_zoom)
+
+    # Crop only the part that will remain in the result (more efficient)
+    # Centered bbox of the final desired size in resized (larger/smaller) image coordinates
+    y1, x1 = max(0, new_height - height) // 2, max(0, new_width - width) // 2
+    y2, x2 = y1 + height, x1 + width
+    # bbox = np.array([y1, x1, y2, x2])
+    # Map back to original image coordinates
+    # bbox = (bbox / zoom_factor).astype(image.dtype)
+    bbox = np.array([x1 / horizontal_zoom, y1 / vertical_zoom,
+                     x2 / horizontal_zoom, y2 / vertical_zoom]).astype(image.dtype)
+    y1, x1, y2, x2 = bbox
+    cropped_img = image[y1:y2, x1:x2]
+
+    # Handle padding when downscaling
+    resize_height, resize_width = min(new_height, height), min(new_width, width)
+    pad_height1, pad_width1 = (height - resize_height) // 2, (width - resize_width) // 2
+    pad_height2, pad_width2 = (height - resize_height) - pad_height1, (width - resize_width) - pad_width1
+    pad_spec = [(pad_height1, pad_height2), (pad_width1, pad_width2)] + [(0, 0)] * (image.ndim - 2)
+
+    result = cv2.resize(cropped_img, (resize_width, resize_height))
+    result = np.pad(result, pad_spec, mode='constant')
+    return result
+
+
 def clipped_zoom(img: np.ndarray, zoom_factor: float, horizontal_only=False, **kwargs) -> np.ndarray:
     # https://stackoverflow.com/questions/37119071/scipy-rotate-and-zoom-an-image-without-changing-its-dimensions
     h, w = img.shape[:2]
@@ -694,7 +732,6 @@ def clipped_zoom(img: np.ndarray, zoom_factor: float, horizontal_only=False, **k
 
     # Zooming out
     if zoom_factor < 1:
-
         # Bounding box of the zoomed-out image within the output array
         zh = int(np.round(h * zoom_factor))
         zw = int(np.round(w * zoom_factor))
@@ -707,7 +744,6 @@ def clipped_zoom(img: np.ndarray, zoom_factor: float, horizontal_only=False, **k
 
     # Zooming in
     elif zoom_factor > 1:
-
         # Bounding box of the zoomed-in region within the input array
         zh = int(np.round(h / zoom_factor))
         zw = int(np.round(w / zoom_factor))
