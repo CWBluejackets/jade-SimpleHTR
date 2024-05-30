@@ -468,6 +468,7 @@ def get_registration_width(registration_image: np.ndarray) -> int:
     strong_columns = np.where(column_counts < median_count)
     print('Strong columns:', strong_columns)
     box_width = strong_columns[-1] - strong_columns[0]
+    print(f'Box width: {box_width}')
     return box_width
 
 
