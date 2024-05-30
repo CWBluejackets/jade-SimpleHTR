@@ -572,6 +572,7 @@ def mark_cutoffs(image: np.ndarray, outer: tuple, inner: tuple,
     left0, right0, top0, bottom0 = outer
     left1, right1, top1, bottom1 = inner
     output = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+    print(f'Debugging mark_cutoffs: {output.shape}')
     # mark the margins
     cv2.line(output, (left0, top0), (right0, top0), RED, 3)
     cv2.line(output, (right0, top0), (right0, bottom0), RED, 3)
