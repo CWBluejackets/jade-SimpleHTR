@@ -464,9 +464,9 @@ def get_registration_width(registration_image: np.ndarray) -> int:
     column_counts = registration_image.shape[0] - column_counts_white
     print('Column counts', column_counts)
     # number of black pixels in each column (dtype now int64)
-    median_count = np.median(column_counts)
-    print(f'Column median {median_count}, min {column_counts.min()}, max {column_counts.max()}')
-    strong_columns = np.asarray(column_counts > median_count).nonzero()[0]
+    threshold = np.percentile(column_counts, 25)
+    print(f'Column threshold {threshold}, min {column_counts.min()}, max {column_counts.max()}')
+    strong_columns = np.asarray(column_counts > threshold).nonzero()[0]
     # np.where equivalent returns a singleton tuple here
     # https://numpy.org/doc/stable/reference/generated/numpy.nonzero.html#numpy.nonzero
     # https://numpy.org/doc/stable/reference/generated/numpy.where.html
