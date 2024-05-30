@@ -460,12 +460,16 @@ def get_registration_width(registration_image: np.ndarray) -> int:
     :return: the width of the header box (to be used for rescaling)
     """
     column_total = registration_image.sum(axis=0)
-    column_counts = np.floor_divide(column_total, 255)
+    column_counts_white = np.floor_divide(column_total, 255)
+    column_counts = registration_image.shape[0] - column_counts_white
     print('Column counts', column_counts)
-    # number of white pixels in each column (dtype now int64)
+    # number of black pixels in each column (dtype now int64)
     median_count = np.median(column_counts)
     print(f'Column median {median_count}, min {column_counts.min()}, max {column_counts.max()}')
-    strong_columns = np.where(column_counts < median_count)
+    strong_columns = np.asarray(column_counts > median_count).nonzero()[0]
+    # np.where equivalent returns a singleton tuple here
+    # https://numpy.org/doc/stable/reference/generated/numpy.nonzero.html#numpy.nonzero
+    # https://numpy.org/doc/stable/reference/generated/numpy.where.html
     print('Strong columns:', strong_columns)
     box_width = strong_columns[-1] - strong_columns[0]
     print(f'Box width: {box_width}')
