@@ -527,7 +527,8 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray,
     # rescale muster image but only horizontally to match the template
     print(f'Before clipped_zoom {modified_image.shape}')
     # modified_image = clipped_zoom(modified_image, rescale_factor, horizontal_only=True)
-    modified_image = cv2_clipped_zoom(modified_image, rescale_factor, horizontal_only=True)
+    # modified_image = cv2_clipped_zoom(modified_image, rescale_factor, horizontal_only=True)
+    modified_image = rescale_horizontally(modified_image, rescale_factor)
     print(f'After clipped_zoom {modified_image.shape}')
 
     # PCC works much better without normalization
@@ -680,6 +681,31 @@ def dup_rows(a, number=1):
 def dup_cols(a, number=1):
     index = a.shape[1] - 1
     return np.insert(a, [index + 1] * number, a[:, [index]], axis=1)
+
+
+def rescale_horizontally(image: np.ndarray, scale: float) -> np.ndarray:
+    """
+    Rescale horizontally but return an image array with the same shape (crop or fill as needed)
+    :param image: grayscale image
+    :param scale: scale factor
+    :return: resized image.
+    """
+    if scale == 1.0:
+        return image
+    # y, x
+    zoom_tuple = (1, scale)
+    original_width = image.shape[1]
+    modified_image = ndimage.zoom(image, zoom_tuple)
+    if modified_image.shape[1] > original_width:
+        modified_image = modified_image[:, :original_width]
+    elif modified_image.shape[1] < original_width:
+        # https://stackoverflow.com/questions/8486294/how-do-i-add-an-extra-column-to-a-numpy-array
+        plus_columns = original_width - modified_image.shape[1]
+        height = modified_image.shape[0]
+        extension = np.full(shape=(height, plus_columns), fill_value=np.median(modified_image),
+                            dtype=modified_image.dtype)
+        modified_image = np.hstack((modified_image, extension))
+    return modified_image
 
 
 def cv2_clipped_zoom(image: np.ndarray, zoom_factor: float, horizontal_only=False) -> np.ndarray:
