@@ -49,10 +49,15 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
     template_image = template['image_top']
     template_form_width = template['form_width']
     print(f'Input size {image_raw.shape}; template size {template_image.shape}')
+    sheet_info = {'input_file': input_jpg_file,
+                  'form_type': form_type,
+                  'template_form_width': template_form_width,
+                  'shape': {'raw_input': image_raw.shape}}
     image_resized = geometry.resize_image(image_raw, template_image)
-    registered_image, pcc_info = geometry.adjust_muster_to_template(image_resized, template_image,
-                                                                    template_form_width,
-                                                                    config, output_dir, output_prefix)
+    registered_image = geometry.adjust_muster_to_template(image_resized, template_image,
+                                                          template_form_width,
+                                                          config, output_dir, output_prefix,
+                                                          sheet_info)
     csv_header = ['row']
     for column in template['output_columns']:
         csv_header.extend([str(column['workflow']), 'conf'])
@@ -80,10 +85,11 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
         row_info['median'] = np.median(registered_image[row_spec['top']: row_spec['bottom'],
                                        row_spec['left']: row_spec['right']])
         row_data[row_key] = row_info
-    row_file = os.path.join(output_dir, f'{output_prefix}_rows.json')
-    print(f'SUMMARY: Writing {row_file}')
-    with open(row_file, 'w') as f:
-        json.dump(row_data, f, indent=1, sort_keys=True)
+    sheet_info['rows'] = row_data
+    sheet_info_file = os.path.join(output_dir, f'{output_prefix}_info.json')
+    print(f'SUMMARY: Writing {sheet_info_file}')
+    with open(sheet_info_file, 'w') as f:
+        json.dump(sheet_info, f, indent=1, sort_keys=True)
 
     previous_workflow_id = None
     model = None
@@ -103,7 +109,7 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
 
         cell_result, cell_image = process_cell(registered_image, cell_spec, model, config)
         cell_result['input'] = image_metadata.copy()
-        cell_result['pcc'] = pcc_info
+        cell_result['pcc'] = sheet_info['pcc']
         save_processed_cell(config, filename_base, cell_result, parts_dir, cell_image)
         if config['htr']:
             csv_table[cell_result['row']][cell_result['column'] * 2] = cell_result['text']

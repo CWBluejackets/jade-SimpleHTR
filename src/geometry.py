@@ -500,14 +500,17 @@ def get_lines_for_registration(image: np.ndarray, config: dict, cutoffs: tuple, 
 
 def adjust_muster_to_template(image: np.ndarray, template: np.ndarray,
                               template_form_width: int, config: dict,
-                              output_dir: str, output_prefix: str) -> Tuple[np.ndarray, tuple]:
+                              output_dir: str, output_prefix: str,
+                              sheet_info: dict) -> np.ndarray:
     """
     Rotate the image; erase the margins; detect H and V lines and shift to match the template
     :param image: muster sheet
     :param template: template image
+    :param template_form_width: pixel width of form
     :param config: config file object
     :param output_dir: used for debugging
     :param output_prefix: used for debugging
+    :param sheet_info: cumulative log of sheet processing
     """
     modified_image = rotate_correct(image, config, output_dir, output_prefix)
     modified_image, cutoffs = erase_margins(modified_image, config)
@@ -519,20 +522,26 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray,
                         config['registration']['cutoff_adjustments']['top_band'],
                         )
     print(f'Inner cutoffs: {adjusted_cutoffs}')
+    sheet_info['cutoffs'] = {'outer': cutoffs, 'inner': adjusted_cutoffs}
     # Detect H & V lines for the dark boxes at the top of the form
     registration_image = get_lined_image_for_registration(modified_image, config, adjusted_cutoffs)
     muster_box_width = get_registration_width(registration_image)
     rescale_factor = template_form_width / muster_box_width
+    sheet_info['rescale'] = rescale_factor
     print(f'Template box width {template_form_width} vs muster {muster_box_width} -> rescale {rescale_factor:.3f}')
     # rescale muster image but only horizontally to match the template
     print(f'Before clipped_zoom {modified_image.shape}')
     # modified_image = clipped_zoom(modified_image, rescale_factor, horizontal_only=True)
     # modified_image = cv2_clipped_zoom(modified_image, rescale_factor, horizontal_only=True)
     rescaled_image = rescale_horizontally(modified_image, rescale_factor)
-    print(f'After clipped_zoom {modified_image.shape}')
+    print(f'After clipped_zoom {rescaled_image.shape}')
+    sheet_info['shape']['input'] = image.shape
+    sheet_info['shape']['modified'] = modified_image.shape
+    sheet_info['shape']['rescaled'] = rescaled_image.shape
 
     # PCC works much better without normalization
     shift, error, diffphase = phase_cross_correlation(template, registration_image, normalization=None)
+    sheet_info['pcc'] = {'shift': shift, 'error': error, 'diffphase': diffphase}
     # pass this shift value as argument to scipy.ndimage.shift
     print('Registration:', shift, error, diffphase)
     # Shift vector (in pixels) required to register moving_image with reference_image.
@@ -546,7 +555,7 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray,
         print(f'Writing {debug_image_path}')
         cv2.imwrite(debug_image_path, debug_image)
 
-    return shifted_image, (shift, error, diffphase)
+    return shifted_image
 
 
 def superimpose(shifted_image: np.ndarray, form: np.ndarray) -> np.ndarray:
@@ -685,7 +694,7 @@ def dup_cols(a, number=1):
 
 def rescale_horizontally(image: np.ndarray, scale: float) -> np.ndarray:
     """
-    Rescale horizontally but return an image array with the same shape (crop or fill as needed)
+    Rescale horizontally but return ndarray with the same shape (crop or fill as needed)
     :param image: grayscale image
     :param scale: scale factor
     :return: resized image.
@@ -706,85 +715,3 @@ def rescale_horizontally(image: np.ndarray, scale: float) -> np.ndarray:
                             dtype=modified_image.dtype)
         modified_image = np.hstack((modified_image, extension))
     return modified_image
-
-
-def cv2_clipped_zoom(image: np.ndarray, zoom_factor: float, horizontal_only=False) -> np.ndarray:
-    """
-    Center zoom in/out of the given image and returning an enlarged/shrinked view of
-    the image without changing dimensions
-    """
-    if zoom_factor == 1.0:
-        return image
-
-    horizontal_zoom = zoom_factor
-    vertical_zoom = 1.0 if horizontal_only else zoom_factor
-
-    height, width = image.shape[:2]  # It's also the final desired shape
-    new_height, new_width = int(height * vertical_zoom), int(width * horizontal_zoom)
-
-    # Crop only the part that will remain in the result (more efficient)
-    # Centered bbox of the final desired size in resized (larger/smaller) image coordinates
-    y1, x1 = max(0, new_height - height) // 2, max(0, new_width - width) // 2
-    y2, x2 = y1 + height, x1 + width
-    # bbox = np.array([y1, x1, y2, x2])
-    # Map back to original image coordinates
-    # bbox = (bbox / zoom_factor).astype(image.dtype)
-    bbox = np.array([x1 / horizontal_zoom, y1 / vertical_zoom,
-                     x2 / horizontal_zoom, y2 / vertical_zoom]).astype(image.dtype)
-    y1, x1, y2, x2 = bbox
-    cropped_img = image[y1:y2, x1:x2]
-
-    # Handle padding when downscaling
-    resize_height, resize_width = min(new_height, height), min(new_width, width)
-    pad_height1, pad_width1 = (height - resize_height) // 2, (width - resize_width) // 2
-    pad_height2, pad_width2 = (height - resize_height) - pad_height1, (width - resize_width) - pad_width1
-    pad_spec = [(pad_height1, pad_height2), (pad_width1, pad_width2)] + [(0, 0)] * (image.ndim - 2)
-
-    result = cv2.resize(cropped_img, (resize_width, resize_height))
-    result = np.pad(result, pad_spec, mode='constant')
-    return result
-
-
-def clipped_zoom(img: np.ndarray, zoom_factor: float, horizontal_only=False, **kwargs) -> np.ndarray:
-    # https://stackoverflow.com/questions/37119071/scipy-rotate-and-zoom-an-image-without-changing-its-dimensions
-    h, w = img.shape[:2]
-    # For multichannel images we don't want to apply the zoom factor to the RGB
-    # dimension, so instead we create a tuple of zoom factors, one per array
-    # dimension, with 1's for any trailing dimensions after the width and height.
-    if horizontal_only:
-        zoom_tuple = (1, zoom_factor) + (1,) * (img.ndim - 2)
-    else:
-        zoom_tuple = (zoom_factor, zoom_factor)  + (1,) * (img.ndim - 2)
-
-    # Zooming out
-    if zoom_factor < 1:
-        # Bounding box of the zoomed-out image within the output array
-        zh = int(np.round(h * zoom_factor))
-        zw = int(np.round(w * zoom_factor))
-        top = (h - zh) // 2
-        left = (w - zw) // 2
-
-        # Zero-padding
-        out = np.zeros_like(img)
-        out[top:top + zh, left:left + zw] = ndimage.zoom(img, zoom_tuple, **kwargs)
-
-    # Zooming in
-    elif zoom_factor > 1:
-        # Bounding box of the zoomed-in region within the input array
-        zh = int(np.round(h / zoom_factor))
-        zw = int(np.round(w / zoom_factor))
-        top = (h - zh) // 2
-        left = (w - zw) // 2
-
-        out = ndimage.zoom(img[top:top + zh, left:left + zw], zoom_tuple, **kwargs)
-
-        # `out` might still be slightly larger than `img` due to rounding, so
-        # trim off any extra pixels at the edges
-        trim_top = ((out.shape[0] - h) // 2)
-        trim_left = ((out.shape[1] - w) // 2)
-        out = out[trim_top:trim_top + h, trim_left:trim_left + w]
-
-    # If zoom_factor == 1, just return the input array
-    else:
-        out = img.copy()
-    return out
