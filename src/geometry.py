@@ -528,7 +528,7 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray,
     print(f'Before clipped_zoom {modified_image.shape}')
     # modified_image = clipped_zoom(modified_image, rescale_factor, horizontal_only=True)
     # modified_image = cv2_clipped_zoom(modified_image, rescale_factor, horizontal_only=True)
-    modified_image = rescale_horizontally(modified_image, rescale_factor)
+    rescaled_image = rescale_horizontally(modified_image, rescale_factor)
     print(f'After clipped_zoom {modified_image.shape}')
 
     # PCC works much better without normalization
@@ -538,7 +538,7 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray,
     # Shift vector (in pixels) required to register moving_image with reference_image.
     # Axis ordering is consistent with the axis order of the input array.
     # https://scikit-image.org/docs/stable/api/skimage.registration.html#skimage.registration.phase_cross_correlation
-    shifted_image = ndimage.shift(modified_image, shift)
+    shifted_image = ndimage.shift(rescaled_image, shift)
 
     if config['debug']:
         debug_image_path = os.path.join(output_dir, f'{output_prefix}_1_cutoffs.png')
