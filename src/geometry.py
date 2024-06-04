@@ -343,7 +343,8 @@ def get_right_cutoff(medians, edge_type, overall_median, config) -> int:
     return cutoff
 
 
-def rotate_correct(image: np.ndarray, config: dict, output_dir: str, output_prefix: str) -> np.ndarray:
+def rotate_correct(image: np.ndarray, config: dict, output_dir: str, output_prefix: str,
+                   sheet_info: dict) -> np.ndarray:
     canny_min = config['rotation']['canny_min']
     canny_max = config['rotation']['canny_max']
     canny_aperture = config['rotation']['canny_aperture']
@@ -368,6 +369,7 @@ def rotate_correct(image: np.ndarray, config: dict, output_dir: str, output_pref
     # find the binned mode of angles and rotate
     angles = [d[0] for d in h_lines]
     rotation = binned_mode(angles, bins=21, range=(-deviation, deviation))
+    sheet_info['rotation'] = rotation
     if abs(rotation) > MIN_ROTATION:
         print(f'Rotating {rotation:.3f} degrees')
         # ndimage angle in degrees
@@ -512,7 +514,7 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray,
     :param output_prefix: used for debugging
     :param sheet_info: cumulative log of sheet processing
     """
-    modified_image = rotate_correct(image, config, output_dir, output_prefix)
+    modified_image = rotate_correct(image, config, output_dir, output_prefix, sheet_info)
     modified_image, cutoffs = erase_margins(modified_image, config)
     # cutoffs (left, right, top, bottom)
     adjusted_cutoffs = (cutoffs[0] + config['registration']['cutoff_adjustments']['left'],
