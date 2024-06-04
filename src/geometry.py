@@ -10,7 +10,7 @@ import numpy as np
 from scipy import ndimage
 from skimage.registration import phase_cross_correlation
 
-from sheet_division import NumpyJsonEncoder
+from utils import NumpyJsonEncoder
 
 # point = (x, y)
 # in cv2, y = 0 at the top

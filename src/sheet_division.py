@@ -9,6 +9,7 @@ import numpy as np
 
 import geometry
 from application import TrainedModel
+from utils import NumpyJsonEncoder
 
 
 def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts_dir, corrections_dir,
@@ -215,17 +216,3 @@ def safe_imread(img_path, cv2_flags, exception_if_missing=False):
     return result
 
 
-class NumpyJsonEncoder(json.JSONEncoder):
-    # https://stackoverflow.com/questions/27050108/convert-numpy-type-to-python
-    # custom encoder to get numpy types through
-    def default(self, obj):
-        if isinstance(obj, np.integer):
-            return int(obj)
-        elif isinstance(obj, np.floating):
-            return float(obj)
-        elif isinstance(obj, np.ndarray):
-            return obj.tolist()
-        elif isinstance(obj, set):
-            return list(obj)
-        else:
-            return super(NumpyJsonEncoder, self).default(obj)
