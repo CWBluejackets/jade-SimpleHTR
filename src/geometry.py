@@ -482,10 +482,11 @@ def get_registration_width(registration_image: np.ndarray, sheet_info: dict) -> 
     box_width = last - first
     print(f'Box width: {box_width}')
     octiles = np.quantile(column_counts, EIGHTHS)
+    nonzero = np.asarray(column_counts > 0).nonzero()[0]
     rescaling = {'column_counts': column_counts,
                  'octiles': octiles,
-                 'first': first,
-                 'last': last,
+                 'strong_edges': [first, last],
+                 'nonzero_range': [nonzero[0], nonzero[-1]],
                  'box_width': box_width}
     sheet_info['rescaling'] = rescaling
     return box_width
@@ -562,7 +563,7 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray,
     # Shift vector (in pixels) required to register moving_image with reference_image.
     # Axis ordering is consistent with the axis order of the input array.
     # https://scikit-image.org/docs/stable/api/skimage.registration.html#skimage.registration.phase_cross_correlation
-    shifted_image = ndimage.shift(rescaled_image, shift)
+    fully_adjusted_image = ndimage.shift(rescaled_image, shift)
 
     if config['debug']:
         debug_image_path = os.path.join(output_dir, f'{output_prefix}_1_cutoffs.png')
@@ -570,7 +571,7 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray,
         print(f'Writing {debug_image_path}')
         cv2.imwrite(debug_image_path, debug_image)
 
-    return shifted_image
+    return fully_adjusted_image
 
 
 def superimpose(shifted_image: np.ndarray, form: np.ndarray) -> np.ndarray:
