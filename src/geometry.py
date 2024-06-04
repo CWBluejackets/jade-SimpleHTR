@@ -369,15 +369,16 @@ def rotate_correct(image: np.ndarray, config: dict, output_dir: str, output_pref
     # find the binned mode of angles and rotate
     angles = [d[0] for d in h_lines]
     rotation = binned_mode(angles, bins=21, range=(-deviation, deviation))
-    sheet_info['rotation'] = rotation
     if abs(rotation) > MIN_ROTATION:
         print(f'Rotating {rotation:.3f} degrees')
         # ndimage angle in degrees
         # https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.rotate.html#scipy.ndimage.rotate
         output = ndimage.rotate(image, angle=rotation, reshape=False)
+        sheet_info['rotation'] = {'degrees': rotation, 'applied': True}
     else:
         print(f'Ignoring {rotation:.3f} degrees')
         output = image
+        sheet_info['rotation'] = {'degrees': rotation, 'applied': False}
     return output
 
 
