@@ -46,7 +46,7 @@
     },
     "cutoff_adjustments": {
       "left": 90,
-      "right": 190,
+      "right": 180,
       "top": 180,
       "top_band": 500,
       "bottom": 25
