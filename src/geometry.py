@@ -547,8 +547,6 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray,
     print(f'Template box width {template_form_width} vs muster {muster_box_width} -> rescale {rescale_factor:.3f}')
     # rescale muster image but only horizontally to match the template
     print(f'Before clipped_zoom {modified_image.shape}')
-    # modified_image = clipped_zoom(modified_image, rescale_factor, horizontal_only=True)
-    # modified_image = cv2_clipped_zoom(modified_image, rescale_factor, horizontal_only=True)
     rescaled_image = rescale_horizontally(modified_image, rescale_factor)
     print(f'After clipped_zoom {rescaled_image.shape}')
     sheet_info['shape']['input'] = image.shape
@@ -567,7 +565,7 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray,
 
     if config['debug']:
         debug_image_path = os.path.join(output_dir, f'{output_prefix}_1_cutoffs.png')
-        debug_image = mark_cutoffs(modified_image, cutoffs, adjusted_cutoffs, registration_image)
+        debug_image = mark_cutoffs(modified_image, cutoffs, adjusted_cutoffs, registration_image, sheet_info)
         print(f'Writing {debug_image_path}')
         cv2.imwrite(debug_image_path, debug_image)
 
@@ -589,13 +587,15 @@ def superimpose(shifted_image: np.ndarray, form: np.ndarray) -> np.ndarray:
 
 
 def mark_cutoffs(image: np.ndarray, outer: tuple, inner: tuple,
-                 registration_image: np.ndarray) -> np.ndarray:
+                 registration_image: np.ndarray,
+                 sheet_info: dict) -> np.ndarray:
     """
     Superimpose the form in blue on the image
     :param image: grayscale image
     :param outer: (left, right, top, bottom)
     :param inner: (left, right, top, bottom)
     :param registration_image: H & V lines detected
+    :param sheet_info: cumulative log of sheet processing
     :return: merged RGB image
     """
     left0, right0, top0, bottom0 = outer
@@ -614,6 +614,10 @@ def mark_cutoffs(image: np.ndarray, outer: tuple, inner: tuple,
     cv2.line(output, (left1, bottom1), (left1, top1), RED, 3)
     # copy the H & V lines detected
     output[np.where(registration_image == 0)] = BLUE
+    # draw green lines above the detected box edges
+    strong_edges = sheet_info['strong_edges'] # left, right
+    cv2.line(output, (strong_edges[0], top0), (strong_edges[0], top1), GREEN, 3)
+    cv2.line(output, (strong_edges[1], top0), (strong_edges[1], top1), GREEN, 3)
     return output
 
 
