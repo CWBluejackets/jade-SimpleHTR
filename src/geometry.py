@@ -615,7 +615,7 @@ def mark_cutoffs(image: np.ndarray, outer: tuple, inner: tuple,
     # copy the H & V lines detected
     output[np.where(registration_image == 0)] = BLUE
     # draw green lines above the detected box edges
-    strong_edges = sheet_info['strong_edges'] # left, right
+    strong_edges = sheet_info['rescaling']['strong_edges']  # left, right
     cv2.line(output, (strong_edges[0], top0), (strong_edges[0], top1), GREEN, 3)
     cv2.line(output, (strong_edges[1], top0), (strong_edges[1], top1), GREEN, 3)
     return output
