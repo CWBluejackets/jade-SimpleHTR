@@ -552,13 +552,14 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray,
     # rescale muster image but only horizontally to match the template
     print(f'Before clipped_zoom {modified_image.shape}')
     rescaled_image = rescale_horizontally(modified_image, rescale_factor)
+    rescaled_registration_image = rescale_horizontally(registration_image, rescale_factor)
     print(f'After clipped_zoom {rescaled_image.shape}')
     sheet_info['shape']['input'] = image.shape
     sheet_info['shape']['modified'] = modified_image.shape
     sheet_info['shape']['rescaled'] = rescaled_image.shape
 
     # PCC works much better without normalization
-    shift, error, diffphase = phase_cross_correlation(template, registration_image, normalization=None)
+    shift, error, diffphase = phase_cross_correlation(template, rescaled_registration_image, normalization=None)
     sheet_info['pcc'] = {'shift': shift, 'error': error, 'diffphase': diffphase}
     # pass this shift value as argument to scipy.ndimage.shift
     print('Registration:', shift, error, diffphase)
