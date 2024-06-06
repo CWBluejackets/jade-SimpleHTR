@@ -359,6 +359,13 @@ def rotate_correct(image: np.ndarray, config: dict, output_dir: str, output_pref
     deviation = config['rotation']['deviation']
     hough_theta = config['rotation']['hough_resolution_degrees'] * np.pi / 180
     hough_rho = config['rotation']['hough_resolution_pixels']
+<<<<<<< Updated upstream
+=======
+    mode_bins = config['rotation']['mode_bins']
+    ignore_sides_fraction = config['rotation']['ignore_sides_fraction']
+    left_limit = round(image.shape[1] * ignore_sides_fraction)
+    right_limit = round(image.shape[1] * (1 - ignore_sides_fraction))
+>>>>>>> Stashed changes
     dst = cv2.Canny(image, threshold1=canny_min, threshold2=canny_max,
                     apertureSize=canny_aperture, L2gradient=True)
     lines = cv2.HoughLinesP(dst, rho=hough_rho, theta=hough_theta, threshold=hough_threshold,
@@ -373,7 +380,9 @@ def rotate_correct(image: np.ndarray, config: dict, output_dir: str, output_pref
         cv2.imwrite(debug_image_path, hline_image)
     # find the binned mode of angles and rotate
     angles = [d[0] for d in h_lines]
-    rotation = binned_mode(angles, bins=21, range=(-deviation, deviation))
+    angle_octiles = np.quantile(angles, EIGHTHS)
+    rotation = binned_mode(angles, bins=mode_bins, range=(-deviation, deviation))
+    rotation = round(rotation, 3)
     if abs(rotation) > MIN_ROTATION:
         print(f'Rotating {rotation:.3f} degrees')
         # ndimage angle in degrees
@@ -383,7 +392,9 @@ def rotate_correct(image: np.ndarray, config: dict, output_dir: str, output_pref
     else:
         print(f'Ignoring {rotation:.3f} degrees')
         output = image
-        sheet_info['rotation'] = {'degrees': rotation, 'applied': False}
+        sheet_info['rotation'] = {'degrees': rotation,
+                                  'applied': False,
+                                  'octiles': angle_octiles}
     return output
 
 
