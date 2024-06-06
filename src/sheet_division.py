@@ -9,7 +9,7 @@ import numpy as np
 
 import geometry
 from application import TrainedModel
-from utils import NumpyJsonEncoder
+from utils import NumpyJsonEncoder, EIGHTHS
 
 
 def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts_dir, corrections_dir,
@@ -87,13 +87,10 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
                                        row_spec['left']: row_spec['right']])
         row_data[row_key] = row_info
     sheet_info['rows'] = row_data
-    sheet_info_file = os.path.join(output_dir, f'{output_prefix}_info.json')
-    print(f'SUMMARY: Writing {sheet_info_file}')
-    with open(sheet_info_file, 'w') as f:
-        json.dump(sheet_info, f, indent=1, sort_keys=True, cls=NumpyJsonEncoder)
 
     previous_workflow_id = None
     model = None
+    confidence_by_workflow = defaultdict(list)
     for cell_spec in template['cells']:
         workflow_id = cell_spec['workflow']
         print(f'Cell info: {cell_spec}')
@@ -115,6 +112,7 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
         if config['htr']:
             csv_table[cell_result['row']][cell_result['column'] * 2] = cell_result['text']
             csv_table[cell_result['row']][cell_result['column'] * 2 + 1] = cell_result['confidence']
+            confidence_by_workflow[workflow_id].append(cell_result['confidence'])
 
         if config['htr'] and (cell_result['confidence'] < cell_result['confidence_threshold']):
             save_cell_for_correction(corrections_dir, filename_base, cell_spec,
@@ -130,6 +128,19 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
             writer.writerow(csv_header)
             for row_no in range(max(csv_table.keys())):
                 writer.writerow([row_no] + csv_table[row_no])
+        confidence_data = dict()
+        for workflow_id, confidences in confidence_by_workflow.items():
+            confidence_data[str(workflow_id)] = {'quantiles': np.quantile(confidences, EIGHTHS),
+                                                 'count': len(confidences)}
+        all_confidences = sum(confidence_by_workflow.values(), start=[])
+        confidence_data['all'] = {'quantiles': np.quantile(all_confidences, EIGHTHS),
+                                  'count': len(all_confidences)}
+        sheet_info['confidences'] = confidence_data
+
+    sheet_info_file = os.path.join(output_dir, f'{output_prefix}_info.json')
+    print(f'SUMMARY: Writing {sheet_info_file}')
+    with open(sheet_info_file, 'w') as f:
+        json.dump(sheet_info, f, indent=1, sort_keys=True, cls=NumpyJsonEncoder)
     return
 
 
@@ -214,5 +225,3 @@ def safe_imread(img_path, cv2_flags, exception_if_missing=False):
         else:
             print(message)
     return result
-
-

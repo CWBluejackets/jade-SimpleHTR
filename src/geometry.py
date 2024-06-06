@@ -10,7 +10,7 @@ import numpy as np
 from scipy import ndimage
 from skimage.registration import phase_cross_correlation
 
-from utils import NumpyJsonEncoder
+from utils import NumpyJsonEncoder, EIGHTHS
 
 # point = (x, y)
 # in cv2, y = 0 at the top
@@ -35,9 +35,6 @@ MIN_ROTATION = math.degrees(math.atan(2 / 5616))
 
 # https://docs.opencv.org/3.4/dd/d1a/group__imgproc__feature.html#ga26413521fde978c0c97f11149336f6e1
 LSD = cv2.createLineSegmentDetector()
-
-# used for quantile debugging
-EIGHTHS = [x/8 for x in range(0, 9)]
 
 
 def solve_line(point0, point1) -> Tuple[float, float]:

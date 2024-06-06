@@ -2,6 +2,9 @@ import json
 
 import numpy as np
 
+# used for quantile debugging
+EIGHTHS = [x/8 for x in range(0, 9)]
+
 
 class NumpyJsonEncoder(json.JSONEncoder):
     # https://stackoverflow.com/questions/27050108/convert-numpy-type-to-python
