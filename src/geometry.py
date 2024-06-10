@@ -663,21 +663,21 @@ def generate_image_for_correction(image: np.ndarray, cell_spec, ml_output: str):
     outer_left, outer_right = cell_spec['expanded']['left'], cell_spec['expanded']['right']
     outer_top, outer_bottom = cell_spec['expanded']['top'], cell_spec['expanded']['bottom']
     extracted_image = image[outer_top: outer_bottom, outer_left: outer_right]
-    # calculate box  within cropped image
+    # calculate red box WITHIN cropped image
     inner_left, inner_right = cell_spec['htr']['left'] - outer_left, cell_spec['htr']['right'] - outer_left
     inner_top, inner_bottom = cell_spec['htr']['top'] - outer_top, cell_spec['htr']['bottom'] - outer_top
     # calculate text size and expand image as needed
     # https://lindevs.com/get-text-size-using-opencv
     (text_width, text_height), _ = cv2.getTextSize(ml_output, FONT, FONT_SCALE, FONT_THICKNESS)
-    text_width += 10
+    text_width += 15
     # add white strip at the bottom to accommodate the text
     # https://stackoverflow.com/questions/3881453/numpy-add-row-to-array
     add_height = text_height * 2
     add_bottom = np.full((add_height, extracted_image.shape[1]), 255, dtype=extracted_image.dtype)
     extracted_image = np.vstack((extracted_image, add_bottom))
     # add white strip on the right if needed to accommodate the text
-    if text_width > extracted_image.shape[0]:
-        add_width = extracted_image.shape[0]
+    if text_width > extracted_image.shape[1]:
+        add_width = extracted_image.shape[1] - text_width
         add_right = np.full((extracted_image.shape[0], add_width), 255, dtype=extracted_image.dtype)
         extracted_image = np.hstack((extracted_image, add_right))
     # add the red box
@@ -686,9 +686,9 @@ def generate_image_for_correction(image: np.ndarray, cell_spec, ml_output: str):
     cv2.line(output_image, (inner_right, inner_top), (inner_right, inner_bottom), RED, 1)
     cv2.line(output_image, (inner_left, inner_top), (inner_right, inner_top), RED, 1)
     cv2.line(output_image, (inner_left, inner_bottom), (inner_right, inner_bottom), RED, 1)
-    # add the text
-    # TODO center the text
-    point = (5, extracted_image.shape[0] - 10)
+    # add the text, centered
+    left_origin = (output_image.shape[1] - text_width) // 2
+    point = (left_origin, extracted_image.shape[0] - 10)
     cv2.putText(output_image, ml_output, point, FONT, FONT_SCALE, BLACK)
     return output_image
 
