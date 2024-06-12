@@ -125,6 +125,7 @@ class Metadata:
             nara_url = self.get_nara_url(vessel, volume)
             item = {"vessel_raw": raw_vessel,
                     "vessel": vessel,
+                    "vessel_ui": raw_vessel.title(),
                     "vessel_no": int(row['ship#']),
                     "volume": volume,
                     "sheet": int(row['sheet#']),
