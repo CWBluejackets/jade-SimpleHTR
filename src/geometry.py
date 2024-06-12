@@ -248,7 +248,8 @@ def rolling_average(values: np.ndarray, window_size: int) -> np.ndarray:
     :param window_size: size:
     :return: array with the same size as the input array
     """
-    return np.convolve(values, np.ones(window_size), 'same') / window_size
+    slider = np.ones(window_size) / window_size
+    return np.convolve(values, slider, 'same')
 
 
 def smoothed_vertical_medians(image: np.ndarray, config) -> np.ndarray:
