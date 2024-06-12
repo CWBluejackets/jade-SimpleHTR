@@ -659,6 +659,7 @@ def generate_hlines_image(image: np.ndarray, hlines: list) -> np.ndarray:
 
 
 def generate_image_for_correction(image: np.ndarray, cell_spec, ml_output: str):
+    # TODO calculate text width first then crop wide if needed
     # crop image to outer bounds
     outer_left, outer_right = cell_spec['expanded']['left'], cell_spec['expanded']['right']
     outer_top, outer_bottom = cell_spec['expanded']['top'], cell_spec['expanded']['bottom']
