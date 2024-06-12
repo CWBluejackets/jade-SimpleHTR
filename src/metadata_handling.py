@@ -6,8 +6,13 @@ WHITESPACE = re.compile(r'\s+')
 INTEGER = re.compile(r'\d+')
 DOUBLE_INITIAL = re.compile(r'\b([a-z])\s*([a-z])\b')
 INDEX = re.compile(r'(\d\d\d)_(\S+)_(\d\d\d\d)')
-NON_LETTER = re.compile(r'[^a-z]')
+NON_LETTER = re.compile(r'[^a-z]+')
 
+# Vessels misspelled in the Master Sheet Entry Log pulldown menu:
+VESSEL_CORRECTIONS = {'adriondack': 'adirondack',
+                      'agamenticus': 'agamanticus',
+                      'cincinatti': 'cincinnati'
+                      }
 
 # columns:
 # "Ship name","ship#","volume#","sheet#","Muster Type","Alignment issue?",
@@ -15,9 +20,10 @@ NON_LETTER = re.compile(r'[^a-z]')
 
 
 def normalize_vessel(raw_vessel: str) -> str:
-    vessel = raw_vessel.strip().lower()
-    vessel = NON_LETTER.sub('', vessel)
-    return vessel
+    vessel0 = raw_vessel.strip().lower()
+    vessel1 = VESSEL_CORRECTIONS.get(vessel0, vessel0)
+    vessel2 = NON_LETTER.sub('_', vessel1)
+    return vessel2
 
 
 def get_image_filename(muster_info):
@@ -119,6 +125,7 @@ class Metadata:
             nara_url = self.get_nara_url(vessel, volume)
             item = {"vessel_raw": raw_vessel,
                     "vessel": vessel,
+                    "vessel_ui": vessel.title(),
                     "vessel_no": int(row['ship#']),
                     "volume": volume,
                     "sheet": int(row['sheet#']),
