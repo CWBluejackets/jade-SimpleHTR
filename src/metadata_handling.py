@@ -22,7 +22,7 @@ VESSEL_CORRECTIONS = {'adriondack': 'adirondack',
 def normalize_vessel(raw_vessel: str) -> str:
     vessel0 = raw_vessel.strip().lower()
     vessel1 = VESSEL_CORRECTIONS.get(vessel0, vessel0)
-    vessel2 = NON_LETTER.sub('_', vessel1)
+    vessel2 = NON_LETTER.sub('', vessel1)
     return vessel2
 
 
@@ -125,7 +125,6 @@ class Metadata:
             nara_url = self.get_nara_url(vessel, volume)
             item = {"vessel_raw": raw_vessel,
                     "vessel": vessel,
-                    "vessel_ui": vessel.title(),
                     "vessel_no": int(row['ship#']),
                     "volume": volume,
                     "sheet": int(row['sheet#']),
