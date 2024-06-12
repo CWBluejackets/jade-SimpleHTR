@@ -658,39 +658,49 @@ def generate_hlines_image(image: np.ndarray, hlines: list) -> np.ndarray:
     return output
 
 
-def generate_image_for_correction(image: np.ndarray, cell_spec, ml_output: str):
-    # TODO calculate text width first then crop wide if needed
+def generate_image_for_correction(image: np.ndarray, cell_spec, ml_output: str, workflow: str):
+    """
+    Generate the image for Zooniverse phase 2.
+    :param image: registered image
+    :param cell_spec: cell specification
+    :param ml_output: HTR output
+    :param workflow: name of workflow
+    """
+    # calculate sizes of texts
+    # https://lindevs.com/get-text-size-using-opencv
+    (wf_width, wf_height), _ = cv2.getTextSize(workflow, FONT, FONT_SCALE, FONT_THICKNESS)
+    (htr_width, htr_height), _ = cv2.getTextSize(ml_output, FONT, FONT_SCALE, FONT_THICKNESS)
+    htr_width += 15
+    required_width = max(wf_width, htr_width) + 20
+    extra_height_top = wf_height * 2
+    extra_height_bottom = htr_height * 2
     # crop image to outer bounds
     outer_left, outer_right = cell_spec['expanded']['left'], cell_spec['expanded']['right']
     outer_top, outer_bottom = cell_spec['expanded']['top'], cell_spec['expanded']['bottom']
+    if (outer_right - outer_left) < required_width:
+        outer_left -= 10
+        outer_right += 10
     extracted_image = image[outer_top: outer_bottom, outer_left: outer_right]
-    # calculate red box WITHIN cropped image
+    # calculate red box WITHIN cropped image after adding workflow to the top
     inner_left, inner_right = cell_spec['htr']['left'] - outer_left, cell_spec['htr']['right'] - outer_left
-    inner_top, inner_bottom = cell_spec['htr']['top'] - outer_top, cell_spec['htr']['bottom'] - outer_top
-    # calculate text size and expand image as needed
-    # https://lindevs.com/get-text-size-using-opencv
-    (text_width, text_height), _ = cv2.getTextSize(ml_output, FONT, FONT_SCALE, FONT_THICKNESS)
-    text_width += 15
-    # add white strip at the bottom to accommodate the text
-    # https://stackoverflow.com/questions/3881453/numpy-add-row-to-array
-    add_height = text_height * 2
-    add_bottom = np.full((add_height, extracted_image.shape[1]), 255, dtype=extracted_image.dtype)
-    extracted_image = np.vstack((extracted_image, add_bottom))
-    # add white strip on the right if needed to accommodate the text
-    if text_width > extracted_image.shape[1]:
-        add_width = extracted_image.shape[1] - text_width
-        add_right = np.full((extracted_image.shape[0], add_width), 255, dtype=extracted_image.dtype)
-        extracted_image = np.hstack((extracted_image, add_right))
+    inner_top = cell_spec['htr']['top'] - outer_top + extra_height_top
+    inner_bottom = cell_spec['htr']['bottom'] - outer_top + extra_height_top
+    # add white strips at the top and bottom to accommodate the texts
+    output_width = extracted_image.shape[1]
+    top_strip = np.full((extra_height_top, output_width), 255, dtype=extracted_image.dtype)
+    bottom_strip = np.full((extra_height_bottom, output_width), 255, dtype=extracted_image.dtype)
+    extracted_image = np.vstack((top_strip, extracted_image, bottom_strip))
     # add the red box
     output_image = cv2.cvtColor(extracted_image, cv2.COLOR_GRAY2RGB)
     cv2.line(output_image, (inner_left, inner_top), (inner_left, inner_bottom), RED, 1)
     cv2.line(output_image, (inner_right, inner_top), (inner_right, inner_bottom), RED, 1)
     cv2.line(output_image, (inner_left, inner_top), (inner_right, inner_top), RED, 1)
     cv2.line(output_image, (inner_left, inner_bottom), (inner_right, inner_bottom), RED, 1)
-    # add the text, centered
-    left_origin = (output_image.shape[1] - text_width) // 2
-    point = (left_origin, extracted_image.shape[0] - 10)
-    cv2.putText(output_image, ml_output, point, FONT, FONT_SCALE, BLACK)
+    # add the text, centered horizontally
+    wf_bottom_left = ((output_width - wf_width) // 2, round(wf_height * 1.5))
+    htr_bottom_left = ((output_width - htr_width) // 2, round(output_image.shape[1] - htr_height // 2))
+    cv2.putText(output_image, workflow, wf_bottom_left, FONT, FONT_SCALE, BLACK)
+    cv2.putText(output_image, ml_output, htr_bottom_left, FONT, FONT_SCALE, BLACK)
     return output_image
 
 
