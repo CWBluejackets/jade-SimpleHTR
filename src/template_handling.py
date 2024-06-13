@@ -124,6 +124,8 @@ def add_template_info(specification: dict, template_directory, workflows, debug_
     # now add the arrays
     specification['image'] = image
     specification['image_top'] = image_top
+    specification['hline_detection'] = {'y_min': y_ref_line + 5,
+                                        'y_max': row_lines[-1] + 5}
     return
 
 

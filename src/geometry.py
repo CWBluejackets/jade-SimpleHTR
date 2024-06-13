@@ -770,7 +770,8 @@ def rescale_horizontally(image: np.ndarray, scale: float) -> np.ndarray:
     return modified_image
 
 
-def find_hlines(image: np.ndarray, config: dict, y_min: int, y_max: int) -> np.ndarray:
+def find_hlines(image: np.ndarray, config: dict, y_min: int, y_max: int,
+                y_ref_line: int) -> np.ndarray:
     """
     Use the slightly smoothed mean pixel value of the middle half of the image to find
     row boundaries (which are brighter than the content).
@@ -792,6 +793,7 @@ def find_hlines(image: np.ndarray, config: dict, y_min: int, y_max: int) -> np.n
     peaks = peaks[np.where(peaks > y_min)]
     peaks = peaks[np.where(peaks < y_max)]
     peaks = interpolate_hlines(peaks, max_distance)
+    peaks = np.insert(peaks, 0, y_ref_line)
     return peaks
 
 
