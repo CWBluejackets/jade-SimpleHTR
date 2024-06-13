@@ -105,11 +105,14 @@ def add_template_info(specification: dict, template_directory, workflows, debug_
     # of the same workflow)
     workflow_starts = defaultdict(set)
     workflow_ends = defaultdict(set)
+    column_x_values = set()
     for column in specification['columns']:
         if column['process']:
             workflow = column['workflow']
             workflow_starts[workflow].add(column['start'])
             workflow_ends[workflow].add(column['end'])
+            column_x_values.add(column['start'])
+            column_x_values.add(column['end'])
     output_columns = []
     for workflow in workflow_starts.keys():
         output_column = {'workflow': workflow,
@@ -117,7 +120,6 @@ def add_template_info(specification: dict, template_directory, workflows, debug_
                          'end': max(workflow_ends[workflow])}
         output_columns.append(output_column)
     specification['output_columns'] = output_columns
-    column_x_values = {col['start'] for col in output_columns} + {col['end'] for col in output_columns}
     specification['column_x_values'] = column_x_values
     generate_cells(specification, workflows)
     generate_rows(specification)
