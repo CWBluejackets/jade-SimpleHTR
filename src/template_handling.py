@@ -93,6 +93,9 @@ def add_template_info(specification: dict, template_directory, workflows, debug_
     specification['row_lines'] = row_lines
     specification['max_y'] = image.shape[0] - 1
     specification['max_x'] = image.shape[1] - 1
+    # following to be used for automatic row breaking
+    specification['hline_detection'] = {'y_min': y_ref_line + 5,
+                                        'y_max': row_lines[-1] + 5}
     # These pre-specified columns are more numerous than our workflows
     for index, column in enumerate(specification['columns']):
         column['start'] = column_lines[index]
@@ -124,8 +127,6 @@ def add_template_info(specification: dict, template_directory, workflows, debug_
     # now add the arrays
     specification['image'] = image
     specification['image_top'] = image_top
-    specification['hline_detection'] = {'y_min': y_ref_line + 5,
-                                        'y_max': row_lines[-1] + 5}
     return
 
 
