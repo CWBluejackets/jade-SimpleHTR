@@ -803,6 +803,6 @@ def interpolate_hlines(peaks: np.ndarray, max_distance: int) -> np.ndarray:
     diffs = peaks[1:] - peaks[:-1]
     big_diff_indices = np.where(diffs > max_distance)[0] + 1
     insertions = (peaks[big_diff_indices] - peaks[big_diff_indices - 1]) // 2
-    return np.insert(peaks, insertions, big_diff_indices)
+    return np.insert(peaks, big_diff_indices, insertions)
 
 
