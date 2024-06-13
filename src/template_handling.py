@@ -117,6 +117,8 @@ def add_template_info(specification: dict, template_directory, workflows, debug_
                          'end': max(workflow_ends[workflow])}
         output_columns.append(output_column)
     specification['output_columns'] = output_columns
+    column_x_values = {col['start'] for col in output_columns} + {col['end'] for col in output_columns}
+    specification['column_x_values'] = column_x_values
     generate_cells(specification, workflows)
     generate_rows(specification)
     # save the debug info WITHOUT the big image arrays

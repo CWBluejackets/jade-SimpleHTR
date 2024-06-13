@@ -9,7 +9,7 @@ import numpy as np
 
 import geometry
 from application import TrainedModel
-from utils import NumpyJsonEncoder, EIGHTHS
+from utils import NumpyJsonEncoder, EIGHTHS, RED
 
 
 def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts_dir, corrections_dir,
@@ -64,19 +64,32 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
         csv_header.extend([str(column['workflow']), 'conf'])
     csv_table = defaultdict(lambda: [str()] * len(template['output_columns'] * 2))
 
+    hline_y_min = template['hline_detection']['y_min']
+    hline_y_max = template['hline_detection']['y_max']
+    y_ref_line = template['y_ref_line']
+    row_y_values = geometry.find_hlines(registered_image, config, hline_y_min, hline_y_max,y_ref_line)
+
     if config['debug']:
         # superimpose the template in blue and save it for inspection
         registration_path = os.path.join(output_dir,
                                          f'{output_prefix}_2_registration.png')
-        registration_debug = geometry.superimpose(registered_image, template_image)
+        registration_debug_2 = geometry.superimpose(registered_image, template_image)
         print(f'Writing {registration_path}')
-        cv2.imwrite(registration_path, registration_debug)
+        cv2.imwrite(registration_path, registration_debug_2)
         registration_path = os.path.join(output_dir,
                                          f'{output_prefix}_3_registration.png')
         full_template_image = template['image']
-        registration_debug = geometry.superimpose(registered_image, full_template_image)
+        registration_debug_3 = geometry.superimpose(registered_image, full_template_image)
         print(f'Writing {registration_path}')
-        cv2.imwrite(registration_path, registration_debug)
+        cv2.imwrite(registration_path, registration_debug_3)
+        registration_path = os.path.join(output_dir,
+                                         f'{output_prefix}_4_registration.png')
+        x_left = min(template['column_x_values'])
+        x_right = max(template['column_x_values'])
+        for y_value in row_y_values:
+            cv2.line(registration_debug_2, (x_left, y_value), (x_right, y_value), RED, 2)
+        print(f'Writing {registration_path}')
+        cv2.imwrite(registration_path, registration_debug_2)
 
     # produce median data for rows
     row_data = dict()

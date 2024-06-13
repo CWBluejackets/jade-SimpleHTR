@@ -3,7 +3,13 @@ import json
 import numpy as np
 
 # used for quantile debugging
-EIGHTHS = [x/8 for x in range(0, 9)]
+EIGHTHS = [x / 8 for x in range(0, 9)]
+
+# the cv2 color scheme is (blue, green, red)
+RED = (0, 0, 255)
+GREEN = (0, 128, 0)
+BLUE = (255, 0, 0)
+BLACK = (0, 0, 0)
 
 
 class NumpyJsonEncoder(json.JSONEncoder):

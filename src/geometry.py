@@ -10,7 +10,7 @@ import numpy as np
 from scipy import ndimage, signal
 from skimage.registration import phase_cross_correlation
 
-from utils import NumpyJsonEncoder, EIGHTHS
+from utils import NumpyJsonEncoder, EIGHTHS, RED, GREEN, BLACK, BLUE
 
 # point = (x, y)
 # in cv2, y = 0 at the top
@@ -20,11 +20,7 @@ from utils import NumpyJsonEncoder, EIGHTHS
 # NOTE: cv2.line(...) correctly handles endpoints outside the image without
 # raising exceptions, so extrapolation does NOT need boundary safety
 
-# the cv2 color scheme is (blue, green, red)
-RED = (0, 0, 255)
-GREEN = (0, 128, 0)
-BLUE = (255, 0, 0)
-BLACK = (0, 0, 0)
+
 
 FONT = cv2.FONT_HERSHEY_COMPLEX
 FONT_SCALE = 1
