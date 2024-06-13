@@ -116,5 +116,3 @@ def get_expanded_y_values(row_index: int, row_boundaries: List[int]) -> Tuple[in
         bottom = row_boundaries[row_index + 2]
     return top, bottom + 1
 
-
-s
