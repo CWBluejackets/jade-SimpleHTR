@@ -24,6 +24,11 @@
     "black_limit": 0.75
   },
   "registration": {
+    "hlines": {
+      "smoothing_window": 5,
+      "min_distance": 50,
+      "max_distance": 100
+    },
     "horizontal": {
       "canny_min": 30,
       "canny_max": 100,

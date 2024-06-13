@@ -7,7 +7,7 @@ from typing import Tuple
 
 import cv2
 import numpy as np
-from scipy import ndimage
+from scipy import ndimage, signal
 from skimage.registration import phase_cross_correlation
 
 from utils import NumpyJsonEncoder, EIGHTHS
@@ -768,3 +768,19 @@ def rescale_horizontally(image: np.ndarray, scale: float) -> np.ndarray:
                             dtype=modified_image.dtype)
         modified_image = np.hstack((modified_image, extension))
     return modified_image
+
+
+def find_hlines(image: np.ndarray, config: dict, y_min: int, y_max: int) -> np.ndarray:
+    left_cut = image.shape[1] // 4
+    middle_half = image[:, left_cut: -left_cut]
+    horizontal_means = np.mean(middle_half, axis=1)
+    window_size = config['registration']['hlines']['smoothing_window']
+    window = np.ones(window_size) / window_size
+    horizontal_means = np.convolve(horizontal_means, window, 'same')
+    min_distance = config['registration']['hlines']['min_distance']
+    max_distance = config['registration']['hlines']['max_distance']
+    peaks = signal.find_peaks(horizontal_means, distance=min_distance)[0]
+    peaks = peaks[np.where(peaks > y_min)]
+    peaks = peaks[np.where(peaks < y_max)]
+    # TODO interpolate where max distance is exceeded
+    return peaks
