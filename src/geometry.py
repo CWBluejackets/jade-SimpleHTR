@@ -797,7 +797,10 @@ def find_hlines(image: np.ndarray, config: dict, y_min: int, y_max: int,
     peaks = peaks[np.where(peaks > y_min)]
     peaks = peaks[np.where(peaks < y_max)]
     peaks = interpolate_hlines(peaks, max_distance)
-    peaks = np.insert(peaks, 0, y_ref_line)
+    if abs(y_ref_line - peaks[0]) < min_distance:
+        peaks[0] = min(y_ref_line, peaks[0])
+    else:
+        peaks = np.insert(peaks, 0, y_ref_line)
     return peaks
 
 
