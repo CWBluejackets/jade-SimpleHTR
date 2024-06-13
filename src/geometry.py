@@ -811,9 +811,15 @@ def interpolate_hlines(peaks: np.ndarray, max_distance: int) -> np.ndarray:
     :param max_distance: maximum distance between peaks
     :return: row boundaries with interpolation
     """
-    diffs = peaks[1:] - peaks[:-1]
-    big_diff_indices = np.where(diffs > max_distance)[0] + 1
-    insertions = (peaks[big_diff_indices] + peaks[big_diff_indices - 1]) // 2
-    return np.insert(peaks, big_diff_indices, insertions)
+    differences = peaks[1:] - peaks[:-1]
+    insertion_points = []
+    insertions = []
+    for i, difference in enumerate(differences):
+        if difference > max_distance:
+            nbr = difference // max_distance + 1
+            for j in range(1, nbr):
+                insertion_points.append(i + 1)
+                insertions.append((peaks[i+1] + peaks[i]) * j // nbr)
+    return np.insert(peaks,insertion_points, insertions)
 
 
