@@ -771,6 +771,15 @@ def rescale_horizontally(image: np.ndarray, scale: float) -> np.ndarray:
 
 
 def find_hlines(image: np.ndarray, config: dict, y_min: int, y_max: int) -> np.ndarray:
+    """
+    Use the slightly smoothed mean pixel value of the middle half of the image to find
+    row boundaries (which are brighter than the content).
+    :param image: grayscale image
+    :param config: config parameters
+    :param y_min: minimum y-coordinate (taken from template)
+    :param y_max: maximum y-coordinate (taken from template)
+    :return: row cutoffs
+    """
     left_cut = image.shape[1] // 4
     middle_half = image[:, left_cut: -left_cut]
     horizontal_means = np.mean(middle_half, axis=1)
@@ -782,5 +791,20 @@ def find_hlines(image: np.ndarray, config: dict, y_min: int, y_max: int) -> np.n
     peaks = signal.find_peaks(horizontal_means, distance=min_distance)[0]
     peaks = peaks[np.where(peaks > y_min)]
     peaks = peaks[np.where(peaks < y_max)]
-    # TODO interpolate where max distance is exceeded
+    peaks = interpolate_hlines(peaks, max_distance)
     return peaks
+
+
+def interpolate_hlines(peaks: np.ndarray, max_distance: int) -> np.ndarray:
+    """
+    Interpolate additional row boundaries where the gap exceeds max_distance.
+    :param peaks: row cutoffs before interpolation
+    :param max_distance: maximum distance between peaks
+    :return: row boundaries with interpolation
+    """
+    diffs = peaks[1:] - peaks[:-1]
+    big_diff_indices = np.where(diffs > max_distance)[0] + 1
+    insertions = (peaks[big_diff_indices] - peaks[big_diff_indices - 1]) // 2
+    return np.insert(peaks, insertions, big_diff_indices)
+
+
