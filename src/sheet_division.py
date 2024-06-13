@@ -10,7 +10,7 @@ import numpy as np
 import geometry
 from application import TrainedModel
 from utils import NumpyJsonEncoder, EIGHTHS, RED
-
+from cellulation import generate_cells
 
 def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts_dir, corrections_dir,
                          config, workflows, templates):
@@ -105,7 +105,9 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
     previous_workflow_id = None
     model = None
     confidence_by_workflow = defaultdict(list)
-    for cell_spec in template['cells']:
+
+    cell_list = generate_cells(template, workflows, row_y_values)
+    for cell_spec in cell_list:
         workflow_id = cell_spec['workflow']
         row = cell_spec['row']
         column = cell_spec['column']
