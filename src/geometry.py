@@ -423,6 +423,14 @@ def erase_margins(image: np.ndarray, config):
     v_medians = smoothed_vertical_medians(modified_image, config)
     left_cutoff = get_left_cutoff(v_medians, side_types[0], image_median, config)
     right_cutoff = get_right_cutoff(v_medians, side_types[1], image_median, config)
+    found_width = right_cutoff - left_cutoff
+    print(f'Detected cutoffs: left {left_cutoff}, right {right_cutoff}, width {found_width}')
+    min_width = config['margin_detection']['min_width']
+    if found_width < min_width:
+        adjustment = (found_width - min_width) // 2
+        left_cutoff -= adjustment
+        right_cutoff += adjustment
+        print(f'Adjusted cutoffs: left {left_cutoff}, right {right_cutoff}')
     # and erase the left and right margins
     for x in range(0, left_cutoff + 1):
         cv2.line(modified_image, (x, 0), (x, y_max), image_median, 1)

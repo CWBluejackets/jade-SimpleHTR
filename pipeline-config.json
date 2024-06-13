@@ -21,7 +21,8 @@
     "left_right_test": 0.10,
     "fallback_side_test": 100,
     "smoothing_window": 10,
-    "black_limit": 0.75
+    "black_limit": 0.75,
+    "min_width": 4080
   },
   "registration": {
     "hlines": {
