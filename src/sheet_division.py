@@ -106,7 +106,6 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
     confidence_by_workflow = defaultdict(list)
     for cell_spec in template['cells']:
         workflow_id = cell_spec['workflow']
-        print(f'Cell info: {cell_spec}')
         row = cell_spec['row']
         column = cell_spec['column']
         filename_base = f'{output_prefix}_{row:02d}_{column:02d}'
@@ -178,15 +177,12 @@ def save_processed_cell(config: dict, filename_base: str, cell_result: dict,
                         output_dir: str, cell_image: np.ndarray):
     output_filename = os.path.join(output_dir,
                                    f'{filename_base}.json')
-    print(f'Writing {output_filename}')
-    # some of the stuff in cell_result is not json serializable e.g., np.float32
     with open(output_filename, 'w') as f:
         json.dump(cell_result, f, cls=NumpyJsonEncoder, indent=1, sort_keys=True)
     if config['debug']:
         cell_image_filename = os.path.join(output_dir,
                                            f'{filename_base}.png')
         cell_result['output_image'] = output_filename
-        print(f'Writing {cell_image_filename}')
         cv2.imwrite(cell_image_filename, cell_image)
     return
 
