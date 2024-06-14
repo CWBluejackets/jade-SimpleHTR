@@ -12,6 +12,7 @@ from application import TrainedModel
 from utils import NumpyJsonEncoder, EIGHTHS, RED
 from cellulation import generate_cells
 
+
 def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts_dir, corrections_dir,
                          config, workflows, templates):
     """
@@ -67,7 +68,7 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
     hline_y_min = template['hline_detection']['y_min']
     hline_y_max = template['hline_detection']['y_max']
     y_ref_line = template['y_ref_line']
-    row_y_values = geometry.find_hlines(registered_image, config, hline_y_min, hline_y_max,y_ref_line)
+    row_y_values = geometry.find_hlines(registered_image, config, hline_y_min, hline_y_max, y_ref_line)
     sheet_info['row_detection'] = {'y_values': row_y_values,
                                    'diffs': row_y_values[1:] - row_y_values[:-1]}
     if config['debug']:
@@ -134,6 +135,7 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
             confidence_by_workflow[workflow_id].append(cell_result['confidence'])
 
         if config['htr'] and (cell_result['confidence'] < cell_result['confidence_threshold']):
+            add_training_boundaries(cell_result)
             workflow_name = workflows[cell_spec['workflow']]['description']
             save_cell_for_correction(corrections_dir, filename_base, cell_spec,
                                      cell_result, registered_image, workflow_name)
@@ -177,6 +179,25 @@ def save_cell_for_correction(correction_dir: str, filename_base: str,
     print(f'Writing for correction {output_json_path}')
     with open(output_json_path, 'w', encoding='utf-8') as f:
         json.dump(cell_result, f, cls=NumpyJsonEncoder, indent=1, sort_keys=True)
+    return
+
+
+def add_training_boundaries(cell_result: dict) -> None:
+    """
+    Add the coordinates for extracting the image for HTR for reuse as
+    training data after correction.
+    :param cell_result: accumulated stuff about the cell
+    """
+    top = cell_result['htr']['top'] - cell_result['expanded']['top']
+    bottom = cell_result['htr']['bottom'] + cell_result['expanded']['top']
+    left = cell_result['htr']['left'] - cell_result['expanded']['left']
+    right = cell_result['htr']['right'] + cell_result['expanded']['left']
+    cell_result['training_boundaries'] = {
+        'top': top,
+        'bottom': bottom,
+        'left': left,
+        'right': right
+    }
     return
 
 
