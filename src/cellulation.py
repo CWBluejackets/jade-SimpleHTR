@@ -35,7 +35,10 @@ def generate_cells(template: dict, workflows: dict, row_boundaries: np.ndarray) 
             htr_bottom = bottom
             expanded_top, expanded_bottom = get_expanded_y_values(row_number, row_boundaries.tolist())
             height = htr_bottom - htr_top
-            if 0 < top_adj < 1:
+            # do not expand the top row upwards (into the headers)
+            if row_number == 0:
+                pass
+            elif 0 < top_adj < 1:
                 htr_top = htr_top - round(top_adj * height)
             elif 1 <= top_adj:
                 htr_top = htr_top - top_adj
