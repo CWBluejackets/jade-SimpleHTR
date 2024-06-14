@@ -703,7 +703,7 @@ def generate_image_for_correction(image: np.ndarray, cell_spec, ml_output: str, 
     cv2.line(output_image, (inner_left, inner_bottom), (inner_right, inner_bottom), RED, 1)
     # add the text, centered horizontally
     wf_bottom_left = ((output_width - wf_width) // 2, round(wf_height * 1.5))
-    htr_bottom_left = ((output_width - htr_width) // 2, round(output_image.shape[1] - htr_height // 2))
+    htr_bottom_left = ((output_width - htr_width) // 2, round(output_image.shape[0] - htr_height // 2))
     cv2.putText(output_image, workflow, wf_bottom_left, FONT, FONT_SCALE, BLACK)
     cv2.putText(output_image, ml_output, htr_bottom_left, FONT, FONT_SCALE, BLACK)
     return output_image
