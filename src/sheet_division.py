@@ -85,13 +85,13 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
         cv2.imwrite(registration_path, registration_debug_3)
         registration_path = os.path.join(output_dir,
                                          f'{output_prefix}_4_registration.png')
-        x_left = min(template['column_x_values'])
-        x_right = max(template['column_x_values'])
+        x_left = min(template['output_column_x_values'])
+        x_right = max(template['output_column_x_values'])
         y_top = min(row_y_values)
         y_bottom = max(row_y_values)
         for y_value in row_y_values:
             cv2.line(registration_debug_2, (x_left, y_value), (x_right, y_value), RED, 2)
-        for x_value in template['column_x_values']:
+        for x_value in template['output_column_x_values']:
             cv2.line(registration_debug_2, (x_value, y_top), (x_value, y_bottom), RED, 2)
         print(f'Writing {registration_path}')
         cv2.imwrite(registration_path, registration_debug_2)

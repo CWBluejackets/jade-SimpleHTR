@@ -107,6 +107,7 @@ def add_template_info(specification: dict, template_directory, workflows, debug_
     workflow_starts = defaultdict(set)
     workflow_ends = defaultdict(set)
     column_x_values = set()
+    output_column_x_values = set()
     for column in specification['columns']:
         if column['process']:
             workflow = column['workflow']
@@ -116,12 +117,16 @@ def add_template_info(specification: dict, template_directory, workflows, debug_
             column_x_values.add(column['end'])
     output_columns = []
     for workflow in workflow_starts.keys():
+        start = min(workflow_starts[workflow])
+        end = max(workflow_ends[workflow])
         output_column = {'workflow': workflow,
-                         'start': min(workflow_starts[workflow]),
-                         'end': max(workflow_ends[workflow])}
+                         'start': start,
+                         'end': end}
         output_columns.append(output_column)
+        output_column_x_values |= {start, end}
     specification['output_columns'] = output_columns
     specification['column_x_values'] = column_x_values
+    specification['output_column_x_values'] = output_column_x_values
     generate_cells(specification, workflows)
     generate_rows(specification)
     # save the debug info WITHOUT the big image arrays
