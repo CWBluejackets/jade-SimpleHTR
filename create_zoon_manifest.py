@@ -41,13 +41,13 @@ def process_json(json_filename1: str, image_directory: str, manifest_data1: list
         sheet = json_data['input']['sheet']
         nara_url = json_data['input']['nara_url']
         workflow_id = json_data['workflow']
-        workflow_name = workflows[workflow_id]['description']
+        workflow_name = workflows[str(workflow_id)]['description']
         row = json_data['row']
         column = json_data['column']
-        training_top = json_data['htr']['top']
-        training_bottom = json_data['htr']['bottom']
-        training_left = json_data['htr']['left']
-        training_right = json_data['htr']['right']
+        training_top = json_data['training_boundaries']['top']
+        training_bottom = json_data['training_boundaries']['bottom']
+        training_left = json_data['training_boundaries']['left']
+        training_right = json_data['training_boundaries']['right']
         htr_text = json_data['text']
         output_line = [image_basename, nara_url, volume, vessel, sheet, workflow_name,
                        row, column, workflow_id,
