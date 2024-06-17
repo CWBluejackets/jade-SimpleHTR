@@ -29,7 +29,6 @@ HTR_DIR="${HOME}/bluejackets/jade-SimpleHTR"
 
 CONFIG_FILE="${HTR_DIR}/pipeline-config.json"
 LOCATIONS_FILE="${HTR_DIR}/locations-jade.json"
-WORKFLOWS_FILE="${HTR_DIR}/pipeline-workflows.json"
 OPTIONS="-c  ${CONFIG_FILE}  -l ${LOCATIONS_FILE}"
 
 while getopts "vdi:" option
