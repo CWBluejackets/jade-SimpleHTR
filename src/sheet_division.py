@@ -173,6 +173,7 @@ def save_cell_for_correction(correction_dir: str, filename_base: str,
     output_image = geometry.generate_image_for_correction(big_image, cell_spec,
                                                           cell_result['text'], workflow_name)
     cell_spec['output_for_correction'] = output_image_path
+    cell_spec['workflow_name'] = workflow_name
     print(f'Writing for correction {output_image_path}')
     cv2.imwrite(output_image_path, output_image)
     output_json_path = os.path.join(correction_dir, 'json', f'{filename_base}.json')

@@ -27,12 +27,12 @@ MANIFEST_HEADER = ['image', 'NARA URL', 'volume', 'vessel', 'sheet', 'type',
 # HTR output
 
 
-def process_json(json_filename1: str, image_directory: str, manifest_data1: list, workflows: dict) -> None:
+def process_json(json_filename1: str, image_directory1: str, manifest_data1: list) -> None:
     print(f'Reading {json_filename1}')
     with open(json_filename1, 'r') as f:
         json_data = json.load(f)
     image_basename = os.path.basename(json_data['output_image'])
-    image_path = os.path.join(image_directory, image_basename)
+    image_path = os.path.join(image_directory1, image_basename)
     if not os.path.exists(image_path):
         print(f'ERROR: missing {image_path}')
     else:
@@ -41,7 +41,7 @@ def process_json(json_filename1: str, image_directory: str, manifest_data1: list
         sheet = json_data['input']['sheet']
         nara_url = json_data['input']['nara_url']
         workflow_id = json_data['workflow']
-        workflow_name = workflows[str(workflow_id)]['description']
+        workflow_name = json_data['workflow_name']
         row = json_data['row']
         column = json_data['column']
         training_top = json_data['training_boundaries']['top']
@@ -67,12 +67,6 @@ if __name__ == "__main__":
                          metavar='LOCATIONS.JSON',
                          help='file locations config file')
 
-    oparser.add_argument('-w', dest='workflow_config',
-                         type=str,
-                         required=True,
-                         metavar='WORKFLOW.JSON',
-                         help='workflow JSON config file')
-
     options = oparser.parse_args()
 
     # machine-dependent configuration (directory and some file locations)
@@ -89,7 +83,7 @@ if __name__ == "__main__":
 
     manifest_data = []
     for json_filename in json_glob:
-        process_json(json_filename, image_directory, manifest_data, workflow_config)
+        process_json(json_filename, image_directory, manifest_data)
 
     manifest_path = os.path.join(image_directory, 'manifest.csv')
     print(f'Writing {manifest_path}')
