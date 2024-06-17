@@ -7,7 +7,8 @@ import argparse
 
 MANIFEST_HEADER = ['image', 'NARA URL', 'volume', 'vessel', 'sheet', 'type',
                    '#row', '#column', '#workflow_id',
-                   '#training_top', '#training_bottom', '#training_left', '#training_right'
+                   '#training_top', '#training_bottom', '#training_left', '#training_right',
+                   '#htr_text'
                    ]
 
 
@@ -22,7 +23,8 @@ MANIFEST_HEADER = ['image', 'NARA URL', 'volume', 'vessel', 'sheet', 'type',
 # row number
 # column number
 # workflow number
-# coordinates of the HTR box (for extracting the image to use as new training data).
+# coordinates of the HTR box (for extracting the image to use as new training data)
+# HTR output
 
 
 def process_json(json_filename1: str, image_directory: str, manifest_data1: list, workflows: dict) -> None:
@@ -34,11 +36,11 @@ def process_json(json_filename1: str, image_directory: str, manifest_data1: list
     if not os.path.exists(image_path):
         print(f'ERROR: missing {image_path}')
     else:
-        vessel = json_data['vessel_raw']
-        volume = json_data['volume']
-        sheet = json_data['sheet']
-        nara_url = json_data['nara_url']
-        workflow_id = json_data['workflow_id']
+        vessel = json_data['input']['vessel_raw']
+        volume = json_data['input']['volume']
+        sheet = json_data['input']['sheet']
+        nara_url = json_data['input']['nara_url']
+        workflow_id = json_data['workflow']
         workflow_name = workflows[workflow_id]['description']
         row = json_data['row']
         column = json_data['column']
@@ -46,10 +48,11 @@ def process_json(json_filename1: str, image_directory: str, manifest_data1: list
         training_bottom = json_data['htr']['bottom']
         training_left = json_data['htr']['left']
         training_right = json_data['htr']['right']
+        htr_text = json_data['text']
         output_line = [image_basename, nara_url, volume, vessel, sheet, workflow_name,
                        row, column, workflow_id,
-                       training_top, training_bottom, training_left, training_right
-                       ]
+                       training_top, training_bottom, training_left, training_right,
+                       htr_text]
         manifest_data1.append(output_line)
     return
 
