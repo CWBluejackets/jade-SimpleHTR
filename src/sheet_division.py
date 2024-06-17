@@ -189,9 +189,9 @@ def add_training_boundaries(cell_result: dict) -> None:
     :param cell_result: accumulated stuff about the cell
     """
     top = cell_result['htr']['top'] - cell_result['expanded']['top']
-    bottom = cell_result['htr']['bottom'] + cell_result['expanded']['top']
+    bottom = cell_result['htr']['bottom'] - cell_result['expanded']['top']
     left = cell_result['htr']['left'] - cell_result['expanded']['left']
-    right = cell_result['htr']['right'] + cell_result['expanded']['left']
+    right = cell_result['htr']['right'] - cell_result['expanded']['left']
     cell_result['training_boundaries'] = {
         'top': top,
         'bottom': bottom,
