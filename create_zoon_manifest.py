@@ -75,11 +75,9 @@ if __name__ == "__main__":
         locations = json.load(f)
     corrections_directory = locations['corrections_directory']
     image_directory = os.path.join(corrections_directory, 'image')
-    json_directory = os.path.join(corrections_directory, 'json')
 
+    json_directory = os.path.join(corrections_directory, 'json')
     json_glob = glob.iglob(os.path.join(json_directory, '*.json'))
-    with open(options.workflow_config, 'r') as f:
-        workflow_config = json.load(f)
 
     manifest_data = []
     for json_filename in json_glob:
