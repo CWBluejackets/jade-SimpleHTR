@@ -6,40 +6,52 @@ import os.path
 import argparse
 
 MANIFEST_HEADER = ['image', 'NARA URL', 'volume', 'vessel', 'sheet', 'type',
-                   '#identifier', '#row', '#column', '#workflow_id',
+                   '#row', '#column', '#workflow_id',
                    '#training_top', '#training_bottom', '#training_left', '#training_right'
                    ]
+
 
 # VISIBLE METADATA
 # image filename
 # NARA URL
+# volume number
 # vessel name
 # sheet number
-# volume number
 # workflow name (e.g., "Eyes Hair Complexion")
 # HIDDEN METADATA
-# image identifier
 # row number
 # column number
 # workflow number
 # coordinates of the HTR box (for extracting the image to use as new training data).
 
 
-def process_json(json_filename1: str, image_directory: str, manifest_data1: list) -> None:
+def process_json(json_filename1: str, image_directory: str, manifest_data1: list, workflows: dict) -> None:
+    print(f'Reading {json_filename1}')
     with open(json_filename1, 'r') as f:
         json_data = json.load(f)
-    vessel = json_data['vessel_raw']
-    volume = json_data['volume']
-    sheet = json_data['sheet']
-    nara_url = json_data['nara_url']
-
-
-
-
-
+    image_basename = os.path.basename(json_data['output_image'])
+    image_path = os.path.join(image_directory, image_basename)
+    if not os.path.exists(image_path):
+        print(f'ERROR: missing {image_path}')
+    else:
+        vessel = json_data['vessel_raw']
+        volume = json_data['volume']
+        sheet = json_data['sheet']
+        nara_url = json_data['nara_url']
+        workflow_id = json_data['workflow_id']
+        workflow_name = workflows[workflow_id]['description']
+        row = json_data['row']
+        column = json_data['column']
+        training_top = json_data['htr']['top']
+        training_bottom = json_data['htr']['bottom']
+        training_left = json_data['htr']['left']
+        training_right = json_data['htr']['right']
+        output_line = [image_basename, nara_url, volume, vessel, sheet, workflow_name,
+                       row, column, workflow_id,
+                       training_top, training_bottom, training_left, training_right
+                       ]
+        manifest_data1.append(output_line)
     return
-
-
 
 
 if __name__ == "__main__":
@@ -77,6 +89,6 @@ if __name__ == "__main__":
     manifest_path = os.path.join(options.image_directory, 'manifest.csv')
     print(f'Writing {manifest_path}')
     with open(manifest_path, 'w', newline='') as f:
-        writer = csv.DictWriter(f)
+        writer = csv.writer(f)
         writer.writerow(MANIFEST_HEADER)
         writer.writerows(manifest_data)
