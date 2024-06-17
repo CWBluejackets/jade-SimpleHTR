@@ -169,13 +169,13 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
 def save_cell_for_correction(correction_dir: str, filename_base: str,
                              cell_spec: dict, cell_result: dict,
                              big_image: np.ndarray, workflow_name: str):
-    output_image_path = os.path.join(correction_dir, f'{filename_base}.png')
+    output_image_path = os.path.join(correction_dir, 'image', f'{filename_base}.jpg')
     output_image = geometry.generate_image_for_correction(big_image, cell_spec,
                                                           cell_result['text'], workflow_name)
     cell_spec['output_for_correction'] = output_image_path
     print(f'Writing for correction {output_image_path}')
     cv2.imwrite(output_image_path, output_image)
-    output_json_path = os.path.join(correction_dir, f'{filename_base}.json')
+    output_json_path = os.path.join(correction_dir, 'json', f'{filename_base}.json')
     print(f'Writing for correction {output_json_path}')
     with open(output_json_path, 'w', encoding='utf-8') as f:
         json.dump(cell_result, f, cls=NumpyJsonEncoder, indent=1, sort_keys=True)

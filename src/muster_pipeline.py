@@ -117,6 +117,8 @@ if __name__ == "__main__":
     parts_dir = os.path.join(output_dir, 'parts')
     os.makedirs(parts_dir, exist_ok=True)
     corrections_dir = os.path.join(os.path.dirname(options.locations_file), locations['corrections_directory'])
+    os.makedirs(os.path.join(corrections_dir, 'image'), exist_ok=True)
+    os.makedirs(os.path.join(corrections_dir, 'json'), exist_ok=True)
 
     # Use options.input_location if specified; otherwise fall back to config file;
     # options.input_location can be a single JPG or a directory containing them
