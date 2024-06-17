@@ -31,7 +31,7 @@ def process_json(json_filename1: str, image_directory1: str, manifest_data1: lis
     print(f'Reading {json_filename1}')
     with open(json_filename1, 'r') as f:
         json_data = json.load(f)
-    image_basename = os.path.basename(json_data['output_image'])
+    image_basename = os.path.basename(json_data['correction_image'])
     image_path = os.path.join(image_directory1, image_basename)
     if not os.path.exists(image_path):
         print(f'ERROR: missing {image_path}')
