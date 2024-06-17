@@ -61,17 +61,11 @@ if __name__ == "__main__":
     oparser = argparse.ArgumentParser(description="Generate Zooniverse manifest",
                                       formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    oparser.add_argument('-I', dest='image_directory',
+    oparser.add_argument('-l', dest='locations_file',
                          type=str,
                          required=True,
-                         metavar='PATH',
-                         help='image input and manifest output directory')
-
-    oparser.add_argument('-J', dest='json_directory',
-                         type=str,
-                         required=True,
-                         metavar='PATH',
-                         help='JSON input directory')
+                         metavar='LOCATIONS.JSON',
+                         help='file locations config file')
 
     oparser.add_argument('-w', dest='workflow_config',
                          type=str,
@@ -81,15 +75,23 @@ if __name__ == "__main__":
 
     options = oparser.parse_args()
 
-    json_glob = glob.iglob(os.path.join(options.json_directory, '*.json'))
+    # machine-dependent configuration (directory and some file locations)
+    print(f'Loading {options.locations_file}')
+    with open(options.locations_file, 'r') as f:
+        locations = json.load(f)
+    corrections_directory = locations['corrections_directory']
+    image_directory = os.path.join(corrections_directory, 'image')
+    json_directory = os.path.join(corrections_directory, 'json')
+
+    json_glob = glob.iglob(os.path.join(json_directory, '*.json'))
     with open(options.workflow_config, 'r') as f:
         workflow_config = json.load(f)
 
     manifest_data = []
     for json_filename in json_glob:
-        process_json(json_filename, options.image_directory, manifest_data, workflow_config)
+        process_json(json_filename, image_directory, manifest_data, workflow_config)
 
-    manifest_path = os.path.join(options.image_directory, 'manifest.csv')
+    manifest_path = os.path.join(image_directory, 'manifest.csv')
     print(f'Writing {manifest_path}')
     with open(manifest_path, 'w', newline='') as f:
         writer = csv.writer(f)
