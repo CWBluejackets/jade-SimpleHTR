@@ -5,10 +5,10 @@ import glob
 import os.path
 import argparse
 
-MANIFEST_HEADER = ['image', 'NARA URL', 'volume', 'vessel', 'sheet', 'type',
+MANIFEST_HEADER = ['image', 'NARA URL', 'volume', 'vessel', 'sheet', 'workflow',
                    '#row', '#column', '#workflow_id',
                    '#training_top', '#training_bottom', '#training_left', '#training_right',
-                   '#htr_text'
+                   '#htr_text', '#conf', '#conf_threshold'
                    ]
 
 
@@ -42,6 +42,8 @@ def process_json(json_filename1: str, image_directory1: str, manifest_data1: lis
         nara_url = json_data['input']['nara_url']
         workflow_id = json_data['workflow']
         workflow_name = json_data['workflow_name']
+        confidence = json_data['confidence']
+        confidence_threshold = json_data['confidence_threshold']
         row = json_data['row']
         column = json_data['column']
         training_top = json_data['training_boundaries']['top']
@@ -52,7 +54,7 @@ def process_json(json_filename1: str, image_directory1: str, manifest_data1: lis
         output_line = [image_basename, nara_url, volume, vessel, sheet, workflow_name,
                        row, column, workflow_id,
                        training_top, training_bottom, training_left, training_right,
-                       htr_text]
+                       htr_text, confidence, confidence_threshold]
         manifest_data1.append(output_line)
     return
 
