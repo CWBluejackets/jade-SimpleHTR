@@ -65,20 +65,39 @@ if __name__ == "__main__":
 
     oparser.add_argument('-l', dest='locations_file',
                          type=str,
-                         required=True,
                          metavar='LOCATIONS.JSON',
                          help='file locations config file')
 
+    oparser.add_argument('-I', dest='image_directory',
+                         type=str,
+                         metavar='PATH',
+                         help='image and manifest directory ')
+
+    oparser.add_argument('-J', dest='json_directory',
+                         type=str,
+                         metavar='PATH',
+                         help='json directory')
+
     options = oparser.parse_args()
 
-    # machine-dependent configuration (directory and some file locations)
-    print(f'Loading {options.locations_file}')
-    with open(options.locations_file, 'r') as f:
-        locations = json.load(f)
-    corrections_directory = locations['corrections_directory']
-    image_directory = os.path.join(corrections_directory, 'image')
+    if not options.locations_file and not (options.json_directory and options.image_directory):
+        print('You must specify either -l FILE or -I DIR and -J DIR!')
+        exit(99)
 
-    json_directory = os.path.join(corrections_directory, 'json')
+    if options.locations_file:
+        # machine-dependent configuration (directory and some file locations)
+        print(f'Loading {options.locations_file}')
+        with open(options.locations_file, 'r') as f:
+            locations = json.load(f)
+        corrections_directory = locations['corrections_directory']
+        image_directory = os.path.join(corrections_directory, 'image')
+        json_directory = os.path.join(corrections_directory, 'json')
+    else:
+        image_directory = options.image_directory
+        json_directory = options.json_directory
+
+    print(f'Images will be read from {image_directory}')
+    print(f'JSON will be read from {json_directory}')
     json_glob = glob.iglob(os.path.join(json_directory, '*.json'))
 
     manifest_data = []
