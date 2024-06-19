@@ -139,8 +139,6 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
             workflow_name = workflows[cell_spec['workflow']]['description']
             save_cell_for_correction(corrections_dir, filename_base, cell_spec,
                                      cell_result, registered_image, workflow_name)
-            # TODO also generate metadata for Pantoptes and for reattaching
-            # https://panoptes.docs.apiary.io/#
 
     if config['htr']:
         csv_file = os.path.join(output_dir, f'{output_prefix}.csv')

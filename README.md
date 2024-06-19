@@ -130,3 +130,7 @@ Pipeline for processing muster JPGs using trained models.
 * intermediate directory: PNGs, maybe control files
 * hints for muster format/structure
 * output directory: CSVs
+
+## Panoptes link
+
+https://panoptes.docs.apiary.io/
