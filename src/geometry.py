@@ -22,12 +22,14 @@ from utils import NumpyJsonEncoder, EIGHTHS, RED, GREEN, BLACK, BLUE
 
 # parameters for text
 FONT = cv2.FONT_HERSHEY_COMPLEX
-FONT_SCALE = 1.5
+FONT_SCALE = 1
 FONT_THICKNESS = 2
 
 FONT_ARGS = {'fontFace': FONT,
              'fontScale': FONT_SCALE,
              'thickness': FONT_THICKNESS}
+
+TEXT_STRIP_HEIGHT = 1.8
 
 # smallest rotation that will actually change the image
 MIN_ROTATION = math.degrees(math.atan(2 / 5616))
@@ -682,14 +684,14 @@ def generate_image_for_correction(image: np.ndarray, cell_spec, ml_output: str, 
     htr_full_height = htr_height + htr_baseline
     htr_width += 15
     required_width = max(wf_width, htr_width) + 25
-    extra_height_top = wf_full_height * 3 // 2
-    extra_height_bottom = htr_full_height * 3 // 2
+    extra_height_top = round(wf_full_height * TEXT_STRIP_HEIGHT)
+    extra_height_bottom = round(htr_full_height * TEXT_STRIP_HEIGHT)
     # crop image to outer bounds
     outer_left, outer_right = cell_spec['expanded']['left'], cell_spec['expanded']['right']
     outer_top, outer_bottom = cell_spec['expanded']['top'], cell_spec['expanded']['bottom']
-    if (outer_right - outer_left) < required_width:
-        outer_left -= 10
-        outer_right += 10
+    side_expansion = max(0, required_width - (outer_right - outer_left))
+    outer_left -= side_expansion // 2
+    outer_right += side_expansion // 2
     extracted_image = image[outer_top: outer_bottom, outer_left: outer_right]
     # calculate red box WITHIN cropped image after adding workflow to the top
     inner_left, inner_right = cell_spec['htr']['left'] - outer_left, cell_spec['htr']['right'] - outer_left
@@ -708,9 +710,9 @@ def generate_image_for_correction(image: np.ndarray, cell_spec, ml_output: str, 
     cv2.line(output_image, (inner_left, inner_bottom), (inner_right, inner_bottom), RED, 1)
     # add the text, centered horizontally
     wf_left = (output_width - wf_width) // 2
-    wf_bottom = wf_full_height + (extra_height_top - wf_full_height) // 2
+    wf_bottom = wf_height + (extra_height_top - wf_height) // 2
     htr_left = (output_width - htr_width) // 2
-    htr_bottom = output_image.shape[0] - (extra_height_bottom - htr_full_height) // 2
+    htr_bottom = output_image.shape[0] - (extra_height_bottom - htr_height) // 2
     cv2.putText(img=output_image, text=workflow, org=(wf_left, wf_bottom), color=BLACK, **FONT_ARGS)
     cv2.putText(img=output_image, text=ml_output, org=(htr_left, htr_bottom), color=BLACK, **FONT_ARGS)
     return output_image
