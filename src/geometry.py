@@ -122,10 +122,12 @@ def normalize_angle(angle):
     return angle
 
 
-def within_side_limits(line, left_limit: int, right_limit: int) -> bool:
+def within_line_limits(line, left_limit: int, right_limit: int, top_limit: int, bottom_limit: int) -> bool:
     left = min(line[2][0], line[2][2])
     right = max(line[2][0], line[2][2])
-    return (left >= left_limit) and (right <= right_limit)
+    top = min(line[2][1], line[2][3])
+    bottom = max(line[2][1], line[2][3])
+    return (left >= left_limit) and (right <= right_limit) and (top >= top_limit) and (bottom <= bottom_limit)
 
 
 def is_nearly_horizontal(angle, tolerance):
@@ -366,15 +368,19 @@ def rotate_correct(image: np.ndarray, config: dict, output_dir: str, output_pref
     hough_rho = config['rotation']['hough_resolution_pixels']
     mode_bins = config['rotation']['mode_bins']
     ignore_sides_fraction = config['rotation']['ignore_sides_fraction']
+    ignore_vertical_fraction = config['rotation']['ignore_vertical_fraction']
     left_limit = round(image.shape[1] * ignore_sides_fraction)
     right_limit = round(image.shape[1] * (1 - ignore_sides_fraction))
+    top_limit = round(image.shape[0] * ignore_vertical_fraction)
+    bottom_limit = round(image.shape[0] * (1- ignore_vertical_fraction))
     dst = cv2.Canny(image, threshold1=canny_min, threshold2=canny_max,
                     apertureSize=canny_aperture, L2gradient=True)
     lines = cv2.HoughLinesP(dst, rho=hough_rho, theta=hough_theta, threshold=hough_threshold,
                             minLineLength=hough_min_length, maxLineGap=hough_max_gap)
     measured_lines = [measure(line[0]) for line in lines.tolist()]
     h_lines = [line for line in measured_lines
-               if is_nearly_horizontal(line[0], deviation) and within_side_limits(line, left_limit, right_limit)]
+               if (is_nearly_horizontal(line[0], deviation) and
+                   within_line_limits(line, left_limit, right_limit, top_limit, bottom_limit))]
     # debug: save the hlines image
     if config['debug']:
         debug_image_path = os.path.join(output_dir, f'{output_prefix}_0_hlines.png')

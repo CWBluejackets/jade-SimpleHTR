@@ -13,6 +13,7 @@
     "hough_max_gap": 10,
     "deviation": 2,
     "ignore_sides_fraction": 0.15,
+    "ignore_vertical_fraction": 0.15,
     "mode_bins": 21
   },
   "margin_detection": {
