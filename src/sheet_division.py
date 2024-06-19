@@ -2,6 +2,7 @@
 import csv
 import json
 import os.path
+import random
 from collections import defaultdict
 
 import cv2
@@ -128,7 +129,10 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
         cell_result, cell_image = process_cell(registered_image, cell_spec, model, config)
         cell_result['input'] = image_metadata.copy()
         cell_result['pcc'] = sheet_info['pcc']
-        save_processed_cell(config, filename_base, cell_result, parts_dir, cell_image)
+
+        if config['debug']:
+            save_processed_cell(config, filename_base, cell_result, parts_dir, cell_image)
+
         if config['htr']:
             csv_table[cell_result['row']][cell_result['column'] * 2] = cell_result['text']
             csv_table[cell_result['row']][cell_result['column'] * 2 + 1] = cell_result['confidence']
@@ -137,6 +141,14 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
         if config['htr'] and (cell_result['confidence'] < cell_result['confidence_threshold']):
             add_training_boundaries(cell_result)
             workflow_name = workflows[cell_spec['workflow']]['description']
+            save_cell_for_correction(corrections_dir, filename_base, cell_spec,
+                                     cell_result, registered_image, workflow_name)
+
+        if config['registration_only'] and random.random() < 0.1:
+            add_training_boundaries(cell_result)
+            workflow_name = workflows[cell_spec['workflow']]['description']
+            text = ' '.join(['Testing'] * random.randint(1, 3))
+            cell_result['confidence'] = random.uniform(0.0, cell_result['confidence_threshold'])
             save_cell_for_correction(corrections_dir, filename_base, cell_spec,
                                      cell_result, registered_image, workflow_name)
 
@@ -229,10 +241,10 @@ def process_cell(image: np.ndarray, cell, model, config: dict):
     inner_cell_image = image[inner_top:inner_bottom, inner_left:inner_right]
     cell_image = image[top: bottom, left: right]
     cell_output = dict()
+    threshold = cell['confidence_threshold']
     if config['htr']:
         text, confidence = model.apply(cell_image)
         cell_output.update({'text': text, 'confidence': confidence})
-        threshold = cell['confidence_threshold']
         print(f'Cell shape {cell_image.shape} confidence {confidence:.3f} / {threshold:.3f} text "{text}"')
     cell_output.update(cell)
     cell_output['median_full'] = np.median(cell_image)
