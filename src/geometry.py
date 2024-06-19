@@ -368,11 +368,12 @@ def rotate_correct(image: np.ndarray, config: dict, output_dir: str, output_pref
     hough_rho = config['rotation']['hough_resolution_pixels']
     mode_bins = config['rotation']['mode_bins']
     ignore_sides_fraction = config['rotation']['ignore_sides_fraction']
-    ignore_vertical_fraction = config['rotation']['ignore_vertical_fraction']
+    ignore_top_fraction = config['rotation']['ignore_top_fraction']
+    ignore_bottom_fraction = config['rotation']['ignore_bottom_fraction']
     left_limit = round(image.shape[1] * ignore_sides_fraction)
     right_limit = round(image.shape[1] * (1 - ignore_sides_fraction))
-    top_limit = round(image.shape[0] * ignore_vertical_fraction)
-    bottom_limit = round(image.shape[0] * (1- ignore_vertical_fraction))
+    top_limit = round(image.shape[0] * ignore_top_fraction)
+    bottom_limit = round(image.shape[0] * (1- ignore_bottom_fraction))
     dst = cv2.Canny(image, threshold1=canny_min, threshold2=canny_max,
                     apertureSize=canny_aperture, L2gradient=True)
     lines = cv2.HoughLinesP(dst, rho=hough_rho, theta=hough_theta, threshold=hough_threshold,
