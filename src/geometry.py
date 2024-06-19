@@ -20,11 +20,14 @@ from utils import NumpyJsonEncoder, EIGHTHS, RED, GREEN, BLACK, BLUE
 # NOTE: cv2.line(...) correctly handles endpoints outside the image without
 # raising exceptions, so extrapolation does NOT need boundary safety
 
-
-
+# parameters for text
 FONT = cv2.FONT_HERSHEY_COMPLEX
-FONT_SCALE = 1
-FONT_THICKNESS = 3
+FONT_SCALE = 1.5
+FONT_THICKNESS = 2
+
+FONT_ARGS = {'fontFace': FONT,
+             'fontScale': FONT_SCALE,
+             'thickness': FONT_THICKNESS}
 
 # smallest rotation that will actually change the image
 MIN_ROTATION = math.degrees(math.atan(2 / 5616))
@@ -673,8 +676,8 @@ def generate_image_for_correction(image: np.ndarray, cell_spec, ml_output: str, 
     """
     # calculate sizes of texts
     # https://lindevs.com/get-text-size-using-opencv
-    (wf_width, wf_height), _ = cv2.getTextSize(workflow, FONT, FONT_SCALE, FONT_THICKNESS)
-    (htr_width, htr_height), _ = cv2.getTextSize(ml_output, FONT, FONT_SCALE, FONT_THICKNESS)
+    (wf_width, wf_height), wf_baseline = cv2.getTextSize(workflow, **FONT_ARGS)
+    (htr_width, htr_height), htr_baseline = cv2.getTextSize(ml_output, **FONT_ARGS)
     htr_width += 15
     required_width = max(wf_width, htr_width) + 20
     extra_height_top = wf_height * 2
@@ -704,8 +707,8 @@ def generate_image_for_correction(image: np.ndarray, cell_spec, ml_output: str, 
     # add the text, centered horizontally
     wf_bottom_left = ((output_width - wf_width) // 2, round(wf_height * 1.5))
     htr_bottom_left = ((output_width - htr_width) // 2, round(output_image.shape[0] - htr_height // 2))
-    cv2.putText(output_image, workflow, wf_bottom_left, FONT, FONT_SCALE, BLACK)
-    cv2.putText(output_image, ml_output, htr_bottom_left, FONT, FONT_SCALE, BLACK)
+    cv2.putText(output_image, workflow, wf_bottom_left, color=BLACK, **FONT_ARGS)
+    cv2.putText(output_image, ml_output, htr_bottom_left, color=BLACK, **FONT_ARGS)
     return output_image
 
 
@@ -819,7 +822,5 @@ def interpolate_hlines(peaks: np.ndarray, max_distance: int) -> np.ndarray:
             nbr = difference // max_distance + 1
             for j in range(1, nbr):
                 insertion_points.append(i + 1)
-                insertions.append((peaks[i+1] + peaks[i]) * j // nbr)
-    return np.insert(peaks,insertion_points, insertions)
-
-
+                insertions.append((peaks[i + 1] + peaks[i]) * j // nbr)
+    return np.insert(peaks, insertion_points, insertions)
