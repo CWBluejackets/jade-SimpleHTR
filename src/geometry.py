@@ -677,11 +677,13 @@ def generate_image_for_correction(image: np.ndarray, cell_spec, ml_output: str, 
     # calculate sizes of texts
     # https://lindevs.com/get-text-size-using-opencv
     (wf_width, wf_height), wf_baseline = cv2.getTextSize(workflow, **FONT_ARGS)
+    wf_full_height = wf_height + wf_baseline
     (htr_width, htr_height), htr_baseline = cv2.getTextSize(ml_output, **FONT_ARGS)
+    htr_full_height = htr_height + htr_baseline
     htr_width += 15
-    required_width = max(wf_width, htr_width) + 20
-    extra_height_top = wf_height * 2
-    extra_height_bottom = htr_height * 2
+    required_width = max(wf_width, htr_width) + 25
+    extra_height_top = wf_full_height * 3 // 2
+    extra_height_bottom = htr_full_height * 3 // 2
     # crop image to outer bounds
     outer_left, outer_right = cell_spec['expanded']['left'], cell_spec['expanded']['right']
     outer_top, outer_bottom = cell_spec['expanded']['top'], cell_spec['expanded']['bottom']
@@ -705,10 +707,12 @@ def generate_image_for_correction(image: np.ndarray, cell_spec, ml_output: str, 
     cv2.line(output_image, (inner_left, inner_top), (inner_right, inner_top), RED, 1)
     cv2.line(output_image, (inner_left, inner_bottom), (inner_right, inner_bottom), RED, 1)
     # add the text, centered horizontally
-    wf_bottom_left = ((output_width - wf_width) // 2, round(wf_height * 1.5))
-    htr_bottom_left = ((output_width - htr_width) // 2, round(output_image.shape[0] - htr_height // 2))
-    cv2.putText(output_image, workflow, wf_bottom_left, color=BLACK, **FONT_ARGS)
-    cv2.putText(output_image, ml_output, htr_bottom_left, color=BLACK, **FONT_ARGS)
+    wf_left = (output_width - wf_width) // 2
+    wf_bottom = wf_full_height + (extra_height_top - wf_full_height) // 2
+    htr_left = (output_width - htr_width) // 2
+    htr_bottom = output_image.shape[0] - (extra_height_bottom - htr_full_height) // 2
+    cv2.putText(img=output_image, text=workflow, org=(wf_left, wf_bottom), color=BLACK, **FONT_ARGS)
+    cv2.putText(img=output_image, text=ml_output, org=(htr_left, htr_bottom), color=BLACK, **FONT_ARGS)
     return output_image
 
 
