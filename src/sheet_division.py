@@ -138,17 +138,18 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
             csv_table[cell_result['row']][cell_result['column'] * 2 + 1] = cell_result['confidence']
             confidence_by_workflow[workflow_id].append(cell_result['confidence'])
 
-        if config['htr'] and (cell_result['confidence'] < cell_result['confidence_threshold']):
+        elif random.random() < 0.1:
+            # if not running HTR, generate a random 10% of correction images to check them
             add_training_boundaries(cell_result)
             workflow_name = workflows[cell_spec['workflow']]['description']
+            cell_result['text'] = ' '.join(['Testing'] * random.randint(1, 4))
+            cell_result['confidence'] = random.uniform(0.0, cell_result['confidence_threshold'])
             save_cell_for_correction(corrections_dir, filename_base, cell_spec,
                                      cell_result, registered_image, workflow_name)
 
-        if config['registration_only'] and random.random() < 0.1:
+        if config['htr'] and (cell_result['confidence'] < cell_result['confidence_threshold']):
             add_training_boundaries(cell_result)
             workflow_name = workflows[cell_spec['workflow']]['description']
-            text = ' '.join(['Testing'] * random.randint(1, 3))
-            cell_result['confidence'] = random.uniform(0.0, cell_result['confidence_threshold'])
             save_cell_for_correction(corrections_dir, filename_base, cell_spec,
                                      cell_result, registered_image, workflow_name)
 

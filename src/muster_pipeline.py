@@ -50,12 +50,12 @@ if __name__ == "__main__":
 
     options = oparser.parse_args()
 
-    # machine-dependent configuration (directory and some file locations)
+    # machine-dependent configuration (directory and file locations)
     print(f'Loading {options.locations_file}')
     with open(options.locations_file, 'r') as f:
         locations = json.load(f)
 
-    # machine-independent configuration (parameters)
+    # machine-independent configuration (HTR and geometry parameters)
     print(f'Loading {options.config_file}')
     with open(options.config_file, 'r') as f:
         config = json.load(f)
