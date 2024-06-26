@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import csv
+import json
 import os
 
 from panoptes_client import Panoptes, Project, SubjectSet, Subject
@@ -8,16 +9,33 @@ from panoptes_client import Panoptes, Project, SubjectSet, Subject
 PROJECT_ID = 18285
 
 
-def create_subject_set(options) -> SubjectSet:
-    input_directory = os.path.dirname(options.manifest_path)
+def create_subject_set(options0, project) -> SubjectSet:
+    subject_set = SubjectSet()
+    subjects = []
+    input_directory = os.path.dirname(options0.manifest_path)
+    manifest = load_manifest(options0.manifest_path)
+    for image_fn, metadata in manifest.items():
+        image_path = os.path.join(input_directory, image_fn)
+        subject = Subject()
+        subject.links.project = project
+        subject.add_location(image_path)
+        subject.metadata.update(metadata)
+        subject.save()
+        subjects.append(subject)
+        subject_set.add_subject(subject)
+
+
+
+
     # TODO
     return None
 
 
 def load_manifest(manifest_path) -> dict:
     with open(manifest_path, 'r') as f:
-        reader = csv.DictReader(f)
-        
+        manifest = json.load(f)
+    return manifest
+
 
 
 
@@ -38,8 +56,8 @@ if __name__ == "__main__":
 
     oparser.add_argument('-m', dest='manifest_path',
                          type=str,
-                         metavar='PATH',
-                         help='path to manifest file in image directory')
+                         metavar='PATH/manifest.json',
+                         help='path to JSON manifest file in image directory')
 
     oparser.add_argument('-2', dest='workflow_id',
                          type=str,
@@ -50,5 +68,4 @@ if __name__ == "__main__":
 
     Panoptes.connect(username=options.user_id, password=options.password)
     cwb_project = Project.find(PROJECT_ID)
-
-    subject_set = create_subject_set(options)
+    subject_set = create_subject_set(options, cwb_project)
