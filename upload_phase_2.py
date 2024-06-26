@@ -12,6 +12,7 @@ PROJECT_ID = 18285
 
 def create_subject_set(options0, project) -> SubjectSet:
     subject_set0 = SubjectSet()
+    subject_set0.links.project = project
     subjects = []
     input_directory = os.path.dirname(options0.manifest_path)
     manifest = load_manifest(options0.manifest_path)
@@ -70,8 +71,15 @@ if __name__ == "__main__":
         workflow = Workflow.find(options.workflow_id)
         subject_set = create_subject_set(options, cwb_project)
         if not options.dry_run:
+            print('Updating Zooniverse workflow')
             workflow.add_subject_sets([subject_set])
             workflow.save()
+            print('Updating Zooniverse project')
+            cwb_project.add_subject_sets([subject_set])
+            cwb_project.save()
+        else:
+            print('Not updating Zooniverse workflow')
     except PanoptesAPIException as e:
+        print('Zooniverse exception!')
         print(e)
 
