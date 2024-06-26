@@ -33,25 +33,9 @@
       "max_distance": 100
     },
     "horizontal": {
-      "canny_min": 30,
-      "canny_max": 100,
-      "canny_aperture": 5,
-      "hough_threshold": 1,
-      "hough_min_length": 25,
-      "hough_max_gap": 10,
-      "hough_resolution_degrees": 0.5,
-      "hough_resolution_pixels": 2,
       "deviation": 1.5
     },
     "vertical": {
-      "canny_min": 30,
-      "canny_max": 100,
-      "canny_aperture": 5,
-      "hough_threshold": 1,
-      "hough_min_length": 35,
-      "hough_max_gap": 5,
-      "hough_resolution_degrees": 0.5,
-      "hough_resolution_pixels": 2,
       "deviation": 1.0
     },
     "cutoff_adjustments": {
