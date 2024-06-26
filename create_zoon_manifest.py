@@ -71,7 +71,7 @@ if __name__ == "__main__":
     oparser.add_argument('-I', dest='image_directory',
                          type=str,
                          metavar='PATH',
-                         help='image and manifest directory ')
+                         help='image and manifest directory')
 
     oparser.add_argument('-J', dest='json_directory',
                          type=str,
