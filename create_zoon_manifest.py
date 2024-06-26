@@ -5,8 +5,8 @@ import glob
 import os.path
 import argparse
 
-MANIFEST_HEADER = ['image', 'NARA URL', 'volume', 'vessel', 'sheet', 'workflow',
-                   '#row', '#column', '#workflow_id',
+MANIFEST_HEADER = ['image', 'NARA URL', 'volume', 'vessel', 'sheet', 'column',
+                   '#row_no', '#column_no', '#workflow_id',
                    '#training_top', '#training_bottom', '#training_left', '#training_right',
                    '#htr_text', '#conf', '#conf_threshold'
                    ]
@@ -27,7 +27,8 @@ MANIFEST_HEADER = ['image', 'NARA URL', 'volume', 'vessel', 'sheet', 'workflow',
 # HTR output
 
 
-def process_json(json_filename1: str, image_directory1: str, manifest_data1: list) -> None:
+def process_json(json_filename1: str, image_directory1: str, csv_data1: list,
+                 json_output0: dict) -> None:
     print(f'Reading {json_filename1}')
     with open(json_filename1, 'r') as f:
         json_data = json.load(f)
@@ -55,7 +56,8 @@ def process_json(json_filename1: str, image_directory1: str, manifest_data1: lis
                        row, column, workflow_id,
                        training_top, training_bottom, training_left, training_right,
                        htr_text, confidence, confidence_threshold]
-        manifest_data1.append(output_line)
+        csv_data1.append(output_line)
+        json_output0[image_basename] = dict(zip(MANIFEST_HEADER[1:], output_line[1:]))
     return
 
 
@@ -100,13 +102,19 @@ if __name__ == "__main__":
     print(f'JSON will be read from {json_directory}')
     json_glob = glob.iglob(os.path.join(json_directory, '*.json'))
 
-    manifest_data = []
+    csv_data = []
+    json_output = dict()
     for json_filename in json_glob:
-        process_json(json_filename, image_directory, manifest_data)
+        process_json(json_filename, image_directory, csv_data, json_output)
 
-    manifest_path = os.path.join(image_directory, 'manifest.csv')
-    print(f'Writing {manifest_path}')
-    with open(manifest_path, 'w', newline='') as f:
+    manifest_csv_path = os.path.join(image_directory, 'manifest.csv')
+    print(f'Writing {manifest_csv_path}')
+    with open(manifest_csv_path, 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerow(MANIFEST_HEADER)
-        writer.writerows(manifest_data)
+        writer.writerows(csv_data)
+
+    manifest_json_path = os.path.join(image_directory, 'manifest.json')
+    print(f'Writing {manifest_json_path}')
+    with open(manifest_json_path, 'w', newline='') as f:
+        json.dump(json_output, f, indent=1, sort_keys=True)
