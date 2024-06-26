@@ -52,10 +52,15 @@ if __name__ == "__main__":
                          metavar='PATH/manifest.json',
                          help='path to JSON manifest file in image directory')
 
-    oparser.add_argument('-2', dest='workflow_id',
+    oparser.add_argument('-w', dest='workflow_id',
                          type=str,
                          metavar='WORKFLOW',
                          help='workflow ID')
+
+    oparser.add_argument('-n', dest='dry_run',
+                         default=False,
+                         action='store_true',
+                         help='do not update Zooniverse')
 
     options = oparser.parse_args()
 
@@ -64,7 +69,9 @@ if __name__ == "__main__":
     try:
         workflow = Workflow.find(options.workflow_id)
         subject_set = create_subject_set(options, cwb_project)
-        workflow.add_subject_sets([subject_set])
+        if not options.dry_run:
+            workflow.add_subject_sets([subject_set])
+            workflow.save()
     except PanoptesAPIException as e:
         print(e)
 
