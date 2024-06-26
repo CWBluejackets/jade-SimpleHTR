@@ -357,15 +357,7 @@ def get_right_cutoff(medians, edge_type, overall_median, config) -> int:
 
 def rotate_correct(image: np.ndarray, config: dict, output_dir: str, output_prefix: str,
                    sheet_info: dict) -> np.ndarray:
-    canny_min = config['rotation']['canny_min']
-    canny_max = config['rotation']['canny_max']
-    canny_aperture = config['rotation']['canny_aperture']
-    hough_threshold = config['rotation']['hough_threshold']
-    hough_min_length = config['rotation']['hough_min_length']
-    hough_max_gap = config['rotation']['hough_max_gap']
     deviation = config['rotation']['deviation']
-    hough_theta = config['rotation']['hough_resolution_degrees'] * np.pi / 180
-    hough_rho = config['rotation']['hough_resolution_pixels']
     mode_bins = config['rotation']['mode_bins']
     ignore_sides_fraction = config['rotation']['ignore_sides_fraction']
     ignore_top_fraction = config['rotation']['ignore_top_fraction']
@@ -374,10 +366,10 @@ def rotate_correct(image: np.ndarray, config: dict, output_dir: str, output_pref
     right_limit = round(image.shape[1] * (1 - ignore_sides_fraction))
     top_limit = round(image.shape[0] * ignore_top_fraction)
     bottom_limit = round(image.shape[0] * (1- ignore_bottom_fraction))
-    dst = cv2.Canny(image, threshold1=canny_min, threshold2=canny_max,
-                    apertureSize=canny_aperture, L2gradient=True)
-    lines = cv2.HoughLinesP(dst, rho=hough_rho, theta=hough_theta, threshold=hough_threshold,
-                            minLineLength=hough_min_length, maxLineGap=hough_max_gap)
+    # TODO investigate parameters
+    lines_and_stuff = LSD.detect(image)
+    # TODO see if the other stuff is useful
+    lines = lines_and_stuff[0]
     measured_lines = [measure(line[0]) for line in lines.tolist()]
     h_lines = [line for line in measured_lines
                if (is_nearly_horizontal(line[0], deviation) and
@@ -398,7 +390,9 @@ def rotate_correct(image: np.ndarray, config: dict, output_dir: str, output_pref
         # ndimage angle in degrees
         # https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.rotate.html#scipy.ndimage.rotate
         output = ndimage.rotate(image, angle=rotation, reshape=False)
-        sheet_info['rotation'] = {'degrees': rotation, 'applied': True}
+        sheet_info['rotation'] = {'degrees': rotation,
+                                  'applied': True,
+                                  'octiles': angle_octiles}
     else:
         print(f'Ignoring {rotation:.3f} degrees')
         output = image
