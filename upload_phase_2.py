@@ -4,13 +4,14 @@ import csv
 import json
 import os
 
-from panoptes_client import Panoptes, Project, SubjectSet, Subject
+from panoptes_client import Panoptes, Project, SubjectSet, Subject, Workflow
+from panoptes_client.panoptes import PanoptesAPIException
 
 PROJECT_ID = 18285
 
 
 def create_subject_set(options0, project) -> SubjectSet:
-    subject_set = SubjectSet()
+    subject_set0 = SubjectSet()
     subjects = []
     input_directory = os.path.dirname(options0.manifest_path)
     manifest = load_manifest(options0.manifest_path)
@@ -22,22 +23,14 @@ def create_subject_set(options0, project) -> SubjectSet:
         subject.metadata.update(metadata)
         subject.save()
         subjects.append(subject)
-        subject_set.add_subject(subject)
-
-
-
-
-    # TODO
-    return None
+    subject_set0.add_subjects(subjects)
+    return subject_set0
 
 
 def load_manifest(manifest_path) -> dict:
     with open(manifest_path, 'r') as f:
         manifest = json.load(f)
     return manifest
-
-
-
 
 
 if __name__ == "__main__":
@@ -68,4 +61,10 @@ if __name__ == "__main__":
 
     Panoptes.connect(username=options.user_id, password=options.password)
     cwb_project = Project.find(PROJECT_ID)
-    subject_set = create_subject_set(options, cwb_project)
+    try:
+        workflow = Workflow.find(options.workflow_id)
+        subject_set = create_subject_set(options, cwb_project)
+        workflow.add_subject_sets([subject_set])
+    except PanoptesAPIException as e:
+        print(e)
+
