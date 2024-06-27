@@ -13,6 +13,7 @@ PROJECT_ID = 18285
 def create_subject_set(options0, project) -> SubjectSet:
     subject_set0 = SubjectSet()
     subject_set0.links.project = project
+    subject_set0.links.display_name = options0.subject_set_name
     subjects = []
     input_directory = os.path.dirname(options0.manifest_path)
     manifest = load_manifest(options0.manifest_path)
@@ -28,6 +29,7 @@ def create_subject_set(options0, project) -> SubjectSet:
         subject.metadata.update(metadata)
         subject.save()
         subjects.append(subject)
+    subject_set0.save()
     subject_set0.add(subjects)
     print('Subject set complete')
     return subject_set0
@@ -61,8 +63,15 @@ if __name__ == "__main__":
 
     oparser.add_argument('-w', dest='workflow_id',
                          type=str,
+                         required=True,
                          metavar='WORKFLOW',
                          help='workflow ID')
+
+    oparser.add_argument('-s', dest='subject_set_name',
+                         type=str,
+                         required=True,
+                         metavar='NAME',
+                         help='subject set name')
 
     oparser.add_argument('-n', dest='dry_run',
                          default=False,
