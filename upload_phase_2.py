@@ -18,6 +18,7 @@ def create_subject_set(options0, project) -> SubjectSet:
     manifest = load_manifest(options0.manifest_path)
     for image_fn, metadata in manifest.items():
         image_path = os.path.join(input_directory, image_fn)
+        print(f'Adding image from {image_path}')
         subject = Subject()
         subject.links.project = project
         subject.add_location(image_path)
@@ -25,10 +26,12 @@ def create_subject_set(options0, project) -> SubjectSet:
         subject.save()
         subjects.append(subject)
     subject_set0.add_subjects(subjects)
+    print('Subject set complete')
     return subject_set0
 
 
 def load_manifest(manifest_path) -> dict:
+    print(f'Loading manifest from {manifest_path}')
     with open(manifest_path, 'r') as f:
         manifest = json.load(f)
     return manifest
@@ -67,6 +70,7 @@ if __name__ == "__main__":
 
     Panoptes.connect(username=options.user_id, password=options.password)
     cwb_project = Project.find(PROJECT_ID)
+    print('Connection and project OK')
     try:
         workflow = Workflow.find(options.workflow_id)
         subject_set = create_subject_set(options, cwb_project)
