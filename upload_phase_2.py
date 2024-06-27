@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 import argparse
-import csv
 import json
 import os
-import traceback
 
 from panoptes_client import Panoptes, Project, SubjectSet, Subject, Workflow
-from panoptes_client.panoptes import PanoptesAPIException
 
 PROJECT_ID = 18285
 
