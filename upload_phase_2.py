@@ -16,9 +16,12 @@ def create_subject_set(options0, project) -> SubjectSet:
     subjects = []
     input_directory = os.path.dirname(options0.manifest_path)
     manifest = load_manifest(options0.manifest_path)
+    nbr_subjects = len(manifest)
+    nbr_added = 0
     for image_fn, metadata in manifest.items():
+        nbr_added += 1
         image_path = os.path.join(input_directory, image_fn)
-        print(f'Adding image from {image_path}')
+        print(f'Adding image ({nbr_added}/{nbr_subjects}) from {image_path}')
         subject = Subject()
         subject.links.project = project
         subject.add_location(image_path)
