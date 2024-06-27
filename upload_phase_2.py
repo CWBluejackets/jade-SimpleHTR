@@ -28,7 +28,7 @@ def create_subject_set(options0, project) -> SubjectSet:
         subject.metadata.update(metadata)
         subject.save()
         subjects.append(subject)
-    subject_set0.add_subjects(subjects)
+    subject_set0.add(subjects)
     print('Subject set complete')
     return subject_set0
 
