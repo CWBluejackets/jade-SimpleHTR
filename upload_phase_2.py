@@ -89,8 +89,7 @@ if __name__ == "__main__":
     if not options.dry_run:
         print('Updating Zooniverse workflow')
         workflow.links.subject_sets.add(subject_set)
-        # workflow.add_subject_sets([subject_set])
-        # workflow.save()
+        # DO NOT workflow.save() for some reason
         print('Updating Zooniverse project')
         cwb_project.add_subject_sets([subject_set])
         cwb_project.save()
