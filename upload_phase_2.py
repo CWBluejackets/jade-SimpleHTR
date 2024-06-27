@@ -3,6 +3,7 @@ import argparse
 import csv
 import json
 import os
+import traceback
 
 from panoptes_client import Panoptes, Project, SubjectSet, Subject, Workflow
 from panoptes_client.panoptes import PanoptesAPIException
@@ -13,7 +14,7 @@ PROJECT_ID = 18285
 def create_subject_set(options0, project) -> SubjectSet:
     subject_set0 = SubjectSet()
     subject_set0.links.project = project
-    subject_set0.links.display_name = options0.subject_set_name
+    subject_set0.display_name = options0.subject_set_name
     subjects = []
     input_directory = os.path.dirname(options0.manifest_path)
     manifest = load_manifest(options0.manifest_path)
@@ -83,19 +84,14 @@ if __name__ == "__main__":
     Panoptes.connect(username=options.user_id, password=options.password)
     cwb_project = Project.find(PROJECT_ID)
     print('Connection and project OK')
-    try:
-        workflow = Workflow.find(options.workflow_id)
-        subject_set = create_subject_set(options, cwb_project)
-        if not options.dry_run:
-            print('Updating Zooniverse workflow')
-            workflow.add_subject_sets([subject_set])
-            workflow.save()
-            print('Updating Zooniverse project')
-            cwb_project.add_subject_sets([subject_set])
-            cwb_project.save()
-        else:
-            print('Not updating Zooniverse workflow')
-    except PanoptesAPIException as e:
-        print('Zooniverse exception!')
-        print(e)
-
+    workflow = Workflow.find(options.workflow_id)
+    subject_set = create_subject_set(options, cwb_project)
+    if not options.dry_run:
+        print('Updating Zooniverse workflow')
+        workflow.add_subject_sets([subject_set])
+        workflow.save()
+        print('Updating Zooniverse project')
+        cwb_project.add_subject_sets([subject_set])
+        cwb_project.save()
+    else:
+        print('Not updating Zooniverse workflow')
