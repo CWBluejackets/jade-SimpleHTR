@@ -3,7 +3,7 @@ import argparse
 import json
 import os
 
-from panoptes_client import Panoptes, Project, SubjectSet, Subject, Workflow
+from panoptes_client import Panoptes, Project, SubjectSet, Subject
 
 PROJECT_ID = 18285
 
@@ -59,12 +59,6 @@ if __name__ == "__main__":
                          metavar='PATH/manifest.json',
                          help='path to JSON manifest file in image directory')
 
-    oparser.add_argument('-w', dest='workflow_id',
-                         type=str,
-                         required=True,
-                         metavar='WORKFLOW',
-                         help='workflow ID')
-
     oparser.add_argument('-s', dest='subject_set_name',
                          type=str,
                          required=True,
@@ -81,14 +75,10 @@ if __name__ == "__main__":
     Panoptes.connect(username=options.user_id, password=options.password)
     cwb_project = Project.find(PROJECT_ID)
     print('Connection and project OK')
-    workflow = Workflow.find(options.workflow_id)
     subject_set = create_subject_set(options, cwb_project)
     if not options.dry_run:
-        print('Updating Zooniverse workflow')
-        workflow.links.subject_sets.add(subject_set)
-        # DO NOT workflow.save() for some reason
         print('Updating Zooniverse project')
         cwb_project.add_subject_sets([subject_set])
         cwb_project.save()
     else:
-        print('Not updating Zooniverse workflow')
+        print('Not updating Zooniverse project')
