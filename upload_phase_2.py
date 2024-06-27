@@ -88,7 +88,8 @@ if __name__ == "__main__":
     subject_set = create_subject_set(options, cwb_project)
     if not options.dry_run:
         print('Updating Zooniverse workflow')
-        workflow.add_subject_sets([subject_set])
+        workflow.links.subject_sets.add(subject_set)
+        #workflow.add_subject_sets([subject_set])
         workflow.save()
         print('Updating Zooniverse project')
         cwb_project.add_subject_sets([subject_set])
