@@ -3,18 +3,10 @@
   "workflows": "pipeline-workflows.json",
   "template_directory": "templates",
   "rotation": {
-    "canny_min": 53,
-    "canny_max": 255,
-    "canny_aperture": 5,
-    "hough_resolution_degrees": 1,
-    "hough_resolution_pixels": 1,
-    "hough_threshold": 1,
-    "hough_min_length": 50,
-    "hough_max_gap": 10,
     "deviation": 2,
     "ignore_sides_fraction": 0.15,
     "ignore_top_fraction": 0.05,
-    "ignore_bottom_fraction": 0.2,
+    "ignore_bottom_fraction": 0.05,
     "mode_bins": 21
   },
   "margin_detection": {
