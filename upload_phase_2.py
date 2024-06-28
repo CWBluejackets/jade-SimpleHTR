@@ -62,8 +62,7 @@ def create_batches(prefix: str, manifest0: dict) -> dict:
 
 
 if __name__ == "__main__":
-    oparser = argparse.ArgumentParser(description="Generate Zooniverse manifest",
-                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    oparser = argparse.ArgumentParser(description="Generate Zooniverse manifest")
 
     oparser.add_argument('-u', dest='user_id',
                          type=str,
@@ -104,7 +103,7 @@ if __name__ == "__main__":
     print(f'Number of batches: {len(named_batches)}')
 
     for batch_name, batch in named_batches.items():
-        subject_set = create_subject_set(batch_name, batch, options, cwb_project)
+        subject_set = create_subject_set(batch_name, batch, input_directory, cwb_project)
         if not options.dry_run:
             print('Updating Zooniverse project')
             cwb_project.add_subject_sets([subject_set])
