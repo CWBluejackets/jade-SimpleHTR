@@ -1,29 +1,29 @@
 #!/usr/bin/env python3
 import argparse
-import csv
 import json
 import os
-import traceback
+from collections import defaultdict
+from typing import Tuple
 
-from panoptes_client import Panoptes, Project, SubjectSet, Subject, Workflow
-from panoptes_client.panoptes import PanoptesAPIException
+from panoptes_client import Panoptes, Project, SubjectSet, Subject
 
 PROJECT_ID = 18285
+MAX_BATCH_SIZE = 1000
 
 
-def create_subject_set(options0, project) -> SubjectSet:
+def create_subject_set(batch_name0, batch0, input_directory0, project) -> Tuple[SubjectSet, int]:
     subject_set0 = SubjectSet()
     subject_set0.links.project = project
-    subject_set0.display_name = options0.subject_set_name
+    subject_set0.display_name = batch_name0
+    print(f'Creating subject set: {batch_name0}')
     subjects = []
-    input_directory = os.path.dirname(options0.manifest_path)
-    manifest = load_manifest(options0.manifest_path)
-    nbr_subjects = len(manifest)
+    nbr_subjects0 = len(batch0)
     nbr_added = 0
-    for image_fn, metadata in manifest.items():
+    # note: a batch is now a list of tuples (filename, metadata)
+    for image_fn, metadata in batch0:
         nbr_added += 1
-        image_path = os.path.join(input_directory, image_fn)
-        print(f'Adding image ({nbr_added}/{nbr_subjects}) from {image_path}')
+        image_path = os.path.join(input_directory0, image_fn)
+        print(f'Adding image ({nbr_added}/{nbr_subjects0}) from {image_path}')
         subject = Subject()
         subject.links.project = project
         subject.add_location(image_path)
@@ -32,20 +32,38 @@ def create_subject_set(options0, project) -> SubjectSet:
         subjects.append(subject)
     subject_set0.save()
     subject_set0.add(subjects)
-    print('Subject set complete')
-    return subject_set0
+    return subject_set0, nbr_subjects0
 
 
 def load_manifest(manifest_path) -> dict:
     print(f'Loading manifest from {manifest_path}')
     with open(manifest_path, 'r') as f:
-        manifest = json.load(f)
-    return manifest
+        manifest0 = json.load(f)
+    return manifest0
+
+
+def create_batches(prefix: str, manifest0: dict) -> dict:
+    """
+    :param prefix: batch name prefix
+    :param manifest0: manifest dict
+    :return: batches dict batch_name -> list of tuples (filename, metadata)
+    """
+    sequence = 0
+    vessel_batches = defaultdict(list)
+    for filename, metadata in manifest0.items():
+        vessel_batches[metadata['vessel']].append((filename, metadata))
+    results = defaultdict(list)
+    for vessel, big_batch in vessel_batches.items():
+        for i in range(0, len(big_batch), MAX_BATCH_SIZE):
+            batch0 = big_batch[i: i + MAX_BATCH_SIZE]
+            batch_name0 = f'{prefix}_{vessel}_{sequence:05d}'
+            sequence += 1
+            results[batch_name0] = batch0
+    return results
 
 
 if __name__ == "__main__":
-    oparser = argparse.ArgumentParser(description="Generate Zooniverse manifest",
-                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    oparser = argparse.ArgumentParser(description="Generate Zooniverse manifest")
 
     oparser.add_argument('-u', dest='user_id',
                          type=str,
@@ -62,17 +80,11 @@ if __name__ == "__main__":
                          metavar='PATH/manifest.json',
                          help='path to JSON manifest file in image directory')
 
-    oparser.add_argument('-w', dest='workflow_id',
-                         type=str,
-                         required=True,
-                         metavar='WORKFLOW',
-                         help='workflow ID')
-
-    oparser.add_argument('-s', dest='subject_set_name',
+    oparser.add_argument('-s', dest='subject_set_prefix',
                          type=str,
                          required=True,
                          metavar='NAME',
-                         help='subject set name')
+                         help='prefix for subject set name')
 
     oparser.add_argument('-n', dest='dry_run',
                          default=False,
@@ -81,17 +93,26 @@ if __name__ == "__main__":
 
     options = oparser.parse_args()
 
+    manifest = load_manifest(options.manifest_path)
+    input_directory = os.path.dirname(options.manifest_path)
+    nbr_subjects = len(manifest)
+    print(f'Number of subjects: {nbr_subjects}')
+
     Panoptes.connect(username=options.user_id, password=options.password)
     cwb_project = Project.find(PROJECT_ID)
     print('Connection and project OK')
-    workflow = Workflow.find(options.workflow_id)
-    subject_set = create_subject_set(options, cwb_project)
-    if not options.dry_run:
-        print('Updating Zooniverse workflow')
-        workflow.links.subject_sets.add(subject_set)
-        # DO NOT workflow.save() for some reason
-        print('Updating Zooniverse project')
-        cwb_project.add_subject_sets([subject_set])
-        cwb_project.save()
-    else:
-        print('Not updating Zooniverse workflow')
+
+    named_batches = create_batches(options.subject_set_prefix, manifest)
+    print(f'Number of batches: {len(named_batches)}')
+    subjects_done = 0
+
+    for batch_name, batch in named_batches.items():
+        subject_set, nbr_created = create_subject_set(batch_name, batch, input_directory, cwb_project)
+        subjects_done += nbr_created
+        print(f'Subjects processed: {subjects_done} / {nbr_subjects}')
+        if not options.dry_run:
+            print(f'Updating Zooniverse project with set {subject_set.display_name}')
+            cwb_project.add_subject_sets([subject_set])
+            cwb_project.save()
+        else:
+            print('Not updating Zooniverse project')
