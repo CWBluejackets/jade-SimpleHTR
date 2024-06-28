@@ -3,6 +3,7 @@ import argparse
 import json
 import os
 from collections import defaultdict
+from typing import Tuple
 
 from panoptes_client import Panoptes, Project, SubjectSet, Subject
 
@@ -10,7 +11,7 @@ PROJECT_ID = 18285
 MAX_BATCH_SIZE = 1000
 
 
-def create_subject_set(batch_name0, batch0, input_directory0, project) -> SubjectSet:
+def create_subject_set(batch_name0, batch0, input_directory0, project) -> Tuple[SubjectSet, int]:
     subject_set0 = SubjectSet()
     subject_set0.links.project = project
     subject_set0.display_name = batch_name0
@@ -31,7 +32,7 @@ def create_subject_set(batch_name0, batch0, input_directory0, project) -> Subjec
         subjects.append(subject)
     subject_set0.save()
     subject_set0.add(subjects)
-    return subject_set0
+    return subject_set0, nbr_subjects
 
 
 def load_manifest(manifest_path) -> dict:
@@ -94,6 +95,8 @@ if __name__ == "__main__":
 
     manifest = load_manifest(options.manifest_path)
     input_directory = os.path.dirname(options.manifest_path)
+    nbr_subjects = len(manifest)
+    print(f'Number of subjects: {nbr_subjects}')
 
     Panoptes.connect(username=options.user_id, password=options.password)
     cwb_project = Project.find(PROJECT_ID)
@@ -101,9 +104,12 @@ if __name__ == "__main__":
 
     named_batches = create_batches(options.subject_set_prefix, manifest)
     print(f'Number of batches: {len(named_batches)}')
+    subjects_done = 0
 
     for batch_name, batch in named_batches.items():
-        subject_set = create_subject_set(batch_name, batch, input_directory, cwb_project)
+        subject_set, nbr_created = create_subject_set(batch_name, batch, input_directory, cwb_project)
+        subjects_done += nbr_created
+        print(f'Subjects processed: {subjects_done} / {nbr_subjects}')
         if not options.dry_run:
             print('Updating Zooniverse project')
             cwb_project.add_subject_sets([subject_set])
