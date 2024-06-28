@@ -41,7 +41,7 @@ def load_manifest(manifest_path) -> dict:
     return manifest0
 
 
-def create_batches(prefix, manifest0: dict) -> dict:
+def create_batches(prefix: str, manifest0: dict) -> dict:
     """
     :param prefix: batch name prefix
     :param manifest0: manifest dict
@@ -53,7 +53,7 @@ def create_batches(prefix, manifest0: dict) -> dict:
         vessel_batches[metadata['vessel']].append((filename, metadata))
     results = defaultdict(list)
     for vessel, big_batch in vessel_batches.items():
-        for i in range(0, len(big_batch, MAX_BATCH_SIZE)):
+        for i in range(0, len(big_batch), MAX_BATCH_SIZE):
             batch0 = big_batch[i: i + MAX_BATCH_SIZE]
             batch_name0 = f'{prefix}_{vessel}_{sequence:05d}'
             sequence += 1
@@ -100,7 +100,9 @@ if __name__ == "__main__":
     cwb_project = Project.find(PROJECT_ID)
     print('Connection and project OK')
 
-    named_batches = create_batches(manifest)
+    named_batches = create_batches(options.subject_set_prefix, manifest)
+    print(f'Number of batches: {len(named_batches)}')
+
     for batch_name, batch in named_batches.items():
         subject_set = create_subject_set(batch_name, batch, options, cwb_project)
         if not options.dry_run:
