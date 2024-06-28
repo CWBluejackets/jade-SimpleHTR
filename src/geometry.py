@@ -669,17 +669,18 @@ def generate_hlines_image(image: np.ndarray, hlines: list) -> np.ndarray:
     return output
 
 
-def generate_image_for_correction(image: np.ndarray, cell_spec, ml_output: str, workflow: str):
+def generate_image_for_correction(image: np.ndarray, cell_spec, ml_output: str, workflow_name: str):
     """
     Generate the image for Zooniverse phase 2.
     :param image: registered image
     :param cell_spec: cell specification
     :param ml_output: HTR output
-    :param workflow: name of workflow
+    :param workflow_name: name of workflow
     """
     # calculate sizes of texts
     # https://lindevs.com/get-text-size-using-opencv
-    (wf_width, wf_height), wf_baseline = cv2.getTextSize(workflow, **FONT_ARGS)
+    workflow_text = f'Field: {workflow_name}'
+    (wf_width, wf_height), wf_baseline = cv2.getTextSize(workflow_text, **FONT_ARGS)
     wf_full_height = wf_height + wf_baseline
     (htr_width, htr_height), htr_baseline = cv2.getTextSize(ml_output, **FONT_ARGS)
     htr_full_height = htr_height + htr_baseline
@@ -714,7 +715,7 @@ def generate_image_for_correction(image: np.ndarray, cell_spec, ml_output: str, 
     wf_bottom = wf_height + (extra_height_top - wf_height) // 2
     htr_left = (output_width - htr_width) // 2
     htr_bottom = output_image.shape[0] - (extra_height_bottom - htr_height) // 2
-    cv2.putText(img=output_image, text=workflow, org=(wf_left, wf_bottom), color=BLACK, **FONT_ARGS)
+    cv2.putText(img=output_image, text=workflow_text, org=(wf_left, wf_bottom), color=BLACK, **FONT_ARGS)
     cv2.putText(img=output_image, text=ml_output, org=(htr_left, htr_bottom), color=BLACK, **FONT_ARGS)
     return output_image
 
