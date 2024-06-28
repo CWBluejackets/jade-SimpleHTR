@@ -17,13 +17,13 @@ def create_subject_set(batch_name0, batch0, input_directory0, project) -> Tuple[
     subject_set0.display_name = batch_name0
     print(f'Creating subject set: {batch_name0}')
     subjects = []
-    nbr_subjects = len(batch0)
+    nbr_subjects0 = len(batch0)
     nbr_added = 0
     # note: a batch is now a list of tuples (filename, metadata)
     for image_fn, metadata in batch0:
         nbr_added += 1
         image_path = os.path.join(input_directory0, image_fn)
-        print(f'Adding image ({nbr_added}/{nbr_subjects}) from {image_path}')
+        print(f'Adding image ({nbr_added}/{nbr_subjects0}) from {image_path}')
         subject = Subject()
         subject.links.project = project
         subject.add_location(image_path)
@@ -32,7 +32,7 @@ def create_subject_set(batch_name0, batch0, input_directory0, project) -> Tuple[
         subjects.append(subject)
     subject_set0.save()
     subject_set0.add(subjects)
-    return subject_set0, nbr_subjects
+    return subject_set0, nbr_subjects0
 
 
 def load_manifest(manifest_path) -> dict:
@@ -111,7 +111,7 @@ if __name__ == "__main__":
         subjects_done += nbr_created
         print(f'Subjects processed: {subjects_done} / {nbr_subjects}')
         if not options.dry_run:
-            print('Updating Zooniverse project')
+            print(f'Updating Zooniverse project with set {subject_set.display_name}')
             cwb_project.add_subject_sets([subject_set])
             cwb_project.save()
         else:
