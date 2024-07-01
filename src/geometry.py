@@ -398,7 +398,9 @@ def rotate_correct(image: np.ndarray, config: dict, output_dir: str, output_pref
         # ndimage angle in degrees
         # https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.rotate.html#scipy.ndimage.rotate
         output = ndimage.rotate(image, angle=rotation, reshape=False)
-        sheet_info['rotation'] = {'degrees': rotation, 'applied': True}
+        sheet_info['rotation'] = {'degrees': rotation,
+                                  'applied': True,
+                                  'octiles': angle_octiles}
     else:
         print(f'Ignoring {rotation:.3f} degrees')
         output = image
