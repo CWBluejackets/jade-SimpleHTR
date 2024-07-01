@@ -99,12 +99,17 @@ if __name__ == "__main__":
 
     options = oparser.parse_args()
 
+    # Load authorization file if specified but do NOT overwrite CLI options
     if options.auth_file:
         print(f'Loading {options.auth_file}')
         with open(options.auth_file, 'r') as f:
             auth = json.load(f)
     options.user_id = options.user_id or auth['user_id']
     options.password = options.password or auth['password']
+
+    # It won't work without these
+    if not (options.user_id and options.password):
+        raise ValueError('Zooniverse userid and password are required')
 
     manifest = load_manifest(options.manifest_path)
     input_directory = os.path.dirname(options.manifest_path)
