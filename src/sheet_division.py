@@ -86,7 +86,7 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
         registration_debug_3 = geometry.superimpose(registered_image, full_template_image)
         # add the horizontal means for inspection
         for y, h_mean in enumerate(horizontal_means):
-            cv2.line(registration_debug_3, (0, y), (4 * round(h_mean), y), RED, 1)
+            cv2.line(registration_debug_3, (0, y), (round(h_mean * 3), y), RED, 1)
         print(f'Writing {registration_path}')
         cv2.imwrite(registration_path, registration_debug_3)
         registration_path = os.path.join(output_dir,
