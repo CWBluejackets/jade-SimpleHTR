@@ -75,8 +75,14 @@ if __name__ == "__main__":
                          metavar='PASSWORD',
                          help='Zooniverse password')
 
+    oparser.add_argument('-c', dest='auth_file',
+                         type=str,
+                         metavar='PATH/zooniverse.json',
+                         help='path to JSON Zooniverse credentials file')
+
     oparser.add_argument('-m', dest='manifest_path',
                          type=str,
+                         required=True,
                          metavar='PATH/manifest.json',
                          help='path to JSON manifest file in image directory')
 
@@ -92,6 +98,13 @@ if __name__ == "__main__":
                          help='do not update Zooniverse')
 
     options = oparser.parse_args()
+
+    if options.auth_file:
+        print(f'Loading {options.auth_file}')
+        with open(options.auth_file, 'r') as f:
+            auth = json.load(f)
+    options.user_id = options.user_id or auth['user_id']
+    options.password = options.password or auth['password']
 
     manifest = load_manifest(options.manifest_path)
     input_directory = os.path.dirname(options.manifest_path)
