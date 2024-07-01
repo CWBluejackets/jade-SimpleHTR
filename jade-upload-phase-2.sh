@@ -28,13 +28,17 @@ HTR_DIR="${HOME}/bluejackets/jade-SimpleHTR"
 # https://www.computerhope.com/unix/bash/getopts.htm
 
 AUTH_FILE="${HOME}/.zooniverse.json"
+# default value
 MANIFEST_FILE="${HTR_DIR}/pipeline//corrections/image/manifest.json"
 
-OPTIONS="-c  ${AUTH_FILE}  -m ${MANIFEST_FILE}"
+OPTIONS="-c  ${AUTH_FILE}"
 
-while getopts "s:" option
+while getopts "s:m:" option
 do
   case "${option}" in
+    m)
+      MANIFEST_FILE="$(realpath "${OPTARG}")"
+      ;;
     s)
       OPTIONS="${OPTIONS}  -s ${OPTARG}"
       ;;
@@ -44,12 +48,14 @@ do
   esac
 done
 
+OPTIONS="${OPTIONS}  -m ${MANIFEST_FILE}"
+
 source activate simplehtr1
 echo "environment activated"
 echo
 cd "${HTR_DIR}/src" || exit 99
 
-COMMAND="python3 upload_phase_2.py ${OPTIONS}"
+COMMAND="python3 upload_phase_2.py  ${OPTIONS}"
 echo "${COMMAND}"
 echo
 ${COMMAND}
