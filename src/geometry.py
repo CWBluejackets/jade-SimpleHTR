@@ -786,14 +786,15 @@ def rescale_horizontally(image: np.ndarray, scale: float) -> np.ndarray:
 
 
 def find_hlines(image: np.ndarray, config: dict, y_min: int, y_max: int,
-                y_ref_line: int) -> np.ndarray:
+                y_ref_line: int) -> Tuple[np.ndarray, np.ndarray]:
     """
     Use the slightly smoothed mean pixel value of the middle half of the image to find
     row boundaries (which are brighter than the content).
     :param image: grayscale image
     :param config: config parameters
-    :param y_min: minimum y-coordinate (taken from template)
-    :param y_max: maximum y-coordinate (taken from template)
+    :param y_min: minimum y-coordinate (derived from template)
+    :param y_max: maximum y-coordinate (from template)
+    :param y_ref_line: top of top row according to the template
     :return: row cutoffs
     """
     left_cut = image.shape[1] // 4
@@ -812,7 +813,7 @@ def find_hlines(image: np.ndarray, config: dict, y_min: int, y_max: int,
         peaks[0] = min(y_ref_line, peaks[0])
     else:
         peaks = np.insert(peaks, 0, y_ref_line)
-    return peaks
+    return peaks, horizontal_means
 
 
 def interpolate_hlines(peaks: np.ndarray, max_distance: int) -> np.ndarray:

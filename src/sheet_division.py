@@ -69,7 +69,8 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
     hline_y_min = template['hline_detection']['y_min']
     hline_y_max = template['hline_detection']['y_max']
     y_ref_line = template['y_ref_line']
-    row_y_values = geometry.find_hlines(registered_image, config, hline_y_min, hline_y_max, y_ref_line)
+    row_y_values, horizontal_means = geometry.find_hlines(registered_image, config, hline_y_min,
+                                                          hline_y_max, y_ref_line)
     sheet_info['row_detection'] = {'y_values': row_y_values,
                                    'diffs': row_y_values[1:] - row_y_values[:-1]}
     if config['debug']:
@@ -83,6 +84,9 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
                                          f'{output_prefix}_3_registration.png')
         full_template_image = template['image']
         registration_debug_3 = geometry.superimpose(registered_image, full_template_image)
+        # add the horizontal means for inspection
+        for y, h_mean in enumerate(horizontal_means):
+            cv2.line(registration_debug_3, (0, y), (4 * round(h_mean), y), RED, 1)
         print(f'Writing {registration_path}')
         cv2.imwrite(registration_path, registration_debug_3)
         registration_path = os.path.join(output_dir,
