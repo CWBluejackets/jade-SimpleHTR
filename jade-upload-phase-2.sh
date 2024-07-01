@@ -53,7 +53,7 @@ OPTIONS="${OPTIONS}  -m ${MANIFEST_FILE}"
 source activate simplehtr1
 echo "environment activated"
 echo
-cd "${HTR_DIR}/src" || exit 99
+cd "${HTR_DIR}" || exit 99
 
 COMMAND="python3 upload_phase_2.py  ${OPTIONS}"
 echo "${COMMAND}"
