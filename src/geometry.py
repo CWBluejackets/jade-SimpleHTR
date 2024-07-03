@@ -50,47 +50,6 @@ def solve_line(point0, point1) -> Tuple[float, float]:
     return a, b
 
 
-def extrapolate_vertical(point0, point1, image: np.ndarray) -> Tuple[Tuple[int, int], Tuple[int, int], int]:
-    """
-    Extrapolate to the top and bottom edges.
-    :param point0:
-    :param point1:
-    :param image:
-    :return: top_point, bottom_point, horizontal_difference
-    """
-    max_x, max_y = get_maxima(image)
-    x0, y0 = point0
-    x1, y1 = point1
-
-    # special case: vertical line has infinite slope
-    if x0 == x1:
-        return (x0, 0), (x0, max_y), 0
-
-    a, b = solve_line(point0, point1)
-    top = (round(-b / a), 0)
-    bottom = (round((max_y - b) / a), max_y)
-    x_diff = abs(bottom[0] - top[0])
-    return top, bottom, x_diff
-
-
-def extrapolate_horizontal(point0, point1, image: np.ndarray) -> Tuple[Tuple[int, int], Tuple[int, int], int]:
-    """
-    Extrapolate to the left and right edges.
-    :param point0:
-    :param point1:
-    :param image:
-    :return: left_point, right_point, vertical_difference
-    """
-    max_x, max_y = get_maxima(image)
-    a, b = solve_line(point0, point1)
-
-    left = (0, round(b))
-    right = (max_x, round(a * max_x + b))
-    y_diff = abs(right[1] - left[1])
-
-    return left, right, y_diff
-
-
 def measure(line0):
     """
     Measure the length and direction of a line (CW from +x axis).
@@ -99,12 +58,13 @@ def measure(line0):
     :param line0: (x0, y0, x1, y1) format returned by HoughLinesP
     :return: degrees, length, line (rounded to int)
     """
-    line1 = [round(item) for item in line0]
     dy = line0[3] - line0[1]
     dx = line0[2] - line0[0]
     angle = math.degrees(math.atan2(dy, dx))
+    angle = normalize_angle(angle)
     # Pythagoras
     length = math.sqrt(dy * dy + dx * dx)
+    line1 = [round(item) for item in line0]
     return angle, length, line1
 
 
@@ -131,17 +91,11 @@ def within_line_limits(line, left_limit: int, right_limit: int, top_limit: int, 
 
 
 def is_nearly_horizontal(angle, tolerance):
-    norm_angle = normalize_angle(angle)
-    return (0 - tolerance) < norm_angle < (0 + tolerance)
+    return (0 - tolerance) < angle < (0 + tolerance)
 
 
 def is_nearly_vertical(angle, tolerance):
-    norm_angle = normalize_angle(angle)
-    return (90 - tolerance) < norm_angle < (90 + tolerance)
-
-
-def get_maxima(image: np.ndarray) -> Tuple[int, int]:
-    return image.shape[0] - 1, image.shape[1] - 1
+    return (90 - tolerance) < angle < (90 + tolerance)
 
 
 def binned_mode(values, bins=10, range=None) -> float:
