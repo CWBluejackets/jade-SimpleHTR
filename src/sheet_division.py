@@ -175,7 +175,7 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
                                   'count': len(all_confidences)}
         sheet_info['confidences'] = confidence_data
 
-    sheet_info_file = os.path.join(output_dir, f'{output_prefix}_info.json')
+    sheet_info_file = os.path.join(output_dir, f'{output_prefix}.json')
     print(f'SUMMARY: Writing {sheet_info_file}')
     with open(sheet_info_file, 'w') as f:
         json.dump(sheet_info, f, indent=1, sort_keys=True, cls=NumpyJsonEncoder)
