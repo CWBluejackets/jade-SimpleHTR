@@ -600,33 +600,33 @@ def mark_cutoffs(image: np.ndarray, outer: tuple, inner: tuple,
     :param registration_octiles: octiles of column values for debugging
     :return: merged RGB image
     """
-    left0, right0, top0, bottom0 = outer
-    left1, right1, top1, bottom1 = inner
+    left_outer, right_outer, top_outer, bottom_outer = outer
+    left_inner, right_inner, top_inner, bottom_inner = inner
     output = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
     print(f'Debugging mark_cutoffs: {output.shape}')
     # mark the margins (erased outside these)
-    cv2.line(output, (left0, top0), (right0, top0), RED, 3)
-    cv2.line(output, (right0, top0), (right0, bottom0), RED, 3)
-    cv2.line(output, (right0, bottom0), (left0, bottom0), RED, 3)
-    cv2.line(output, (left0, bottom0), (left0, top0), RED, 3)
+    cv2.line(output, (left_outer, top_outer), (right_outer, top_outer), RED, 3)
+    cv2.line(output, (right_outer, top_outer), (right_outer, bottom_outer), RED, 3)
+    cv2.line(output, (right_outer, bottom_outer), (left_outer, bottom_outer), RED, 3)
+    cv2.line(output, (left_outer, bottom_outer), (left_outer, top_outer), RED, 3)
     # mark the adjusted cutoffs (area used for header registration)
-    cv2.line(output, (left1, top1), (right1, top1), RED, 3)
-    cv2.line(output, (right1, top1), (right1, bottom1), RED, 3)
-    cv2.line(output, (right1, bottom1), (left1, bottom1), RED, 3)
-    cv2.line(output, (left1, bottom1), (left1, top1), RED, 3)
+    cv2.line(output, (left_inner, top_inner), (right_inner, top_inner), RED, 3)
+    cv2.line(output, (right_inner, top_inner), (right_inner, bottom_inner), RED, 3)
+    cv2.line(output, (right_inner, bottom_inner), (left_inner, bottom_inner), RED, 3)
+    cv2.line(output, (left_inner, bottom_inner), (left_inner, top_inner), RED, 3)
     # copy the H & V lines detected
     output[np.where(registration_image == 0)] = BLUE
     # draw green lines above the detected box edges
-    cv2.line(output, (header_edges[0], top0), (header_edges[0], top1), GREEN, 3)
-    cv2.line(output, (header_edges[1], top0), (header_edges[1], top1), GREEN, 3)
+    cv2.line(output, (header_edges[0], top_outer), (header_edges[0], top_inner), GREEN, 3)
+    cv2.line(output, (header_edges[1], top_outer), (header_edges[1], top_inner), GREEN, 3)
     # mark the column counts used for determining the header width
-    scale_v = (top1 - 5) / column_counts.max()
+    scale_v = (top_outer - 1) / column_counts.max()
     # plot the registration values across the top
     for x, count in enumerate(column_counts):
         y = round(scale_v * count)
         cv2.line(output, (x, 0), (x, y), GREEN, 1)
     # mark the registration octiles on the left
-    scale_h = (left1 - 5) / (registration_octiles.shape[0] + 1)
+    scale_h = (left_outer - 5) / (registration_octiles.shape[0] + 1)
     for i, y in enumerate(registration_octiles):
         x1 = round(scale_h * (i + 1))
         y1 = round(scale_v * y)
