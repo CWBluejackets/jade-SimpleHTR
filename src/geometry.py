@@ -428,7 +428,7 @@ def get_lined_image_for_registration(image: np.ndarray, config: dict, cutoffs: t
     :param image: input image
     :param config: configuration parameters
     :param cutoffs: tuple of horizontal and vertical lines coordinates
-    :return: b/w image
+    :return: white image with black lines for registration
     """
     horizontal_lines = get_lines_for_registration(image, config, cutoffs, 'horizontal')
     vertical_lines = get_lines_for_registration(image, config, cutoffs, 'vertical')
