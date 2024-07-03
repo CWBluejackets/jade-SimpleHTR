@@ -469,8 +469,8 @@ def keep_horizontal_or_vertical(measured_line, tolerance, line_type: str, cutoff
 
 def get_lined_image_for_registration(image: np.ndarray, config: dict, cutoffs: tuple) -> np.ndarray:
     """
-    Generate a black on white image of horizontal and vertical lines for registration by
-    phase cross correlation.
+    Generate a black on white image of horizontal and vertical lines (for
+    subsequent registration by phase cross correlation).
     :param image: input image
     :param config: configuration parameters
     :param cutoffs: tuple of horizontal and vertical lines coordinates
@@ -593,7 +593,8 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray,
 
     if config['debug']:
         debug_image_path = os.path.join(output_dir, f'{output_prefix}_1_cutoffs.png')
-        debug_image = mark_cutoffs(modified_image, cutoffs, adjusted_cutoffs, registration_image, sheet_info)
+        debug_image = mark_cutoffs(modified_image, cutoffs, adjusted_cutoffs, registration_image,
+                                   sheet_info, column_counts)
         print(f'Writing {debug_image_path}')
         cv2.imwrite(debug_image_path, debug_image)
         columns_path = os.path.join(output_dir, f'{output_prefix}_1_columns.json')
@@ -620,7 +621,7 @@ def superimpose(shifted_image: np.ndarray, form: np.ndarray) -> np.ndarray:
 
 def mark_cutoffs(image: np.ndarray, outer: tuple, inner: tuple,
                  registration_image: np.ndarray,
-                 sheet_info: dict) -> np.ndarray:
+                 sheet_info: dict, column_counts: np.ndarray) -> np.ndarray:
     """
     Superimpose the form in blue on the image
     :param image: grayscale image
@@ -628,18 +629,19 @@ def mark_cutoffs(image: np.ndarray, outer: tuple, inner: tuple,
     :param inner: (left, right, top, bottom)
     :param registration_image: H & V lines detected
     :param sheet_info: cumulative log of sheet processing
+    :param column_counts: darkness of columns within general header zone
     :return: merged RGB image
     """
     left0, right0, top0, bottom0 = outer
     left1, right1, top1, bottom1 = inner
     output = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
     print(f'Debugging mark_cutoffs: {output.shape}')
-    # mark the margins
+    # mark the margins (erased outside these)
     cv2.line(output, (left0, top0), (right0, top0), RED, 3)
     cv2.line(output, (right0, top0), (right0, bottom0), RED, 3)
     cv2.line(output, (right0, bottom0), (left0, bottom0), RED, 3)
     cv2.line(output, (left0, bottom0), (left0, top0), RED, 3)
-    # mark the adjusted ones
+    # mark the adjusted cutoffs (area used for header registration)
     cv2.line(output, (left1, top1), (right1, top1), RED, 3)
     cv2.line(output, (right1, top1), (right1, bottom1), RED, 3)
     cv2.line(output, (right1, bottom1), (left1, bottom1), RED, 3)
@@ -650,6 +652,11 @@ def mark_cutoffs(image: np.ndarray, outer: tuple, inner: tuple,
     strong_edges = sheet_info['rescaling']['strong_edges']  # left, right
     cv2.line(output, (strong_edges[0], top0), (strong_edges[0], top1), GREEN, 3)
     cv2.line(output, (strong_edges[1], top0), (strong_edges[1], top1), GREEN, 3)
+    # mark the column counts used for determining the header width
+    scale = (top0 - 5) / column_counts.max()
+    for x, count in enumerate(column_counts):
+        y = round(scale * count)
+        cv2.line(output, (x, 0), (x, y), GREEN, 1)
     return output
 
 
