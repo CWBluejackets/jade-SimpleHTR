@@ -458,7 +458,8 @@ def get_registration_width(registration_image: np.ndarray, sheet_info: dict,
     column_counts_usable = column_counts_black[cutoffs[0]:cutoffs[1]]
     threshold = np.percentile(column_counts_usable, percentile)
     print(f'Column threshold {threshold}, min {column_counts_black.min()}, max {column_counts_black.max()}')
-    strong_columns = np.asarray(column_counts_black > threshold).nonzero()[0]
+    # strong_columns = np.asarray(column_counts_black > threshold).nonzero()[0]
+    strong_columns = signal.find_peaks(column_counts_black, prominence=threshold)[0]
     # np.where equivalent returns a singleton tuple here
     # https://numpy.org/doc/stable/reference/generated/numpy.nonzero.html#numpy.nonzero
     # https://numpy.org/doc/stable/reference/generated/numpy.where.html
@@ -473,6 +474,7 @@ def get_registration_width(registration_image: np.ndarray, sheet_info: dict,
                                   [strong_right, column_counts_black[strong_right]]],
                  'percentile': percentile,
                  'threshold': threshold,
+                 'peaks': strong_columns,
                  'min_black': column_counts_black.min(),
                  'max_black': column_counts_black.max(),
                  'nonzero_range': [[nonzero[0], column_counts_black[nonzero[0]]],
