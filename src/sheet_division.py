@@ -10,7 +10,7 @@ import numpy as np
 
 import geometry
 from application import TrainedModel
-from utils import NumpyJsonEncoder, EIGHTHS, RED
+from utils import NumpyJsonEncoder, EIGHTHS, RED, BLUE
 from cellulation import generate_cells
 
 
@@ -74,33 +74,34 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
     sheet_info['row_detection'] = {'y_values': row_y_values,
                                    'diffs': row_y_values[1:] - row_y_values[:-1]}
     if config['debug']:
-        # superimpose the template in blue and save it for inspection
+        # superimpose the header template in blue and save it for inspection
         registration_path = os.path.join(output_dir,
                                          f'{output_prefix}_2_registration.png')
         registration_debug_2 = geometry.superimpose(registered_image, template_image)
         print(f'Writing {registration_path}')
         cv2.imwrite(registration_path, registration_debug_2)
+
+        # superimpose the lines detected and the whiteness plot
         registration_path = os.path.join(output_dir,
                                          f'{output_prefix}_3_registration.png')
-        full_template_image = template['image']
-        registration_debug_3 = geometry.superimpose(registered_image, full_template_image)
-        # add the horizontal means for inspection
-        for y, h_mean in enumerate(horizontal_means):
-            cv2.line(registration_debug_3, (0, y), (round(h_mean * 3), y), RED, 1)
-        print(f'Writing {registration_path}')
-        cv2.imwrite(registration_path, registration_debug_3)
-        registration_path = os.path.join(output_dir,
-                                         f'{output_prefix}_4_registration.png')
+        registration_debug_3 = registration_debug_2.copy()
         x_left = min(template['output_column_x_values'])
         x_right = max(template['output_column_x_values'])
         y_top = min(row_y_values)
         y_bottom = max(row_y_values)
+        # mark the horizontal lines
         for y_value in row_y_values:
-            cv2.line(registration_debug_2, (x_left, y_value), (x_right, y_value), RED, 2)
+            cv2.line(registration_debug_3, (x_left, y_value), (x_right, y_value), RED, 2)
+        # mark the extended columns
         for x_value in template['output_column_x_values']:
-            cv2.line(registration_debug_2, (x_value, y_top), (x_value, y_bottom), RED, 2)
+            cv2.line(registration_debug_3, (x_value, y_top), (x_value, y_bottom), RED, 2)
+        # add the horizontal means for inspection
+        for y, h_mean in enumerate(horizontal_means):
+            cv2.line(registration_debug_3, (0, y), (round(h_mean * 3), y), RED, 1)
+        # mark the bottom limit from the template
+        cv2.line(registration_debug_3, (255*3, hline_y_max), (x_right, hline_y_max), BLUE, 1)
         print(f'Writing {registration_path}')
-        cv2.imwrite(registration_path, registration_debug_2)
+        cv2.imwrite(registration_path, registration_debug_3)
 
     # produce median data for rows
     row_data = dict()
