@@ -19,17 +19,13 @@
     "min_width": 4080
   },
   "registration": {
-    "hlines": {
-      "smoothing_window": 5,
-      "min_distance": 50,
-      "max_distance": 100
-    },
     "horizontal": {
       "deviation": 1.5
     },
     "vertical": {
-      "deviation": 1.0
+      "deviation": 2.0
     },
+    "percentile": 25,
     "cutoff_adjustments": {
       "left": 90,
       "right": 150,
@@ -37,5 +33,10 @@
       "top_band": 550,
       "bottom": 25
     }
+  },
+  "row_detection": {
+    "smoothing_window": 5,
+    "min_distance": 50,
+    "max_distance": 100
   }
 }
