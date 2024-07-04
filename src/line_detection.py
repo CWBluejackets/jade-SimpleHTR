@@ -7,7 +7,16 @@ import numpy as np
 LSD = cv2.createLineSegmentDetector()
 
 
-def detect_all_lines(image: np.ndarray, left: int, right: int, top: int, bottom: int) -> list:
+def detect_lines_within(image: np.ndarray, left: int, right: int, top: int, bottom: int) -> list:
+    """
+    Crop the image to the specified coordinates and detect lines within that area.
+    :param image: the full image
+    :param left: left X of inner image
+    :param right: right X of inner image
+    :param top: top Y of inner image
+    :param bottom: bottom Y of inner image
+    :return: list of Line objects
+    """
     inner_image = image[top:bottom + 1, left:right + 1]
     # TODO investigate parameters
     lines_and_stuff = LSD.detect(inner_image)
@@ -54,3 +63,10 @@ class Line:
         self.angle = normalize_angle(angle)
         self.length = math.hypot(dx, dy)
         return
+
+    def is_nearly_horizontal(self, tolerance):
+        return -tolerance <= self.angle <= tolerance
+
+    def is_nearly_vertical(self, tolerance):
+        return (90 - tolerance) <= self.angle <= (90 + tolerance)
+    
