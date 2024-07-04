@@ -4,6 +4,7 @@ import json
 import os
 from collections import defaultdict
 from typing import Tuple
+from datetime import datetime
 
 from panoptes_client import Panoptes, Project, SubjectSet, Subject
 
@@ -53,6 +54,7 @@ def create_batches(prefix: str, manifest0: dict) -> dict:
     for filename, metadata in manifest0.items():
         vessel_batches[metadata['vessel']].append((filename, metadata))
     results = defaultdict(list)
+    print(f'Number of vessels: {len(vessel_batches)}')
     for vessel, big_batch in vessel_batches.items():
         for i in range(0, len(big_batch), MAX_BATCH_SIZE):
             batch0 = big_batch[i: i + MAX_BATCH_SIZE]
@@ -99,6 +101,8 @@ if __name__ == "__main__":
 
     options = oparser.parse_args()
 
+    START_TIME = datetime.now()
+
     # Load authorization file if specified but do NOT overwrite CLI options
     if options.auth_file:
         print(f'Loading {options.auth_file}')
@@ -134,3 +138,9 @@ if __name__ == "__main__":
             cwb_project.save()
         else:
             print('Not updating Zooniverse project')
+        elapsed_time = datetime.now() - START_TIME
+        # drop the microseconds
+        elapsed_time_str = str(datetime.now() - START_TIME).split('.')[0]
+        seconds_per_subject = elapsed_time.total_seconds() / subjects_done
+        print(f'Elapsed time: {elapsed_time_str} ({seconds_per_subject:.2f} seconds/subject)')
+        print()
