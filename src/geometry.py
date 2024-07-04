@@ -3,7 +3,7 @@ import json
 import math
 import os
 from collections import Counter
-from typing import Tuple
+from typing import Tuple, List
 
 import cv2
 import numpy as np
@@ -11,11 +11,13 @@ from scipy import ndimage, signal
 from skimage.registration import phase_cross_correlation
 
 from utils import NumpyJsonEncoder, EIGHTHS, RED, GREEN, BLACK, BLUE
+import line_detection
 
 # point = (x, y)
 # in cv2, y = 0 at the top
 #         x = 0 at the left
 # cv2 ndarray.shape = (height, width)
+# pixel is ndarray[y, x]
 
 # NOTE: cv2.line(...) correctly handles endpoints outside the image without
 # raising exceptions, so extrapolation does NOT need boundary safety
@@ -33,9 +35,6 @@ TEXT_STRIP_HEIGHT = 1.8
 
 # smallest rotation that will actually change the image
 MIN_ROTATION = math.degrees(math.atan(2 / 5616))
-
-# https://docs.opencv.org/3.4/dd/d1a/group__imgproc__feature.html#ga26413521fde978c0c97f11149336f6e1
-LSD = cv2.createLineSegmentDetector()
 
 
 def solve_line(point0, point1) -> Tuple[float, float]:
@@ -321,21 +320,16 @@ def rotate_correct(image: np.ndarray, config: dict, output_dir: str, output_pref
     top_limit = round(image.shape[0] * ignore_top_fraction)
     bottom_limit = round(image.shape[0] * (1- ignore_bottom_fraction))
     # TODO investigate parameters
-    lines_and_stuff = LSD.detect(image)
-    # TODO see if the other stuff is useful
-    lines = lines_and_stuff[0]
-    measured_lines = [measure(line[0]) for line in lines.tolist()]
-    h_lines = [line for line in measured_lines
-               if (is_nearly_horizontal(line[0], deviation) and
-                   within_line_limits(line, left_limit, right_limit, top_limit, bottom_limit))]
+    lines = line_detection.detect_lines_within(image, left_limit, right_limit, top_limit, bottom_limit)
+    horizontal_lines = line_detection.keep_horizontal(lines, deviation)
     # debug: save the hlines image
     if config['debug']:
         debug_image_path = os.path.join(output_dir, f'{output_prefix}_0_hlines.png')
-        hline_image = generate_hlines_image(image, h_lines)
+        hline_image = generate_hlines_image(image, horizontal_lines)
         print(f'Writing {debug_image_path}')
         cv2.imwrite(debug_image_path, hline_image)
     # find the binned mode of angles and rotate
-    angles = [d[0] for d in h_lines]
+    angles = [line.angle for line in horizontal_lines]
     angle_octiles = np.quantile(angles, EIGHTHS)
     rotation = binned_mode(angles, bins=mode_bins, bin_range=(-deviation, deviation))
     rotation = round(rotation, 3)
@@ -430,11 +424,15 @@ def get_lined_image_for_registration(image: np.ndarray, config: dict, cutoffs: t
     :param cutoffs: tuple of horizontal and vertical lines coordinates
     :return: white image with black lines for registration
     """
-    horizontal_lines = get_lines_for_registration(image, config, cutoffs, 'horizontal')
-    vertical_lines = get_lines_for_registration(image, config, cutoffs, 'vertical')
+    lines = line_detection.detect_lines_within(image, *cutoffs)
+    h_tolerance = config['registration']['horizontal']['deviation']
+    v_tolerance = config['registration']['vertical']['deviation']
+    h_and_v_lines = line_detection.keep_horizontal_and_vertical(lines, h_tolerance, v_tolerance)
+    # create white image
     new_image = np.full(image.shape, 255, dtype="uint8")
-    for line in horizontal_lines + vertical_lines:
-        cv2.line(new_image, (line[2][0], line[2][1]), (line[2][2], line[2][3]), (0,), 3)
+    # superimpose black lines
+    for line in h_and_v_lines:
+        cv2.line(new_image, (line.x0, line.y0), (line.x1, line.y1), (0,), 3)
     return new_image
 
 
@@ -482,28 +480,6 @@ def get_registration_width(registration_image: np.ndarray, sheet_info: dict,
                  'box_width': box_width}
     sheet_info['rescaling'] = rescaling
     return box_width, column_counts_black, (strong_left, strong_right), octiles
-
-
-def get_lines_for_registration(image: np.ndarray, config: dict, cutoffs: tuple, line_type: str) -> list:
-    """
-    Get horizontal or vertical lines using the specific configuration parameters.
-    :param image: input image
-    :param config: configuration parameters
-    :param cutoffs: tuple of horizontal and vertical lines coordinates
-    :param line_type: 'horizontal' or 'vertical'
-    :return: list of measured lines
-    """
-    if line_type not in ['horizontal', 'vertical']:
-        raise ValueError(f'Type {line_type} is not horizontal or vertical!')
-    # TODO investigate parameters
-    lines_and_stuff = LSD.detect(image)
-    # TODO see if the other stuff is useful
-    lines = lines_and_stuff[0]
-    deviation = config['registration'][line_type]['deviation']
-    measured_lines = [measure(line[0]) for line in lines.tolist()]
-    keep_lines = [line for line in measured_lines if keep_horizontal_or_vertical(line, deviation,
-                                                                                 line_type, cutoffs)]
-    return keep_lines
 
 
 def adjust_muster_to_template(image: np.ndarray, template: np.ndarray,
@@ -636,7 +612,7 @@ def mark_cutoffs(image: np.ndarray, outer: tuple, inner: tuple,
     return output
 
 
-def generate_hlines_image(image: np.ndarray, hlines: list) -> np.ndarray:
+def generate_hlines_image(image: np.ndarray, hlines: List[line_detection.Line]) -> np.ndarray:
     """
     Superimpose the near-horizontal lines on the image
     :param image: grayscale image
@@ -646,8 +622,8 @@ def generate_hlines_image(image: np.ndarray, hlines: list) -> np.ndarray:
     # angle, length, [x0, y0, x1, y1]
     output = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
     for line in hlines:
-        p0 = (line[2][0], line[2][1])
-        p1 = (line[2][2], line[2][3])
+        p0 = (line.x0, line.y0)
+        p1 = (line.x1, line.y1)
         cv2.line(output, p0, p1, BLUE, 1)
     return output
 
