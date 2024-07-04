@@ -5,6 +5,8 @@ import cv2
 import numpy as np
 
 # https://docs.opencv.org/3.4/dd/d1a/group__imgproc__feature.html#ga26413521fde978c0c97f11149336f6e1
+# QUOTE: The LineSegmentDetector algorithm is defined using the standard values. Only
+# advanced users may want to edit those, as to tailor it for their own application.
 LSD = cv2.createLineSegmentDetector()
 
 
@@ -12,12 +14,12 @@ def normalize_angle(angle):
     """
     Normalize the angle to the range -45° <= angle < 135° to simplify
     horizontal and vertical detection.
-    :param angle:
-    :return:
+    :param angle: output of atan2 converted to degrees
+    :return: normalized angle
     """
-    while angle < -45:
+    if angle < -45:
         angle += 180
-    while angle >= 135:
+    elif angle >= 135:
         angle -= 180
     return angle
 
@@ -30,6 +32,7 @@ class Line:
         self.y1 = round(y1)
         dy = y1 - y0
         dx = x1 - x0
+        # result is -180° to +180°
         angle = math.degrees(math.atan2(dy, dx))
         self.angle = normalize_angle(angle)
         self.length = math.hypot(dx, dy)
@@ -53,9 +56,7 @@ def detect_lines_within(image: np.ndarray, left: int, right: int, top: int, bott
     :return: list of Line objects
     """
     inner_image = image[top:bottom + 1, left:right + 1]
-    # TODO investigate parameters
     lines_and_stuff = LSD.detect(inner_image)
-    # TODO see if the other stuff is useful
     lines = convert_detection_array(lines_and_stuff[0], x_plus=left, y_plus=top)
     return lines
 
