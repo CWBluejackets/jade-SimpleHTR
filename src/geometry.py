@@ -81,22 +81,6 @@ def normalize_angle(angle):
     return angle
 
 
-def within_line_limits(line, left_limit: int, right_limit: int, top_limit: int, bottom_limit: int) -> bool:
-    left = min(line[2][0], line[2][2])
-    right = max(line[2][0], line[2][2])
-    top = min(line[2][1], line[2][3])
-    bottom = max(line[2][1], line[2][3])
-    return (left >= left_limit) and (right <= right_limit) and (top >= top_limit) and (bottom <= bottom_limit)
-
-
-def is_nearly_horizontal(angle, tolerance):
-    return (0 - tolerance) < angle < (0 + tolerance)
-
-
-def is_nearly_vertical(angle, tolerance):
-    return (90 - tolerance) < angle < (90 + tolerance)
-
-
 def binned_mode(values, bins=10, bin_range=None) -> float:
     """
     Make histogram bins and find the mode.
@@ -114,24 +98,6 @@ def binned_mode(values, bins=10, bin_range=None) -> float:
     counts, lefts = np.histogram(values, bins=bins, range=range0)
     i = counts.argmax()
     return (lefts[i] + lefts[i + 1]) / 2.0
-
-
-def most_frequent_values(values, interval, end, count):
-    """
-    Bin the values histogram-style and return the middles and
-    counts of the most frequent bins
-    :param values: sequence of values
-    :param interval: bin size
-    :param end: high value of highest bin
-    :param count: number of values to return
-    :return:
-    """
-    bins = range(0, end, interval)
-    counts, edges = np.histogram(values, bins=bins)
-    middles = [round((edges[i] + edges[i + 1]) / 2) for i in range(len(edges) - 1)]
-    d = {middles[i]: counts[i] for i in range(len(counts)) if (counts[i] > 0)}
-    c = Counter(d)
-    return c.most_common(count)
 
 
 def identify_image_sides(image_median, left_median, right_median,
@@ -392,27 +358,6 @@ def erase_margins(image: np.ndarray, config):
         cv2.line(modified_image, (x, 0), (x, y_max), image_median, 1)
     print(f'Cutoffs: left {left_cutoff}, right {right_cutoff}, top {top_cutoff}, bottom {bottom_cutoff}')
     return modified_image, (left_cutoff, right_cutoff, top_cutoff, bottom_cutoff)
-
-
-def keep_horizontal_or_vertical(measured_line, tolerance, line_type: str, cutoffs):
-    # cutoffs: left, right, top, bottom
-    angle = measured_line[0]
-    # ML: degrees 90 up, length,  line (x0, y0, x1, y1)
-    x = (measured_line[2][0] + measured_line[2][2]) / 2
-    y = (measured_line[2][1] + measured_line[2][3]) / 2
-    left = min(measured_line[2][0], measured_line[2][2])
-    right = max(measured_line[2][0], measured_line[2][2])
-    top = min(measured_line[2][1], measured_line[2][3])
-    bottom = max(measured_line[2][1], measured_line[2][3])
-    if line_type == 'horizontal':
-        result = (is_nearly_horizontal(angle, tolerance) and (cutoffs[2] < y < cutoffs[3]) and
-                  (left > cutoffs[0]) and (right < cutoffs[1]))
-    elif line_type == 'vertical':
-        result = (is_nearly_vertical(angle, tolerance) and (cutoffs[0] < x < cutoffs[1]) and
-                  (top > cutoffs[2]) and (bottom < cutoffs[3]))
-    else:
-        raise ValueError(f'Unrecognized line type: {line_type}')
-    return result
 
 
 def get_lined_image_for_registration(image: np.ndarray, config: dict, cutoffs: tuple) -> np.ndarray:
