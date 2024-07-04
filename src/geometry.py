@@ -458,7 +458,7 @@ def get_registration_width(registration_image: np.ndarray, sheet_info: dict,
     column_counts_usable = column_counts_black[cutoffs[0]:cutoffs[1]]
     threshold = np.percentile(column_counts_usable, percentile)
     print(f'Column threshold {threshold}, min {column_counts_black.min()}, max {column_counts_black.max()}')
-    # strong_columns = np.asarray(column_counts_black > threshold).nonzero()[0]
+    # https://stackoverflow.com/questions/76786670/what-is-the-difference-between-threshold-and-prominence-in-scipy-find-peaks
     strong_columns = signal.find_peaks(column_counts_black, prominence=threshold)[0]
     # np.where equivalent returns a singleton tuple here
     # https://numpy.org/doc/stable/reference/generated/numpy.nonzero.html#numpy.nonzero
