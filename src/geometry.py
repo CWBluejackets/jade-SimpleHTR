@@ -406,12 +406,9 @@ def get_registration_width(registration_image: np.ndarray, sheet_info: dict,
     # np.where equivalent returns a singleton tuple here
     # https://numpy.org/doc/stable/reference/generated/numpy.nonzero.html#numpy.nonzero
     # https://numpy.org/doc/stable/reference/generated/numpy.where.html
-    print('Strong columns:', strong_columns)
-    strong_left, strong_right = strong_columns[0], strong_columns[-1]
+    strong_left, strong_right, box_width = determine_header_width(strong_columns, max_header_width)
     # IMPORTANT, PENDING
     # TODO use max_header_width, probably to suppress the LH edge
-    box_width = strong_right - strong_left
-    print(f'Box width: {box_width}')
     octiles = np.quantile(column_counts_black, EIGHTHS)
     nonzero = np.asarray(column_counts_black > 0).nonzero()[0]
     rescaling = {'octiles': octiles,
@@ -424,9 +421,24 @@ def get_registration_width(registration_image: np.ndarray, sheet_info: dict,
                  'max_black': column_counts_black.max(),
                  'nonzero_range': [[nonzero[0], column_counts_black[nonzero[0]]],
                                    [nonzero[-1], column_counts_black[nonzero[-1]]]],
-                 'box_width': box_width}
+                 'found_box_width': box_width,
+                 'max_box_width': max_header_width}
     sheet_info['rescaling'] = rescaling
     return box_width, column_counts_black, (strong_left, strong_right), octiles
+
+
+def determine_header_width(strong_columns: np.ndarray, max_header_width: int) -> Tuple[int, int, int]:
+    print('Strong columns:', strong_columns)
+    left_index = 0
+    strong_left, strong_right = strong_columns[left_index], strong_columns[-1]
+    box_width = strong_right - strong_left
+    print(f'Using: {strong_left}, {strong_right} -> {box_width}')
+    while box_width > max_header_width:
+        left_index += 1
+        strong_left = strong_columns[left_index]
+        box_width = strong_right - strong_left
+        print(f'Using: {strong_left}, {strong_right} -> {box_width}')
+    return strong_left, strong_right, box_width
 
 
 def adjust_muster_to_template(image: np.ndarray, template: np.ndarray,
