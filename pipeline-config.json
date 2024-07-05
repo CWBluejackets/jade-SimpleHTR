@@ -23,10 +23,10 @@
       "deviation": 1.5
     },
     "vertical": {
-      "deviation": 2.0
+      "deviation": 3.0
     },
     "percentile": 90.0,
-    "max_header_factor": 1.2,
+    "max_header_factor": 1.05,
     "cutoff_adjustments": {
       "left": 90,
       "right": 150,
