@@ -432,12 +432,12 @@ def determine_header_width(strong_columns: np.ndarray, max_header_width: int) ->
     left_index = 0
     strong_left, strong_right = strong_columns[left_index], strong_columns[-1]
     box_width = strong_right - strong_left
-    print(f'Using: {strong_left}, {strong_right} -> {box_width}')
+    print(f'Using: {strong_left}, {strong_right} -> {box_width} [{max_header_width}]')
     while box_width > max_header_width:
         left_index += 1
         strong_left = strong_columns[left_index]
         box_width = strong_right - strong_left
-        print(f'Using: {strong_left}, {strong_right} -> {box_width}')
+        print(f'Using: {strong_left}, {strong_right} -> {box_width} [{max_header_width}]')
     return strong_left, strong_right, box_width
 
 
