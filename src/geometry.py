@@ -434,18 +434,17 @@ def get_registration_width(registration_image: np.ndarray, sheet_info: dict,
     # TODO use max_header_width, probably to suppress the LH edge
     octiles = np.quantile(column_counts_black, EIGHTHS)
     nonzero = np.asarray(column_counts_black > 0).nonzero()[0]
-    rescaling = {'octiles': octiles,
+    rescaling = {'black_octiles': octiles,
                  'strong_edges': [[strong_left, column_counts_black[strong_left]],
                                   [strong_right, column_counts_black[strong_right]]],
                  'percentile': percentile,
                  'threshold': threshold,
                  'peaks': strong_columns,
                  'edge_log': edge_log,
-                 'min_black': column_counts_black.min(),
-                 'max_black': column_counts_black.max(),
                  'nonzero_range': [[nonzero[0], column_counts_black[nonzero[0]]],
                                    [nonzero[-1], column_counts_black[nonzero[-1]]]],
-                 'found_box_width': box_width}
+                 'box_width_found': box_width,
+                 'box_width_max': max_header_width}
     sheet_info['rescaling'] = rescaling
     return box_width, column_counts_black, (strong_left, strong_right), octiles
 
