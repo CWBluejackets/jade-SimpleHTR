@@ -360,14 +360,14 @@ def erase_margins(image: np.ndarray, config: dict, sheet_info: dict):
                               'width': found_width,
                               'min_width': min_width}
     if found_width < min_width:
+        difference = min_width - found_width
         if side_types[0] == 'light':
-            left_cutoff -= found_width - min_width
+            left_cutoff -= difference
         elif side_types[1] == 'light':
-            right_cutoff += found_width - min_width
+            right_cutoff += difference
         else:
-            adjustment = (min_width - found_width) // 2
-            left_cutoff -= adjustment
-            right_cutoff += adjustment
+            left_cutoff -= difference // 2
+            right_cutoff += difference // 2
         print(f'Modified cutoffs: left {left_cutoff}, right {right_cutoff}, width {right_cutoff - left_cutoff}')
         margin_log['modified'] = {'left': left_cutoff,
                                   'right': right_cutoff,
