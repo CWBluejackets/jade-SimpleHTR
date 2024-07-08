@@ -347,10 +347,15 @@ def erase_margins(image: np.ndarray, config):
     print(f'Detected cutoffs: left {left_cutoff}, right {right_cutoff}, width {found_width}')
     min_width = config['margin_detection']['min_width']
     if found_width < min_width:
-        adjustment = (min_width - found_width) // 2
-        left_cutoff -= adjustment
-        right_cutoff += adjustment
-        print(f'Adjusted cutoffs: left {left_cutoff}, right {right_cutoff}, width {right_cutoff - left_cutoff}')
+        if side_types[0] == 'light':
+            left_cutoff -= found_width - min_width
+        elif side_types[1] == 'light':
+            right_cutoff += found_width - min_width
+        else:
+            adjustment = (min_width - found_width) // 2
+            left_cutoff -= adjustment
+            right_cutoff += adjustment
+        print(f'Modified cutoffs: left {left_cutoff}, right {right_cutoff}, width {right_cutoff - left_cutoff}')
     # and erase the left and right margins
     for x in range(0, left_cutoff):
         cv2.line(modified_image, (x, 0), (x, y_max), image_median, 1)
