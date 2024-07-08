@@ -316,7 +316,8 @@ def rotate_correct(image: np.ndarray, config: dict, output_dir: str, output_pref
     return output
 
 
-def erase_margins(image: np.ndarray, config):
+def erase_margins(image: np.ndarray, config: dict, sheet_info: dict):
+    margin_log = dict()
     # set some values
     image_median = round(np.median(image))
     x_max = image.shape[1] - 1
@@ -338,14 +339,26 @@ def erase_margins(image: np.ndarray, config):
     left_median, right_median, very_left_median, very_right_median = get_edge_medians(image, config)
     print(f'Medians: left {left_median}, very left {very_left_median}, '
           f'right {right_median}, very right {very_right_median}')
+    margin_log['medians'] = {'image': image_median,
+                             'left': left_median,
+                             'right': right_median,
+                             'very_left': very_left_median,
+                             'very_right': very_right_median}
+
     side_types = identify_image_sides(image_median, left_median, right_median,
                                       very_left_median, very_right_median, config)
+    margin_log['sides'] = {'left': side_types[0],
+                           'right': side_types[1]}
     v_medians = smoothed_vertical_medians(modified_image, config)
     left_cutoff = get_left_cutoff(v_medians, side_types[0], image_median, config)
     right_cutoff = get_right_cutoff(v_medians, side_types[1], image_median, config)
     found_width = right_cutoff - left_cutoff
     print(f'Detected cutoffs: left {left_cutoff}, right {right_cutoff}, width {found_width}')
     min_width = config['margin_detection']['min_width']
+    margin_log['detected'] = {'left': left_cutoff,
+                              'right': right_cutoff,
+                              'width': found_width,
+                              'min_width': min_width}
     if found_width < min_width:
         if side_types[0] == 'light':
             left_cutoff -= found_width - min_width
@@ -356,12 +369,16 @@ def erase_margins(image: np.ndarray, config):
             left_cutoff -= adjustment
             right_cutoff += adjustment
         print(f'Modified cutoffs: left {left_cutoff}, right {right_cutoff}, width {right_cutoff - left_cutoff}')
+        margin_log['modified'] = {'left': left_cutoff,
+                                  'right': right_cutoff,
+                                  'width': right_cutoff - left_cutoff}
     # and erase the left and right margins
     for x in range(0, left_cutoff):
         cv2.line(modified_image, (x, 0), (x, y_max), image_median, 1)
     for x in range(right_cutoff, image.shape[1]):
         cv2.line(modified_image, (x, 0), (x, y_max), image_median, 1)
     print(f'Cutoffs: left {left_cutoff}, right {right_cutoff}, top {top_cutoff}, bottom {bottom_cutoff}')
+    sheet_info['margin_handling'] = margin_log
     return modified_image, (left_cutoff, right_cutoff, top_cutoff, bottom_cutoff)
 
 
@@ -464,7 +481,7 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray,
     :param sheet_info: cumulative log of sheet processing
     """
     modified_image = rotate_correct(image, config, output_dir, output_prefix, sheet_info)
-    modified_image, cutoffs = erase_margins(modified_image, config)
+    modified_image, cutoffs = erase_margins(modified_image, config, sheet_info)
     # cutoffs (left, right, top, bottom)
     adjusted_cutoffs = (cutoffs[0] + config['registration']['cutoff_adjustments']['left'],
                         cutoffs[1] - config['registration']['cutoff_adjustments']['right'],
