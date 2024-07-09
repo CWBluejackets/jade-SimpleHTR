@@ -26,20 +26,21 @@ if __name__ == "__main__":
     if options.sample_size and not options.output_file:
         raise ValueError("option -n requires option -o")
 
-    input_data = []
+    input_data = dict()
 
     for input_file in options.input_files:
         print(f'Reading {input_file}')
         with open(input_file, 'r') as f:
             batch = json.load(f)
             print(f'Loaded {len(batch)} entries')
-            input_data.extend(batch)
+            input_data.update(batch)
 
     print(f'Total input size {len(input_data)}')
 
     if options.output_file:
         if options.sample_size:
-            output_data = random.sample(input_data, options.sample_size)
+            output_keys = random.sample(input_data.keys(), options.sample_size)
+            output_data = {key: input_data[key] for key in output_keys}
         else:
             output_data = input_data
         print(f'Total output size {len(output_data)}')
