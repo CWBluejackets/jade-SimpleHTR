@@ -33,18 +33,17 @@ if __name__ == "__main__":
         with open(input_file, 'r') as f:
             batch = json.load(f)
             print(f'Loaded {len(batch)} entries')
-            input_data.extend(json.load(f))
+            input_data.extend(batch)
 
     print(f'Total input size {len(input_data)}')
 
-    if options.sample_size:
-        output_data = random.sample(input_data, options.sample_size)
-    else:
-        output_data = input_data
-    print(f'Total output size {len(output_data)}')
-
     if options.output_file:
+        if options.sample_size:
+            output_data = random.sample(input_data, options.sample_size)
+        else:
+            output_data = input_data
+        print(f'Total output size {len(output_data)}')
         print(f'Writing {options.output_file}')
-        with options.output_file.open('w') as f:
+        with open(options.output_file, 'w') as f:
             json.dump(output_data, f, indent=1, sort_keys=True)
 
