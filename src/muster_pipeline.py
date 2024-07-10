@@ -112,10 +112,11 @@ if __name__ == "__main__":
                                   locations['inventory_file'])
     all_metadata = Metadata(metadata_file, inventory_file)
 
-    # output of this program is images and control files
+    # output: images and control files
     output_dir = os.path.join(os.path.dirname(options.locations_file), locations['output_directory'])
     parts_dir = os.path.join(output_dir, 'parts')
     os.makedirs(parts_dir, exist_ok=True)
+    # output: Zooniverse phase 2 for corrections where confidence score is low
     corrections_dir = os.path.join(os.path.dirname(options.locations_file), locations['corrections_directory'])
     os.makedirs(os.path.join(corrections_dir, 'image'), exist_ok=True)
     os.makedirs(os.path.join(corrections_dir, 'json'), exist_ok=True)

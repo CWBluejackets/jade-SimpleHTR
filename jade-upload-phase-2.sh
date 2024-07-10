@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# Request 5 gigabytes of real memory (mem)
+#$ -l rmem=5G
+
+# set memory, nodes, GPUs, time limit
+#SBATCH --mem=16000
+#SBATCH --time=10:00:00
+#SBATCH --nodes=1
+#SBATCH --gres=gpu:1
+#SBATCH --partition=small
+# time limit on big is 24h <http://docs.jade.ac.uk/en/latest/jade/scheduler/>
+
+#SBATCH --job-name=CWB_upload_phase_2
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=a.funk@sheffield.ac.uk
+
+# INSTRUCTIONS
+# http://docs.jade.ac.uk/en/latest/jade/scheduler/index.html
+
+# load the modules for the program we want to run
+module load python/anaconda3
+module load cuda/10.1
+echo "modules loaded"
+
+HTR_DIR="${HOME}/bluejackets/jade-SimpleHTR"
+
+# https://www.golinuxcloud.com/bash-getopts/
+# https://www.computerhope.com/unix/bash/getopts.htm
+
+AUTH_FILE="${HOME}/.zooniverse.json"
+# default value
+MANIFEST_FILE="${HTR_DIR}/pipeline//corrections/image/manifest.json"
+
+OPTIONS="-c  ${AUTH_FILE}"
+
+while getopts "s:m:" option
+do
+  case "${option}" in
+    m)
+      MANIFEST_FILE="$(realpath "${OPTARG}")"
+      ;;
+    s)
+      OPTIONS="${OPTIONS}  -s ${OPTARG}"
+      ;;
+    *)
+      echo "invalid option: ${option}"
+      exit 13
+  esac
+done
+
+OPTIONS="${OPTIONS}  -m ${MANIFEST_FILE}"
+
+source activate simplehtr1
+echo "environment activated"
+echo
+cd "${HTR_DIR}" || exit 99
+
+COMMAND="python3 upload_phase_2.py  ${OPTIONS}"
+echo "${COMMAND}"
+echo
+${COMMAND}
+echo

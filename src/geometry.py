@@ -3,7 +3,7 @@ import json
 import math
 import os
 from collections import Counter
-from typing import Tuple
+from typing import Tuple, List
 
 import cv2
 import numpy as np
@@ -11,11 +11,13 @@ from scipy import ndimage, signal
 from skimage.registration import phase_cross_correlation
 
 from utils import NumpyJsonEncoder, EIGHTHS, RED, GREEN, BLACK, BLUE
+import line_detection
 
 # point = (x, y)
 # in cv2, y = 0 at the top
 #         x = 0 at the left
 # cv2 ndarray.shape = (height, width)
+# pixel is ndarray[y, x]
 
 # NOTE: cv2.line(...) correctly handles endpoints outside the image without
 # raising exceptions, so extrapolation does NOT need boundary safety
@@ -34,9 +36,6 @@ TEXT_STRIP_HEIGHT = 1.8
 # smallest rotation that will actually change the image
 MIN_ROTATION = math.degrees(math.atan(2 / 5616))
 
-# https://docs.opencv.org/3.4/dd/d1a/group__imgproc__feature.html#ga26413521fde978c0c97f11149336f6e1
-LSD = cv2.createLineSegmentDetector()
-
 
 def solve_line(point0, point1) -> Tuple[float, float]:
     """
@@ -50,47 +49,6 @@ def solve_line(point0, point1) -> Tuple[float, float]:
     return a, b
 
 
-def extrapolate_vertical(point0, point1, image: np.ndarray) -> Tuple[Tuple[int, int], Tuple[int, int], int]:
-    """
-    Extrapolate to the top and bottom edges.
-    :param point0:
-    :param point1:
-    :param image:
-    :return: top_point, bottom_point, horizontal_difference
-    """
-    max_x, max_y = get_maxima(image)
-    x0, y0 = point0
-    x1, y1 = point1
-
-    # special case: vertical line has infinite slope
-    if x0 == x1:
-        return (x0, 0), (x0, max_y), 0
-
-    a, b = solve_line(point0, point1)
-    top = (round(-b / a), 0)
-    bottom = (round((max_y - b) / a), max_y)
-    x_diff = abs(bottom[0] - top[0])
-    return top, bottom, x_diff
-
-
-def extrapolate_horizontal(point0, point1, image: np.ndarray) -> Tuple[Tuple[int, int], Tuple[int, int], int]:
-    """
-    Extrapolate to the left and right edges.
-    :param point0:
-    :param point1:
-    :param image:
-    :return: left_point, right_point, vertical_difference
-    """
-    max_x, max_y = get_maxima(image)
-    a, b = solve_line(point0, point1)
-
-    left = (0, round(b))
-    right = (max_x, round(a * max_x + b))
-    y_diff = abs(right[1] - left[1])
-
-    return left, right, y_diff
-
-
 def measure(line0):
     """
     Measure the length and direction of a line (CW from +x axis).
@@ -99,12 +57,13 @@ def measure(line0):
     :param line0: (x0, y0, x1, y1) format returned by HoughLinesP
     :return: degrees, length, line (rounded to int)
     """
-    line1 = [round(item) for item in line0]
     dy = line0[3] - line0[1]
     dx = line0[2] - line0[0]
     angle = math.degrees(math.atan2(dy, dx))
+    angle = normalize_angle(angle)
     # Pythagoras
     length = math.sqrt(dy * dy + dx * dx)
+    line1 = [round(item) for item in line0]
     return angle, length, line1
 
 
@@ -122,63 +81,23 @@ def normalize_angle(angle):
     return angle
 
 
-def within_line_limits(line, left_limit: int, right_limit: int, top_limit: int, bottom_limit: int) -> bool:
-    left = min(line[2][0], line[2][2])
-    right = max(line[2][0], line[2][2])
-    top = min(line[2][1], line[2][3])
-    bottom = max(line[2][1], line[2][3])
-    return (left >= left_limit) and (right <= right_limit) and (top >= top_limit) and (bottom <= bottom_limit)
-
-
-def is_nearly_horizontal(angle, tolerance):
-    norm_angle = normalize_angle(angle)
-    return (0 - tolerance) < norm_angle < (0 + tolerance)
-
-
-def is_nearly_vertical(angle, tolerance):
-    norm_angle = normalize_angle(angle)
-    return (90 - tolerance) < norm_angle < (90 + tolerance)
-
-
-def get_maxima(image: np.ndarray) -> Tuple[int, int]:
-    return image.shape[0] - 1, image.shape[1] - 1
-
-
-def binned_mode(values, bins=10, range=None) -> float:
+def binned_mode(values, bins=10, bin_range=None) -> float:
     """
     Make histogram bins and find the mode.
     :param values:
     :param bins: number of bins
-    :param range: (otherwise determined from values)
+    :param bin_range: (otherwise determined from values)
     :return: the mode
     """
     # TODO maybe implement the proper histogram mode formula
     # https://www.statology.org/histogram-mode/
-    if range:
-        range0 = range
+    if bin_range:
+        range0 = bin_range
     else:
         range0 = (min(values), max(values))
     counts, lefts = np.histogram(values, bins=bins, range=range0)
     i = counts.argmax()
     return (lefts[i] + lefts[i + 1]) / 2.0
-
-
-def most_frequent_values(values, interval, end, count):
-    """
-    Bin the values histogram-style and return the middles and
-    counts of the most frequent bins
-    :param values: sequence of values
-    :param interval: bin size
-    :param end: high value of highest bin
-    :param count: number of values to return
-    :return:
-    """
-    bins = range(0, end, interval)
-    counts, edges = np.histogram(values, bins=bins)
-    middles = [round((edges[i] + edges[i + 1]) / 2) for i in range(len(edges) - 1)]
-    d = {middles[i]: counts[i] for i in range(len(counts)) if (counts[i] > 0)}
-    c = Counter(d)
-    return c.most_common(count)
 
 
 def identify_image_sides(image_median, left_median, right_median,
@@ -357,15 +276,7 @@ def get_right_cutoff(medians, edge_type, overall_median, config) -> int:
 
 def rotate_correct(image: np.ndarray, config: dict, output_dir: str, output_prefix: str,
                    sheet_info: dict) -> np.ndarray:
-    canny_min = config['rotation']['canny_min']
-    canny_max = config['rotation']['canny_max']
-    canny_aperture = config['rotation']['canny_aperture']
-    hough_threshold = config['rotation']['hough_threshold']
-    hough_min_length = config['rotation']['hough_min_length']
-    hough_max_gap = config['rotation']['hough_max_gap']
     deviation = config['rotation']['deviation']
-    hough_theta = config['rotation']['hough_resolution_degrees'] * np.pi / 180
-    hough_rho = config['rotation']['hough_resolution_pixels']
     mode_bins = config['rotation']['mode_bins']
     ignore_sides_fraction = config['rotation']['ignore_sides_fraction']
     ignore_top_fraction = config['rotation']['ignore_top_fraction']
@@ -374,24 +285,19 @@ def rotate_correct(image: np.ndarray, config: dict, output_dir: str, output_pref
     right_limit = round(image.shape[1] * (1 - ignore_sides_fraction))
     top_limit = round(image.shape[0] * ignore_top_fraction)
     bottom_limit = round(image.shape[0] * (1- ignore_bottom_fraction))
-    dst = cv2.Canny(image, threshold1=canny_min, threshold2=canny_max,
-                    apertureSize=canny_aperture, L2gradient=True)
-    lines = cv2.HoughLinesP(dst, rho=hough_rho, theta=hough_theta, threshold=hough_threshold,
-                            minLineLength=hough_min_length, maxLineGap=hough_max_gap)
-    measured_lines = [measure(line[0]) for line in lines.tolist()]
-    h_lines = [line for line in measured_lines
-               if (is_nearly_horizontal(line[0], deviation) and
-                   within_line_limits(line, left_limit, right_limit, top_limit, bottom_limit))]
+    # TODO investigate parameters
+    lines = line_detection.detect_lines_within(image, left_limit, right_limit, top_limit, bottom_limit)
+    horizontal_lines = line_detection.keep_horizontal(lines, deviation)
     # debug: save the hlines image
     if config['debug']:
         debug_image_path = os.path.join(output_dir, f'{output_prefix}_0_hlines.png')
-        hline_image = generate_hlines_image(image, h_lines)
+        hline_image = generate_hlines_image(image, horizontal_lines)
         print(f'Writing {debug_image_path}')
         cv2.imwrite(debug_image_path, hline_image)
     # find the binned mode of angles and rotate
-    angles = [d[0] for d in h_lines]
+    angles = [line.angle for line in horizontal_lines]
     angle_octiles = np.quantile(angles, EIGHTHS)
-    rotation = binned_mode(angles, bins=mode_bins, range=(-deviation, deviation))
+    rotation = binned_mode(angles, bins=mode_bins, bin_range=(-deviation, deviation))
     rotation = round(rotation, 3)
     if abs(rotation) > MIN_ROTATION:
         print(f'Rotating {rotation:.3f} degrees')
@@ -410,7 +316,8 @@ def rotate_correct(image: np.ndarray, config: dict, output_dir: str, output_pref
     return output
 
 
-def erase_margins(image: np.ndarray, config):
+def erase_margins(image: np.ndarray, config: dict, sheet_info: dict):
+    margin_log = dict()
     # set some values
     image_median = round(np.median(image))
     x_max = image.shape[1] - 1
@@ -432,120 +339,130 @@ def erase_margins(image: np.ndarray, config):
     left_median, right_median, very_left_median, very_right_median = get_edge_medians(image, config)
     print(f'Medians: left {left_median}, very left {very_left_median}, '
           f'right {right_median}, very right {very_right_median}')
+    margin_log['medians'] = {'image': image_median,
+                             'left': left_median,
+                             'right': right_median,
+                             'very_left': very_left_median,
+                             'very_right': very_right_median}
+
     side_types = identify_image_sides(image_median, left_median, right_median,
                                       very_left_median, very_right_median, config)
+    margin_log['sides'] = {'left': side_types[0],
+                           'right': side_types[1]}
     v_medians = smoothed_vertical_medians(modified_image, config)
     left_cutoff = get_left_cutoff(v_medians, side_types[0], image_median, config)
     right_cutoff = get_right_cutoff(v_medians, side_types[1], image_median, config)
     found_width = right_cutoff - left_cutoff
     print(f'Detected cutoffs: left {left_cutoff}, right {right_cutoff}, width {found_width}')
     min_width = config['margin_detection']['min_width']
+    margin_log['detected'] = {'left': left_cutoff,
+                              'right': right_cutoff,
+                              'width': found_width,
+                              'min_width': min_width}
     if found_width < min_width:
-        adjustment = (found_width - min_width) // 2
-        left_cutoff -= adjustment
-        right_cutoff += adjustment
-        print(f'Adjusted cutoffs: left {left_cutoff}, right {right_cutoff}')
+        difference = min_width - found_width
+        if side_types[0] == 'light':
+            left_cutoff -= difference
+        elif side_types[1] == 'light':
+            right_cutoff += difference
+        else:
+            left_cutoff -= difference // 2
+            right_cutoff += difference // 2
+        print(f'Modified cutoffs: left {left_cutoff}, right {right_cutoff}, width {right_cutoff - left_cutoff}')
+        margin_log['modified'] = {'left': left_cutoff,
+                                  'right': right_cutoff,
+                                  'width': right_cutoff - left_cutoff}
     # and erase the left and right margins
-    for x in range(0, left_cutoff + 1):
+    for x in range(0, left_cutoff):
         cv2.line(modified_image, (x, 0), (x, y_max), image_median, 1)
     for x in range(right_cutoff, image.shape[1]):
         cv2.line(modified_image, (x, 0), (x, y_max), image_median, 1)
     print(f'Cutoffs: left {left_cutoff}, right {right_cutoff}, top {top_cutoff}, bottom {bottom_cutoff}')
+    sheet_info['margin_handling'] = margin_log
     return modified_image, (left_cutoff, right_cutoff, top_cutoff, bottom_cutoff)
-
-
-def keep_horizontal_or_vertical(measured_line, tolerance, line_type: str, cutoffs):
-    # cutoffs: left, right, top, bottom
-    angle = measured_line[0]
-    # ML: degrees 90 up, length,  line (x0, y0, x1, y1)
-    x = (measured_line[2][0] + measured_line[2][2]) / 2
-    y = (measured_line[2][1] + measured_line[2][3]) / 2
-    left = min(measured_line[2][0], measured_line[2][2])
-    right = max(measured_line[2][0], measured_line[2][2])
-    top = min(measured_line[2][1], measured_line[2][3])
-    bottom = max(measured_line[2][1], measured_line[2][3])
-    if line_type == 'horizontal':
-        result = (is_nearly_horizontal(angle, tolerance) and (cutoffs[2] < y < cutoffs[3]) and
-                  (left > cutoffs[0]) and (right < cutoffs[1]))
-    elif line_type == 'vertical':
-        result = (is_nearly_vertical(angle, tolerance) and (cutoffs[0] < x < cutoffs[1]) and
-                  (top > cutoffs[2]) and (bottom < cutoffs[3]))
-    else:
-        raise ValueError(f'Unrecognized line type: {line_type}')
-    return result
 
 
 def get_lined_image_for_registration(image: np.ndarray, config: dict, cutoffs: tuple) -> np.ndarray:
     """
-    Generate a black on white image of horizontal and vertical lines for registration by
-    phase cross correlation.
+    Generate a black on white image of horizontal and vertical lines (for
+    subsequent registration by phase cross correlation).
     :param image: input image
     :param config: configuration parameters
     :param cutoffs: tuple of horizontal and vertical lines coordinates
-    :return: b/w image
+    :return: white image with black lines for registration
     """
-    horizontal_lines = get_lines_for_registration(image, config, cutoffs, 'horizontal')
-    vertical_lines = get_lines_for_registration(image, config, cutoffs, 'vertical')
+    lines = line_detection.detect_lines_within(image, *cutoffs)
+    h_tolerance = config['registration']['horizontal']['deviation']
+    v_tolerance = config['registration']['vertical']['deviation']
+    h_and_v_lines = line_detection.keep_horizontal_and_vertical(lines, h_tolerance, v_tolerance)
+    # create white image
     new_image = np.full(image.shape, 255, dtype="uint8")
-    for line in horizontal_lines + vertical_lines:
-        cv2.line(new_image, (line[2][0], line[2][1]), (line[2][2], line[2][3]), (0,), 3)
+    # superimpose black lines
+    for line in h_and_v_lines:
+        cv2.line(new_image, (line.x0, line.y0), (line.x1, line.y1), (0,), 3)
     return new_image
 
 
-def get_registration_width(registration_image: np.ndarray, sheet_info: dict) -> Tuple[int, np.ndarray]:
+def get_registration_width(registration_image: np.ndarray, sheet_info: dict,
+                           percentile: float, cutoffs: Tuple[int, int, int, int],
+                           max_header_width: int) -> Tuple[int, np.ndarray, Tuple[int, int], np.ndarray]:
     """
     Determine the width of the header box detected from the muster image.
     :param registration_image: input image (generated by line segment detection)
     :param sheet_info:
+    :param percentile: percentile of column values for determining left and right edges of header
+    :param cutoffs left, right, top, bottom of search box for header
+    :param max_header_width: maximum allowed width of header box
     :return: the width of the header box (to be used for rescaling)
     """
-    # "flatten" the image vertically and count white pixels
+    # sum the image vertically and count white pixels
     column_total = registration_image.sum(axis=0)
     column_counts_white = np.floor_divide(column_total, 255)
-    # subtract to get black pixels (dtype now int64)
-    column_counts = registration_image.shape[0] - column_counts_white
-    # number of black pixels in each column
-    threshold = np.percentile(column_counts, 25)
-    print(f'Column threshold {threshold}, min {column_counts.min()}, max {column_counts.max()}')
-    strong_columns = np.asarray(column_counts > threshold).nonzero()[0]
+    # subtract to get nbr of black pixels (dtype is now int64) in each column
+    column_counts_black = registration_image.shape[0] - column_counts_white
+    # for threshold calculation, only use the area within the box
+    column_counts_usable = column_counts_black[cutoffs[0]:cutoffs[1]]
+    threshold = np.percentile(column_counts_usable, percentile)
+    print(f'Column threshold {threshold}, min {column_counts_black.min()}, max {column_counts_black.max()}')
+    # https://stackoverflow.com/questions/76786670/what-is-the-difference-between-threshold-and-prominence-in-scipy-find-peaks
+    strong_columns = signal.find_peaks(column_counts_black, prominence=threshold)[0]
     # np.where equivalent returns a singleton tuple here
     # https://numpy.org/doc/stable/reference/generated/numpy.nonzero.html#numpy.nonzero
     # https://numpy.org/doc/stable/reference/generated/numpy.where.html
-    print('Strong columns:', strong_columns)
-    first, last = strong_columns[0], strong_columns[-1]
-    box_width = last - first
-    print(f'Box width: {box_width}')
-    octiles = np.quantile(column_counts, EIGHTHS)
-    nonzero = np.asarray(column_counts > 0).nonzero()[0]
-    rescaling = {'octiles': octiles,
-                 'strong_edges': [first, last],
+    strong_left, strong_right, box_width, edge_log = determine_header_width(strong_columns, max_header_width)
+    # IMPORTANT, PENDING
+    # TODO use max_header_width, probably to suppress the LH edge
+    octiles = np.quantile(column_counts_black, EIGHTHS)
+    nonzero = np.asarray(column_counts_black > 0).nonzero()[0]
+    rescaling = {'black_octiles': octiles,
+                 'strong_edges': [[strong_left, column_counts_black[strong_left]],
+                                  [strong_right, column_counts_black[strong_right]]],
+                 'percentile': percentile,
                  'threshold': threshold,
-                 'nonzero_range': [nonzero[0], nonzero[-1]],
-                 'box_width': box_width}
+                 'peaks': strong_columns,
+                 'edge_log': edge_log,
+                 'nonzero_range': [[nonzero[0], column_counts_black[nonzero[0]]],
+                                   [nonzero[-1], column_counts_black[nonzero[-1]]]],
+                 'box_width_found': box_width,
+                 'box_width_max': max_header_width}
     sheet_info['rescaling'] = rescaling
-    return box_width, column_counts
+    return box_width, column_counts_black, (strong_left, strong_right), octiles
 
 
-def get_lines_for_registration(image: np.ndarray, config: dict, cutoffs: tuple, line_type: str) -> list:
-    """
-    Get horizontal or vertical lines using the specific configuration parameters.
-    :param image: input image
-    :param config: configuration parameters
-    :param cutoffs: tuple of horizontal and vertical lines coordinates
-    :param line_type: 'horizontal' or 'vertical'
-    :return: list of measured lines
-    """
-    if line_type not in ['horizontal', 'vertical']:
-        raise ValueError(f'Type {line_type} is not horizontal or vertical!')
-    # TODO investigate parameters
-    lines_and_stuff = LSD.detect(image)
-    # TODO see if the other stuff is useful
-    lines = lines_and_stuff[0]
-    deviation = config['registration'][line_type]['deviation']
-    measured_lines = [measure(line[0]) for line in lines.tolist()]
-    keep_lines = [line for line in measured_lines if keep_horizontal_or_vertical(line, deviation,
-                                                                                 line_type, cutoffs)]
-    return keep_lines
+def determine_header_width(strong_columns: np.ndarray, max_header_width: int) -> Tuple[int, int, int, list]:
+    print('Strong columns:', strong_columns)
+    left_index = 0
+    strong_left, strong_right = strong_columns[left_index], strong_columns[-1]
+    box_width = strong_right - strong_left
+    print(f'Using: {strong_left}, {strong_right} -> {box_width} [{max_header_width}]')
+    log = [(strong_left, strong_right, box_width, max_header_width)]
+    while box_width > max_header_width:
+        left_index += 1
+        strong_left = strong_columns[left_index]
+        box_width = strong_right - strong_left
+        log.append((strong_left, strong_right, box_width, max_header_width))
+        print(f'Using: {strong_left}, {strong_right} -> {box_width} [{max_header_width}]')
+    return strong_left, strong_right, box_width, log
 
 
 def adjust_muster_to_template(image: np.ndarray, template: np.ndarray,
@@ -563,7 +480,7 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray,
     :param sheet_info: cumulative log of sheet processing
     """
     modified_image = rotate_correct(image, config, output_dir, output_prefix, sheet_info)
-    modified_image, cutoffs = erase_margins(modified_image, config)
+    modified_image, cutoffs = erase_margins(modified_image, config, sheet_info)
     # cutoffs (left, right, top, bottom)
     adjusted_cutoffs = (cutoffs[0] + config['registration']['cutoff_adjustments']['left'],
                         cutoffs[1] - config['registration']['cutoff_adjustments']['right'],
@@ -575,10 +492,15 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray,
     sheet_info['cutoffs'] = {'outer': cutoffs, 'inner': adjusted_cutoffs}
     # Detect H & V lines for the dark boxes at the top of the form
     registration_image = get_lined_image_for_registration(modified_image, config, adjusted_cutoffs)
-    muster_box_width, column_counts = get_registration_width(registration_image, sheet_info)
-
+    percentile = config['registration']['percentile']
+    max_header_factor = config['registration']['max_header_factor']
+    max_header_width = round(template_form_width * max_header_factor)
+    muster_box_width, column_counts, header_edges, registration_octiles = get_registration_width(registration_image,
+                                                                                                 sheet_info, percentile,
+                                                                                                 adjusted_cutoffs,
+                                                                                                 max_header_width)
     rescale_factor = template_form_width / muster_box_width
-    sheet_info['rescale'] = rescale_factor
+    sheet_info['rescaling']['rescale'] = rescale_factor
     print(f'Template box width {template_form_width} vs muster {muster_box_width} -> rescale {rescale_factor:.3f}')
     # rescale muster image but only horizontally to match the template
     print(f'Before clipped_zoom {modified_image.shape}')
@@ -601,7 +523,8 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray,
 
     if config['debug']:
         debug_image_path = os.path.join(output_dir, f'{output_prefix}_1_cutoffs.png')
-        debug_image = mark_cutoffs(modified_image, cutoffs, adjusted_cutoffs, registration_image, sheet_info)
+        debug_image = mark_cutoffs(modified_image, cutoffs, adjusted_cutoffs, registration_image,
+                                   column_counts, header_edges, registration_octiles)
         print(f'Writing {debug_image_path}')
         cv2.imwrite(debug_image_path, debug_image)
         columns_path = os.path.join(output_dir, f'{output_prefix}_1_columns.json')
@@ -628,40 +551,54 @@ def superimpose(shifted_image: np.ndarray, form: np.ndarray) -> np.ndarray:
 
 def mark_cutoffs(image: np.ndarray, outer: tuple, inner: tuple,
                  registration_image: np.ndarray,
-                 sheet_info: dict) -> np.ndarray:
+                 column_counts: np.ndarray, header_edges: Tuple[int, int],
+                 registration_octiles: np.ndarray) -> np.ndarray:
     """
     Superimpose the form in blue on the image
     :param image: grayscale image
     :param outer: (left, right, top, bottom)
     :param inner: (left, right, top, bottom)
     :param registration_image: H & V lines detected
-    :param sheet_info: cumulative log of sheet processing
+    :param column_counts: darkness of columns within general header zone
+    :param header_edges: left and right edges of found header for rescaling
+    :param registration_octiles: octiles of column values for debugging
     :return: merged RGB image
     """
-    left0, right0, top0, bottom0 = outer
-    left1, right1, top1, bottom1 = inner
+    left_outer, right_outer, top_outer, bottom_outer = outer
+    left_inner, right_inner, top_inner, bottom_inner = inner
     output = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
     print(f'Debugging mark_cutoffs: {output.shape}')
-    # mark the margins
-    cv2.line(output, (left0, top0), (right0, top0), RED, 3)
-    cv2.line(output, (right0, top0), (right0, bottom0), RED, 3)
-    cv2.line(output, (right0, bottom0), (left0, bottom0), RED, 3)
-    cv2.line(output, (left0, bottom0), (left0, top0), RED, 3)
-    # mark the adjusted ones
-    cv2.line(output, (left1, top1), (right1, top1), RED, 3)
-    cv2.line(output, (right1, top1), (right1, bottom1), RED, 3)
-    cv2.line(output, (right1, bottom1), (left1, bottom1), RED, 3)
-    cv2.line(output, (left1, bottom1), (left1, top1), RED, 3)
+    # mark the margins (erased outside these)
+    cv2.line(output, (left_outer, top_outer), (right_outer, top_outer), RED, 3)
+    cv2.line(output, (right_outer, top_outer), (right_outer, bottom_outer), RED, 3)
+    cv2.line(output, (right_outer, bottom_outer), (left_outer, bottom_outer), RED, 3)
+    cv2.line(output, (left_outer, bottom_outer), (left_outer, top_outer), RED, 3)
+    # mark the adjusted cutoffs (area used for header registration)
+    cv2.line(output, (left_inner, top_inner), (right_inner, top_inner), RED, 3)
+    cv2.line(output, (right_inner, top_inner), (right_inner, bottom_inner), RED, 3)
+    cv2.line(output, (right_inner, bottom_inner), (left_inner, bottom_inner), RED, 3)
+    cv2.line(output, (left_inner, bottom_inner), (left_inner, top_inner), RED, 3)
     # copy the H & V lines detected
     output[np.where(registration_image == 0)] = BLUE
     # draw green lines above the detected box edges
-    strong_edges = sheet_info['rescaling']['strong_edges']  # left, right
-    cv2.line(output, (strong_edges[0], top0), (strong_edges[0], top1), GREEN, 3)
-    cv2.line(output, (strong_edges[1], top0), (strong_edges[1], top1), GREEN, 3)
+    cv2.line(output, (header_edges[0], top_outer), (header_edges[0], top_inner), GREEN, 3)
+    cv2.line(output, (header_edges[1], top_outer), (header_edges[1], top_inner), GREEN, 3)
+    # mark the column counts used for determining the header width
+    scale_v = (top_outer - 1) / column_counts.max()
+    # plot the registration values across the top
+    for x, count in enumerate(column_counts):
+        y = round(scale_v * count)
+        cv2.line(output, (x, 0), (x, y), GREEN, 1)
+    # mark the registration octiles on the left
+    scale_h = (left_outer - 5) / (registration_octiles.shape[0] + 1)
+    for i, y in enumerate(registration_octiles):
+        x1 = round(scale_h * (i + 1))
+        y1 = round(scale_v * y)
+        cv2.line(output, (0, y1), (x1, y1), GREEN, 1)
     return output
 
 
-def generate_hlines_image(image: np.ndarray, hlines: list) -> np.ndarray:
+def generate_hlines_image(image: np.ndarray, hlines: List[line_detection.Line]) -> np.ndarray:
     """
     Superimpose the near-horizontal lines on the image
     :param image: grayscale image
@@ -671,8 +608,8 @@ def generate_hlines_image(image: np.ndarray, hlines: list) -> np.ndarray:
     # angle, length, [x0, y0, x1, y1]
     output = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
     for line in hlines:
-        p0 = (line[2][0], line[2][1])
-        p1 = (line[2][2], line[2][3])
+        p0 = (line.x0, line.y0)
+        p1 = (line.x1, line.y1)
         cv2.line(output, p0, p1, BLUE, 1)
     return output
 
@@ -794,24 +731,25 @@ def rescale_horizontally(image: np.ndarray, scale: float) -> np.ndarray:
 
 
 def find_hlines(image: np.ndarray, config: dict, y_min: int, y_max: int,
-                y_ref_line: int) -> np.ndarray:
+                y_ref_line: int) -> Tuple[np.ndarray, np.ndarray]:
     """
     Use the slightly smoothed mean pixel value of the middle half of the image to find
     row boundaries (which are brighter than the content).
     :param image: grayscale image
     :param config: config parameters
-    :param y_min: minimum y-coordinate (taken from template)
-    :param y_max: maximum y-coordinate (taken from template)
+    :param y_min: minimum y-coordinate (derived from template)
+    :param y_max: maximum y-coordinate (from template)
+    :param y_ref_line: top of top row according to the template
     :return: row cutoffs
     """
     left_cut = image.shape[1] // 4
     middle_half = image[:, left_cut: -left_cut]
     horizontal_means = np.mean(middle_half, axis=1)
-    window_size = config['registration']['hlines']['smoothing_window']
+    window_size = config['row_detection']['smoothing_window']
     window = np.ones(window_size) / window_size
     horizontal_means = np.convolve(horizontal_means, window, 'same')
-    min_distance = config['registration']['hlines']['min_distance']
-    max_distance = config['registration']['hlines']['max_distance']
+    min_distance = config['row_detection']['min_distance']
+    max_distance = config['row_detection']['max_distance']
     peaks = signal.find_peaks(horizontal_means, distance=min_distance)[0]
     peaks = peaks[np.where(peaks > y_min)]
     peaks = peaks[np.where(peaks < y_max)]
@@ -820,7 +758,7 @@ def find_hlines(image: np.ndarray, config: dict, y_min: int, y_max: int,
         peaks[0] = min(y_ref_line, peaks[0])
     else:
         peaks = np.insert(peaks, 0, y_ref_line)
-    return peaks
+    return peaks, horizontal_means
 
 
 def interpolate_hlines(peaks: np.ndarray, max_distance: int) -> np.ndarray:
