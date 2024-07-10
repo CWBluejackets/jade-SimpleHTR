@@ -295,7 +295,9 @@ def rotate_correct(image: np.ndarray, config: dict, output_dir: str, output_pref
     angle_octiles = np.quantile(angles, EIGHTHS)
     rotation = binned_mode(angles, bins=mode_bins, bin_range=(-deviation, deviation))
     rotation = round(rotation, 3)
-    apply_rotation = (abs(rotation) > MIN_ROTATION)
+    # https://stackoverflow.com/questions/58408054/typeerror-object-of-type-bool-is-not-json-serializable
+    # TypeError: Object of type bool_ is not JSON serializable
+    apply_rotation = bool(abs(rotation) > MIN_ROTATION)
     if apply_rotation:
         print(f'Rotating {rotation:.3f} degrees')
         # ndimage angle in degrees
