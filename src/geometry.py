@@ -277,11 +277,12 @@ def rotate_correct(image: np.ndarray, config: dict, output_dir: str, output_pref
                    sheet_info: dict) -> np.ndarray:
     deviation = config['rotation']['deviation']
     mode_bins = config['rotation']['mode_bins']
+    margin_adjustment = config['rotation']['margin_adjustment']
     left_cutoff, right_cutoff, top_cutoff, bottom_cutoff, margin_log = detect_margins(image, config)
-    left_limit = left_cutoff + 5
-    right_limit = right_cutoff - 5
-    top_limit = top_cutoff + 5
-    bottom_limit = bottom_cutoff - 5
+    left_limit = left_cutoff + margin_adjustment
+    right_limit = right_cutoff - margin_adjustment
+    top_limit = top_cutoff + margin_adjustment
+    bottom_limit = bottom_cutoff - margin_adjustment
     lines = line_detection.detect_lines_within(image, left_limit, right_limit, top_limit, bottom_limit)
     horizontal_lines = line_detection.keep_horizontal(lines, deviation)
     # debug: save the hlines image

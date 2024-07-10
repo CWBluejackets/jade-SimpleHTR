@@ -4,9 +4,7 @@
   "template_directory": "templates",
   "rotation": {
     "deviation": 2,
-    "ignore_sides_fraction": 0.15,
-    "ignore_top_fraction": 0.05,
-    "ignore_bottom_fraction": 0.05,
+    "margin_adjustment": 10,
     "mode_bins": 21
   },
   "margin_detection": {
