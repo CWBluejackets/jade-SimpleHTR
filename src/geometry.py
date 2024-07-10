@@ -277,14 +277,11 @@ def rotate_correct(image: np.ndarray, config: dict, output_dir: str, output_pref
                    sheet_info: dict) -> np.ndarray:
     deviation = config['rotation']['deviation']
     mode_bins = config['rotation']['mode_bins']
-    ignore_sides_fraction = config['rotation']['ignore_sides_fraction']
-    ignore_top_fraction = config['rotation']['ignore_top_fraction']
-    ignore_bottom_fraction = config['rotation']['ignore_bottom_fraction']
-    left_limit = round(image.shape[1] * ignore_sides_fraction)
-    right_limit = round(image.shape[1] * (1 - ignore_sides_fraction))
-    top_limit = round(image.shape[0] * ignore_top_fraction)
-    bottom_limit = round(image.shape[0] * (1- ignore_bottom_fraction))
-    # TODO investigate parameters
+    left_cutoff, right_cutoff, top_cutoff, bottom_cutoff, margin_log = detect_margins(image, config)
+    left_limit = left_cutoff + 5
+    right_limit = right_cutoff - 5
+    top_limit = top_cutoff + 5
+    bottom_limit = bottom_cutoff - 5
     lines = line_detection.detect_lines_within(image, left_limit, right_limit, top_limit, bottom_limit)
     horizontal_lines = line_detection.keep_horizontal(lines, deviation)
     # debug: save the hlines image
@@ -298,21 +295,68 @@ def rotate_correct(image: np.ndarray, config: dict, output_dir: str, output_pref
     angle_octiles = np.quantile(angles, EIGHTHS)
     rotation = binned_mode(angles, bins=mode_bins, bin_range=(-deviation, deviation))
     rotation = round(rotation, 3)
-    if abs(rotation) > MIN_ROTATION:
+    apply_rotation = (abs(rotation) > MIN_ROTATION)
+    if apply_rotation:
         print(f'Rotating {rotation:.3f} degrees')
         # ndimage angle in degrees
         # https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.rotate.html#scipy.ndimage.rotate
         output = ndimage.rotate(image, angle=rotation, reshape=False)
-        sheet_info['rotation'] = {'degrees': rotation,
-                                  'applied': True,
-                                  'octiles': angle_octiles}
     else:
         print(f'Ignoring {rotation:.3f} degrees')
         output = image
-        sheet_info['rotation'] = {'degrees': rotation,
-                                  'applied': False,
-                                  'octiles': angle_octiles}
+    sheet_info['rotation'] = {'degrees': rotation,
+                              'applied': apply_rotation,
+                              'octiles': angle_octiles,
+                              'margins': margin_log}
     return output
+
+
+def detect_margins(image: np.ndarray, config: dict) -> Tuple[int, int, int, int, dict]:
+    margin_log = dict()
+    # set some values
+    image_median = round(np.median(image))
+    print(f'Median: {image_median}')
+
+    # scan horizontal lines
+    top_cutoff, bottom_cutoff = get_top_bottom_cutoffs(image, config)
+    # scan vertical lines
+    left_median, right_median, very_left_median, very_right_median = get_edge_medians(image, config)
+    print(f'Medians: left {left_median}, very left {very_left_median}, '
+          f'right {right_median}, very right {very_right_median}')
+    margin_log['medians'] = {'image': image_median,
+                             'left': left_median,
+                             'right': right_median,
+                             'very_left': very_left_median,
+                             'very_right': very_right_median}
+
+    side_types = identify_image_sides(image_median, left_median, right_median,
+                                      very_left_median, very_right_median, config)
+    margin_log['sides'] = {'left': side_types[0],
+                           'right': side_types[1]}
+    v_medians = smoothed_vertical_medians(image, config)
+    left_cutoff = get_left_cutoff(v_medians, side_types[0], image_median, config)
+    right_cutoff = get_right_cutoff(v_medians, side_types[1], image_median, config)
+    found_width = right_cutoff - left_cutoff
+    print(f'Detected cutoffs: left {left_cutoff}, right {right_cutoff}, width {found_width}')
+    min_width = config['margin_detection']['min_width']
+    margin_log['detected'] = {'left': left_cutoff,
+                              'right': right_cutoff,
+                              'width': found_width,
+                              'min_width': min_width}
+    if found_width < min_width:
+        difference = min_width - found_width
+        if side_types[0] == 'light':
+            left_cutoff -= difference
+        elif side_types[1] == 'light':
+            right_cutoff += difference
+        else:
+            left_cutoff -= difference // 2
+            right_cutoff += difference // 2
+        print(f'Modified cutoffs: left {left_cutoff}, right {right_cutoff}, width {right_cutoff - left_cutoff}')
+        margin_log['modified'] = {'left': left_cutoff,
+                                  'right': right_cutoff,
+                                  'width': right_cutoff - left_cutoff}
+    return left_cutoff, right_cutoff, top_cutoff, bottom_cutoff, margin_log
 
 
 def erase_margins(image: np.ndarray, config: dict, sheet_info: dict):
