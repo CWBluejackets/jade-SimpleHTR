@@ -2,7 +2,6 @@
 import json
 import math
 import os
-from collections import Counter
 from typing import Tuple, List
 
 import cv2
@@ -10,8 +9,8 @@ import numpy as np
 from scipy import ndimage, signal
 from skimage.registration import phase_cross_correlation
 
-from utils import NumpyJsonEncoder, EIGHTHS, RED, GREEN, BLACK, BLUE
 import line_detection
+from utils import NumpyJsonEncoder, EIGHTHS, RED, GREEN, BLACK, BLUE
 
 # point = (x, y)
 # in cv2, y = 0 at the top
