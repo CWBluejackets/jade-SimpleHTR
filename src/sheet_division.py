@@ -76,8 +76,8 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
     hline_y_min = template['hline_detection']['y_min']
     hline_y_max = template['hline_detection']['y_max']
     y_ref_line = template['y_ref_line']
-    row_y_values, horizontal_means = geometry.find_hlines(registered_image, config, hline_y_min,
-                                                          hline_y_max, y_ref_line)
+    row_y_values, horizontal_means = geometry.find_row_boundaries(registered_image, config, hline_y_min,
+                                                                  hline_y_max, y_ref_line)
     sheet_info['row_detection'] = {'y_values': row_y_values,
                                    'diffs': row_y_values[1:] - row_y_values[:-1]}
     if config['debug']:

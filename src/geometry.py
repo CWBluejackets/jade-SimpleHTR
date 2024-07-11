@@ -718,7 +718,6 @@ def resize_image(source: np.ndarray, to_match: np.ndarray) -> np.ndarray:
     # typically (3744, 5616)
     if source.shape == to_match.shape:
         return source
-    # TODO
     output = source
     target_height, target_width = to_match.shape
     source_height, source_width = source.shape
@@ -729,24 +728,24 @@ def resize_image(source: np.ndarray, to_match: np.ndarray) -> np.ndarray:
         j = i + target_height
         output = output[i:j, :]
     elif source_height < target_height:
-        output = dup_rows(output, target_height - source_height)
+        output = duplicate_rows(output, target_height - source_height)
     if source_width > target_width:
         i = round((source_width - target_width) / 2)
         j = i + target_width
         output = output[:, i:j]
     elif source_width < target_width:
-        output = dup_cols(output, target_width - source_width)
+        output = duplicate_columns(output, target_width - source_width)
     print(f'Resized to {output.shape}')
     return output
 
 
 # https://stackoverflow.com/questions/43870647/how-to-duplicate-a-row-or-column-in-a-numpy-array
-def dup_rows(a, number=1):
+def duplicate_rows(a: np.ndarray, number=1) -> np.ndarray:
     index = a.shape[0] - 1
     return np.insert(a, [index + 1] * number, a[index], axis=0)
 
 
-def dup_cols(a, number=1):
+def duplicate_columns(a: np.ndarray, number=1) -> np.ndarray:
     index = a.shape[1] - 1
     return np.insert(a, [index + 1] * number, a[:, [index]], axis=1)
 
@@ -760,7 +759,7 @@ def rescale_horizontally(image: np.ndarray, scale: float) -> np.ndarray:
     """
     if scale == 1.0:
         return image
-    # y, x
+    # matrix (y, x)
     zoom_tuple = (1, scale)
     original_width = image.shape[1]
     modified_image = ndimage.zoom(image, zoom_tuple)
@@ -776,8 +775,8 @@ def rescale_horizontally(image: np.ndarray, scale: float) -> np.ndarray:
     return modified_image
 
 
-def find_hlines(image: np.ndarray, config: dict, y_min: int, y_max: int,
-                y_ref_line: int) -> Tuple[np.ndarray, np.ndarray]:
+def find_row_boundaries(image: np.ndarray, config: dict, y_min: int, y_max: int,
+                        y_ref_line: int) -> Tuple[np.ndarray, np.ndarray]:
     """
     Use the slightly smoothed mean pixel value of the middle half of the image to find
     row boundaries (which are brighter than the content).
@@ -799,7 +798,7 @@ def find_hlines(image: np.ndarray, config: dict, y_min: int, y_max: int,
     peaks = signal.find_peaks(horizontal_means, distance=min_distance)[0]
     peaks = peaks[np.where(peaks > y_min)]
     peaks = peaks[np.where(peaks < y_max)]
-    peaks = interpolate_hlines(peaks, max_distance)
+    peaks = interpolate_row_boundaries(peaks, max_distance)
     if abs(y_ref_line - peaks[0]) < min_distance:
         peaks[0] = min(y_ref_line, peaks[0])
     else:
@@ -807,7 +806,7 @@ def find_hlines(image: np.ndarray, config: dict, y_min: int, y_max: int,
     return peaks, horizontal_means
 
 
-def interpolate_hlines(peaks: np.ndarray, max_distance: int) -> np.ndarray:
+def interpolate_row_boundaries(peaks: np.ndarray, max_distance: int) -> np.ndarray:
     """
     Interpolate additional row boundaries where the gap exceeds max_distance.
     :param peaks: row cutoffs before interpolation

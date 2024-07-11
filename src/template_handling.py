@@ -1,15 +1,13 @@
 import json
 import os
 from collections import defaultdict
+from statistics import median
 from typing import List, Tuple
 
 import cv2
 import numpy as np
-from statistics import median
 
-import sheet_division
-from cellulation import get_cell_adjustments, get_expanded_x_values, get_expanded_y_values
-from utils import safe_imread
+from utils import safe_imread, NumpyJsonEncoder
 
 
 def find_lines(scanline: np.ndarray) -> Tuple[List[int], int]:
@@ -132,7 +130,7 @@ def add_template_info(specification: dict, template_directory, workflows, debug_
     if debug_template_path:
         print(f'Writing {debug_template_path}')
         with open(debug_template_path, 'w') as f:
-            json.dump(specification, f, indent=1, sort_keys=True, cls=sheet_division.NumpyJsonEncoder)
+            json.dump(specification, f, indent=1, sort_keys=True, cls=NumpyJsonEncoder)
     # now add the arrays
     specification['image'] = image
     specification['image_top'] = image_top
