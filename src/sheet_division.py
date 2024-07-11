@@ -10,7 +10,7 @@ import numpy as np
 
 import geometry
 from application import TrainedModel
-from utils import NumpyJsonEncoder, EIGHTHS, RED, BLUE
+from utils import NumpyJsonEncoder, EIGHTHS, RED, BLUE, safe_imread
 from cellulation import generate_cells
 
 
@@ -275,16 +275,3 @@ def write_control_file(input_path: str, output_directory: str, data: dict):
     with open(output_path, 'w') as f:
         json.dump(data, f, cls=NumpyJsonEncoder, indent=2, sort_keys=True)
     return
-
-
-def safe_imread(img_path, cv2_flags, exception_if_missing=False):
-    if os.path.exists(img_path):
-        result = cv2.imread(img_path, cv2_flags)
-    else:
-        result = None
-        message = f'File {img_path} is missing!'
-        if exception_if_missing:
-            raise FileNotFoundError(message)
-        else:
-            print(message)
-    return result

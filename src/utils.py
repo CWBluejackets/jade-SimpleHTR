@@ -1,5 +1,7 @@
 import json
+import os
 
+import cv2
 import numpy as np
 
 # used for quantile debugging
@@ -26,3 +28,16 @@ class NumpyJsonEncoder(json.JSONEncoder):
             return list(obj)
         else:
             return super(NumpyJsonEncoder, self).default(obj)
+
+
+def safe_imread(img_path, cv2_flags, exception_if_missing=False):
+    if os.path.exists(img_path):
+        result = cv2.imread(img_path, cv2_flags)
+    else:
+        result = None
+        message = f'File {img_path} is missing!'
+        if exception_if_missing:
+            raise FileNotFoundError(message)
+        else:
+            print(message)
+    return result

@@ -9,6 +9,7 @@ from statistics import median
 
 import sheet_division
 from cellulation import get_cell_adjustments, get_expanded_x_values, get_expanded_y_values
+from utils import safe_imread
 
 
 def find_lines(scanline: np.ndarray) -> Tuple[List[int], int]:
@@ -79,9 +80,9 @@ def add_template_info(specification: dict, template_directory, workflows, debug_
     specification['template_top_path'] = template_top_path
     y_ref_line = specification['y_ref_line']
     print(f'Loading template image from {template_path}')
-    image = sheet_division.safe_imread(template_path, cv2.IMREAD_GRAYSCALE)
+    image = safe_imread(template_path, cv2.IMREAD_GRAYSCALE)
     print(f'Loading template top image from {template_top_path}')
-    image_top = sheet_division.safe_imread(template_top_path, cv2.IMREAD_GRAYSCALE)
+    image_top = safe_imread(template_top_path, cv2.IMREAD_GRAYSCALE)
     # find the black column boundaries in the template
     column_lines, x_ref_line, form_width = get_column_separators(image, y_ref_line)
     specification['form_width'] = form_width
