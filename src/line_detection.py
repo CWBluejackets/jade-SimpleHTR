@@ -1,5 +1,5 @@
 import math
-from typing import List
+from typing import List, Union
 
 import cv2
 import numpy as np
@@ -25,7 +25,8 @@ def normalize_angle(angle):
 
 
 class Line:
-    def __init__(self, x0: int, y0: int, x1: int, y1: int) -> None:
+    def __init__(self, x0: Union[int, float], y0: Union[int, float],
+                 x1: Union[int, float], y1: Union[int, float]) -> None:
         self.x0 = round(x0)
         self.y0 = round(y0)
         self.x1 = round(x1)
