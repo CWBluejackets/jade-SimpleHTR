@@ -24,7 +24,7 @@
       "deviation": 3.0
     },
     "percentile": 90.0,
-    "max_header_factor": 1.02,
+    "max_header_factor": 1.01,
     "cutoff_adjustments": {
       "left": 90,
       "right": 100,
