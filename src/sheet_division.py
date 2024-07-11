@@ -76,18 +76,18 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
     hline_y_min = template['hline_detection']['y_min']
     hline_y_max = template['hline_detection']['y_max']
     y_ref_line = template['y_ref_line']
-    row_y_values, horizontal_means = geometry.find_row_boundaries(registered_image, config, hline_y_min,
+    row_y_values, horizontal_means = geometry.  find_row_boundaries(registered_image, config, hline_y_min,
                                                                   hline_y_max, y_ref_line)
     sheet_info['row_detection'] = {'y_values': row_y_values,
                                    'diffs': row_y_values[1:] - row_y_values[:-1]}
+    x_left = min(template['output_column_x_values'])
+    x_right = max(template['output_column_x_values'])
     if config['debug']:
         registration_path = os.path.join(output_dir,
                                          f'{output_prefix}_2_registration.png')
         # superimpose the header template in blue and save it for inspection
         registration_debug_2 = geometry.superimpose(registered_image, template_image)
         # superimpose the lines detected and the whiteness plot
-        x_left = min(template['output_column_x_values'])
-        x_right = max(template['output_column_x_values'])
         y_top = min(row_y_values)
         y_bottom = max(row_y_values)
         # mark the horizontal lines in red
@@ -104,21 +104,21 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
         print(f'Writing {registration_path}')
         cv2.imwrite(registration_path, registration_debug_2)
 
-    # produce median data for rows
-    row_data = dict()
-    for row_number, row_spec in template['rows'].items():
-        row_info = row_spec.copy()
-        row_key = f'{row_number:02d}'
-        row_info['median'] = np.median(registered_image[row_spec['top']: row_spec['bottom'],
-                                       row_spec['left']: row_spec['right']])
-        row_data[row_key] = row_info
-    sheet_info['rows'] = row_data
-
     previous_workflow_id = None
     model = None
     confidence_by_workflow = defaultdict(list)
 
     cell_list = generate_cells(template, workflows, row_y_values)
+    # produce median data for rows
+    row_data = dict()
+    for row_number, (top, bottom) in enumerate(zip(row_y_values, row_y_values)):
+        row_key = f'{row_number:02d}'
+        row_info = {'top': top,
+                    'bottom': bottom,
+                    'median': np.median(registered_image[top: bottom, x_left: x_right])}
+        row_data[row_key] = row_info
+    sheet_info['rows'] = row_data
+
     for cell_spec in cell_list:
         workflow_id = cell_spec['workflow']
         row = cell_spec['row']
