@@ -29,14 +29,22 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
     :return:
     """
     print(f'Reading image from {input_jpg_file}')
+    sheet_info = {'input_file': input_jpg_file}
+    output_prefix = os.path.splitext(os.path.basename(input_jpg_file))[0]
+
     try:
         form_type = image_metadata['type']
+        sheet_info['form_type'] = form_type
         print(f'SUMMARY: Form type is {form_type}')
     except KeyError:
         print(f'SUMMARY: Missing form type!')
+        sheet_info['form_type'] = '_MISSING_'
+        write_sheet_info(output_dir, output_prefix, sheet_info)
         return
     if form_type not in templates:
         print(f'SUMMARY: Form type {form_type} is not supported')
+        sheet_info['error'] = 'Form type is not supported'
+        write_sheet_info(output_dir, output_prefix, sheet_info)
         return
 
     try:
@@ -44,18 +52,17 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
                                 exception_if_missing=True)
     except FileNotFoundError:
         print(f'SUMMARY: File {input_jpg_file} not found')
+        sheet_info['error'] = 'File not found'
+        write_sheet_info(output_dir, output_prefix, sheet_info)
         return
 
-    output_prefix = os.path.splitext(os.path.basename(input_jpg_file))[0]
     template = templates[form_type]
     # now trying the top of the form
     template_image = template['image_top']
     template_form_width = template['form_width']
     print(f'Input size {image_raw.shape}; template size {template_image.shape}')
-    sheet_info = {'input_file': input_jpg_file,
-                  'form_type': form_type,
-                  'template_form_width': template_form_width,
-                  'shape': {'raw_input': image_raw.shape}}
+    sheet_info.update({'template_form_width': template_form_width,
+                       'shape': {'raw_input': image_raw.shape}})
     image_resized = geometry.resize_image(image_raw, template_image)
     registered_image = geometry.adjust_muster_to_template(image_resized, template_image,
                                                           template_form_width,
@@ -93,7 +100,7 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
         for y, h_mean in enumerate(horizontal_means):
             cv2.line(registration_debug_2, (0, y), (round(h_mean * 3), y), RED, 1)
         # mark the bottom limit from the template in blue
-        cv2.line(registration_debug_2, (255*3, hline_y_max), (x_right, hline_y_max), BLUE, 1)
+        cv2.line(registration_debug_2, (255 * 3, hline_y_max), (x_right, hline_y_max), BLUE, 1)
         print(f'Writing {registration_path}')
         cv2.imwrite(registration_path, registration_debug_2)
 
@@ -169,6 +176,11 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
                                   'count': len(all_confidences)}
         sheet_info['confidences'] = confidence_data
 
+    write_sheet_info(output_dir, output_prefix, sheet_info)
+    return
+
+
+def write_sheet_info(output_dir, output_prefix, sheet_info):
     sheet_info_file = os.path.join(output_dir, f'{output_prefix}.json')
     print(f'SUMMARY: Writing {sheet_info_file}')
     with open(sheet_info_file, 'w') as f:
