@@ -128,8 +128,6 @@ def add_template_info(specification: dict, template_directory, workflows, debug_
     specification['output_columns'] = output_columns
     specification['column_x_values'] = column_x_values
     specification['output_column_x_values'] = output_column_x_values
-    generate_cells(specification, workflows)
-    generate_rows(specification)
     # save the debug info WITHOUT the big image arrays
     if debug_template_path:
         print(f'Writing {debug_template_path}')
@@ -141,85 +139,3 @@ def add_template_info(specification: dict, template_directory, workflows, debug_
     return
 
 
-def generate_rows(specification: dict):
-    row_boundaries = specification['row_lines']
-    left = specification['output_columns'][0]['start'] + 1
-    right = specification['output_columns'][-1]['end'] - 1
-    row_data = {}
-    for row_number, (top, bottom) in enumerate(zip(row_boundaries[:-1], row_boundaries[1:])):
-        row_data[row_number] = {"top": top,
-                                "bottom": bottom,
-                                "left": left,
-                                "right": right}
-    specification['rows'] = row_data
-    pass
-
-
-def generate_cells(specification: dict, workflows: dict):
-    """
-    Add all the individual cell details to the template specification.
-    :param specification: the template to be updated
-    :param workflows: workflow specifications
-    """
-    cells = []
-    for column_number, column_details in enumerate(specification['output_columns']):
-        workflow = column_details['workflow']
-        threshold = workflows[workflow]['confidence']
-        left_adj, right_adj, top_adj, bottom_adj = get_cell_adjustments(workflow, workflows)
-        original_left = column_details['start']
-        htr_left = column_details['start']
-        original_right = column_details['end']
-        htr_right = column_details['end']
-        expanded_left, expanded_right = get_expanded_x_values(column_number, specification['output_columns'])
-        width = htr_right - htr_left
-        # 0 do nothing
-        # 0.0 < ADJ < 1.0 is a proportion of height or width
-        # 1 up is number of pixels
-        if 0 < left_adj < 1:
-            htr_left = htr_left - round(left_adj * width)
-        elif 1 <= left_adj:
-            htr_left = htr_left - left_adj
-        if 0 < right_adj < 1:
-            htr_right = htr_right + round(right_adj * width)
-        elif 1 <= right_adj:
-            htr_right = htr_right + right_adj
-        row_boundaries = specification['row_lines']
-        for row_number, (top, bottom) in enumerate(zip(row_boundaries[:-1], row_boundaries[1:])):
-            original_top = top
-            htr_top = top
-            original_bottom = bottom
-            htr_bottom = bottom
-            expanded_top, expanded_bottom = get_expanded_y_values(row_number, row_boundaries)
-            height = htr_bottom - htr_top
-            if 0 < top_adj < 1:
-                htr_top = htr_top - round(top_adj * height)
-            elif 1 <= top_adj:
-                htr_top = htr_top - top_adj
-            if 0 < bottom_adj < 1:
-                htr_bottom = htr_bottom + round(bottom_adj * height)
-            elif 1 <= bottom_adj:
-                htr_bottom = htr_bottom + bottom_adj
-            cell = {"workflow": workflow,
-                    "confidence_threshold": threshold,
-                    "column": column_number,
-                    "row": row_number,
-                    "htr": {
-                        "left": htr_left,
-                        "right": htr_right,
-                        "top": htr_top,
-                        "bottom": htr_bottom,
-                    },
-                    "original": {"left": original_left,
-                                 "right": original_right,
-                                 "top": original_top,
-                                 "bottom": original_bottom
-                                 },
-                    "expanded": {"top": max(expanded_top, 0),
-                                 "bottom": min(expanded_bottom, specification['max_y']),
-                                 "left": max(expanded_left, 0),
-                                 "right": min(expanded_right, specification['max_x'])
-                                 }
-                    }
-            cells.append(cell)
-    specification['cells'] = cells
-    return
