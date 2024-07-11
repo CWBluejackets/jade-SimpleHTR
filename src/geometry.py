@@ -573,11 +573,6 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray,
                                    column_counts, header_edges, registration_octiles)
         print(f'Writing {debug_image_path}')
         cv2.imwrite(debug_image_path, debug_image)
-        columns_path = os.path.join(output_dir, f'{output_prefix}_1_columns.json')
-        print(f'Writing {columns_path}')
-        with open(columns_path, 'w') as f:
-            json.dump(column_counts, f, cls=NumpyJsonEncoder)
-
     return fully_adjusted_image
 
 
