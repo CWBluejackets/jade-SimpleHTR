@@ -112,7 +112,7 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
 
     # produce median data for rows
     row_data = dict()
-    for row_number, (top, bottom) in enumerate(zip(row_y_values[:-1], row_y_values[1])):
+    for row_number, (top, bottom) in enumerate(zip(row_y_values[:-1], row_y_values[1:])):
         row_key = f'{row_number:02d}'
         row_info = {'top': top,
                     'bottom': bottom,
