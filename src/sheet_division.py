@@ -76,7 +76,7 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
     hline_y_min = template['hline_detection']['y_min']
     hline_y_max = template['hline_detection']['y_max']
     y_ref_line = template['y_ref_line']
-    row_y_values, horizontal_means = geometry.  find_row_boundaries(registered_image, config, hline_y_min,
+    row_y_values, horizontal_means = geometry.find_row_boundaries(registered_image, config, hline_y_min,
                                                                   hline_y_max, y_ref_line)
     sheet_info['row_detection'] = {'y_values': row_y_values,
                                    'diffs': row_y_values[1:] - row_y_values[:-1]}
@@ -109,13 +109,14 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
     confidence_by_workflow = defaultdict(list)
 
     cell_list = generate_cells(template, workflows, row_y_values)
+
     # produce median data for rows
     row_data = dict()
-    for row_number, (top, bottom) in enumerate(zip(row_y_values, row_y_values)):
+    for row_number, (top, bottom) in enumerate(zip(row_y_values[:-1], row_y_values[1])):
         row_key = f'{row_number:02d}'
         row_info = {'top': top,
                     'bottom': bottom,
-                    'median': np.median(registered_image[top: bottom, x_left: x_right])}
+                    'octiles': np.quantile(registered_image[top: bottom, x_left: x_right], EIGHTHS)}
         row_data[row_key] = row_info
     sheet_info['rows'] = row_data
 
@@ -169,10 +170,10 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
                 writer.writerow([row_no] + csv_table[row_no])
         confidence_data = dict()
         for workflow_id, confidences in confidence_by_workflow.items():
-            confidence_data[str(workflow_id)] = {'quantiles': np.quantile(confidences, EIGHTHS),
+            confidence_data[str(workflow_id)] = {'octiles': np.quantile(confidences, EIGHTHS),
                                                  'count': len(confidences)}
         all_confidences = sum(confidence_by_workflow.values(), start=[])
-        confidence_data['all'] = {'quantiles': np.quantile(all_confidences, EIGHTHS),
+        confidence_data['all'] = {'octiles': np.quantile(all_confidences, EIGHTHS),
                                   'count': len(all_confidences)}
         sheet_info['confidences'] = confidence_data
 
