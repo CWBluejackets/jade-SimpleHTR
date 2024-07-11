@@ -41,3 +41,12 @@ def safe_imread(img_path, cv2_flags, exception_if_missing=False):
         else:
             print(message)
     return result
+
+
+def write_sheet_info(output_dir, output_prefix, sheet_info):
+    sheet_info_file = os.path.join(output_dir, f'{output_prefix}.json')
+    print(f'SUMMARY: Writing {sheet_info_file}')
+    with open(sheet_info_file, 'w') as f:
+        json.dump(sheet_info, f, indent=1, sort_keys=True, cls=NumpyJsonEncoder)
+    return
+

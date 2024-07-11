@@ -10,7 +10,7 @@ import numpy as np
 
 import geometry
 from application import TrainedModel
-from utils import NumpyJsonEncoder, EIGHTHS, RED, BLUE, safe_imread
+from utils import NumpyJsonEncoder, EIGHTHS, RED, BLUE, safe_imread, write_sheet_info
 from cellulation import generate_cells
 
 
@@ -180,14 +180,6 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
         sheet_info['confidences'] = confidence_data
 
     write_sheet_info(output_dir, output_prefix, sheet_info)
-    return
-
-
-def write_sheet_info(output_dir, output_prefix, sheet_info):
-    sheet_info_file = os.path.join(output_dir, f'{output_prefix}.json')
-    print(f'SUMMARY: Writing {sheet_info_file}')
-    with open(sheet_info_file, 'w') as f:
-        json.dump(sheet_info, f, indent=1, sort_keys=True, cls=NumpyJsonEncoder)
     return
 
 

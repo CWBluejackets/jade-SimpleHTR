@@ -9,6 +9,7 @@ import os.path
 import sheet_division
 import template_handling
 from metadata_handling import Metadata, make_index_key_from_pathname
+from utils import write_sheet_info
 
 HERE = os.path.dirname(os.path.realpath(__file__))
 DEFAULT_CONFIG_FILE = os.path.join(HERE, 'config.json')
@@ -140,12 +141,21 @@ if __name__ == "__main__":
         print(f'SUMMARY: Processing {input_file}')
         index_key = make_index_key_from_pathname(input_file)
         image_metadata = all_metadata.get_metadata(index_key)
+        output_prefix = os.path.splitext(os.path.basename(input_file))[0]
+        sheet_info = {'input_file': input_file,
+                      'index_key': index_key}
         if image_metadata is None:
             print(f'SUMMARY: no metadata for {index_key}')
+            sheet_info['error'] = 'no metadata'
+            write_sheet_info(output_dir, output_prefix, sheet_info)
         elif image_metadata['bad_alignment']:
             print(f'SUMMARY: Skipping {input_file} = bad alignment')
+            sheet_info['error'] = 'bad alignment'
+            write_sheet_info(output_dir, output_prefix, sheet_info)
         elif image_metadata['non_standard']:
-            print(f'SUMMARY: Skipping {input_file} = non standard')
+            print(f'SUMMARY: Skipping {input_file} = non-standard')
+            sheet_info['error'] = 'non-standard'
+            write_sheet_info(output_dir, output_prefix, sheet_info)
         else:
             sheet_division.process_muster_sheet(input_file, image_metadata,
                                                 output_dir, parts_dir, corrections_dir,
