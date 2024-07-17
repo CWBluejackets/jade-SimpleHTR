@@ -149,7 +149,7 @@ if __name__ == "__main__":
         output_prefix = os.path.splitext(os.path.basename(input_file))[0]
         sheet_info = {'input_file': input_file,
                       'index_key': index_key}
-        global_statistics['sheets']['found'] += 1
+        global_statistics['sheets']['files found'] += 1
         if image_metadata is None:
             print(f'SUMMARY: skipping {input_file} no metadata for {index_key}')
             error = 'no metadata'
