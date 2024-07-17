@@ -56,7 +56,9 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
                                 exception_if_missing=True)
     except FileNotFoundError:
         print(f'SUMMARY: File {input_jpg_file} not found')
-        sheet_info['error'] = 'File not found'
+        error = 'file not found'
+        sheet_info['error'] = error
+        global_statistics['sheets'][error] += 1
         write_sheet_info(output_dir, output_prefix, sheet_info)
         return
 
