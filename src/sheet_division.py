@@ -15,7 +15,7 @@ from cellulation import generate_cells
 
 
 def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts_dir, corrections_dir,
-                         config, workflows, templates):
+                         config, workflows, templates, global_statistics: dict) -> None:
     """
     Process sheet...
     :param image_metadata:
@@ -26,6 +26,7 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
     :param input_jpg_file: JPG filename
     :param config: general configuration
     :param workflows: workflow specifications
+    :param global_statistics: accumulation to write at end of job
     :return:
     """
     print(f'Reading image from {input_jpg_file}')
@@ -36,14 +37,17 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
         form_type = image_metadata['type']
         sheet_info['form_type'] = form_type
         print(f'SUMMARY: Form type is {form_type}')
+        global_statistics['sheets'][f'type {form_type}'] += 1
     except KeyError:
         print(f'SUMMARY: Missing form type!')
         sheet_info['form_type'] = '_MISSING_'
+        global_statistics['sheets']['type _MISSING_'] += 1
         write_sheet_info(output_dir, output_prefix, sheet_info)
         return
     if form_type not in templates:
         print(f'SUMMARY: Form type {form_type} is not supported')
         sheet_info['error'] = 'Form type is not supported'
+        global_statistics['sheets']['type not supported'] += 1
         write_sheet_info(output_dir, output_prefix, sheet_info)
         return
 
@@ -124,6 +128,7 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
 
     for cell_spec in cell_list:
         workflow_id = cell_spec['workflow']
+        global_statistics['cells_by_type'][str(workflow_id)] += 1
         row = cell_spec['row']
         column = cell_spec['column']
         filename_base = f'{output_prefix}_{row:02d}_{column:02d}'
@@ -155,12 +160,14 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
             cell_result['confidence'] = random.uniform(0.0, cell_result['confidence_threshold'])
             save_cell_for_correction(corrections_dir, filename_base, cell_spec,
                                      cell_result, registered_image, workflow_name)
+            global_statistics['corrections_by_type'][str(workflow_id)] += 1
 
         if config['htr'] and (cell_result['confidence'] < cell_result['confidence_threshold']):
             add_training_boundaries(cell_result)
             workflow_name = workflows[cell_spec['workflow']]['description']
             save_cell_for_correction(corrections_dir, filename_base, cell_spec,
                                      cell_result, registered_image, workflow_name)
+            global_statistics['corrections_by_type'][str(workflow_id)] += 1
 
     if config['htr']:
         csv_file = os.path.join(output_dir, f'{output_prefix}.csv')
@@ -179,6 +186,7 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
                                   'count': len(all_confidences)}
         sheet_info['confidences'] = confidence_data
 
+    global_statistics['sheets']['processed'] += 1
     write_sheet_info(output_dir, output_prefix, sheet_info)
     return
 

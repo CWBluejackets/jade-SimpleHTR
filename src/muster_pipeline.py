@@ -5,6 +5,7 @@ import glob
 import itertools
 import json
 import os.path
+from collections import defaultdict
 
 import sheet_division
 import template_handling
@@ -136,6 +137,10 @@ if __name__ == "__main__":
     else:
         raise ValueError(f'Input location {input_location} is not a valid file or directory!')
 
+    global_statistics = {'sheets': defaultdict(int),
+                         'cells_by_type': defaultdict(int),
+                         'corrections_by_type': defaultdict(int)}
+
     for input_file in input_files:
         print()
         print(f'SUMMARY: Processing {input_file}')
@@ -145,19 +150,31 @@ if __name__ == "__main__":
         sheet_info = {'input_file': input_file,
                       'index_key': index_key}
         if image_metadata is None:
-            print(f'SUMMARY: no metadata for {index_key}')
-            sheet_info['error'] = 'no metadata'
+            print(f'SUMMARY: skipping {input_file} no metadata for {index_key}')
+            error = 'no metadata'
+            sheet_info['error'] = error
+            global_statistics['sheets'][error] += 1
             write_sheet_info(output_dir, output_prefix, sheet_info)
         elif image_metadata['bad_alignment']:
-            print(f'SUMMARY: Skipping {input_file} = bad alignment')
-            sheet_info['error'] = 'bad alignment'
+            print(f'SUMMARY: Skipping {input_file} bad alignment')
+            error = 'bad alignment'
+            sheet_info['error'] = error
+            global_statistics['sheets'][error] += 1
             write_sheet_info(output_dir, output_prefix, sheet_info)
         elif image_metadata['non_standard']:
-            print(f'SUMMARY: Skipping {input_file} = non-standard')
-            sheet_info['error'] = 'non-standard'
+            error = 'non-standard'
+            print(f'SUMMARY: Skipping {input_file}  non-standard')
+            sheet_info['error'] = error
+            global_statistics['sheets'][error] += 1
             write_sheet_info(output_dir, output_prefix, sheet_info)
         else:
             sheet_division.process_muster_sheet(input_file, image_metadata,
                                                 output_dir, parts_dir, corrections_dir,
                                                 config, workflows,
-                                                templates)
+                                                templates, global_statistics)
+            global_statistics['sheets']['attempted'] += 1
+
+    statistics_path = os.path.join(output_dir, 'statistics.json')
+    print(f'Writing {statistics_path}')
+    with open(statistics_path, 'w') as f:
+        json.dump(global_statistics, f)
