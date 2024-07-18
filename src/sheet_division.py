@@ -15,7 +15,8 @@ from cellulation import generate_cells
 
 
 def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts_dir, corrections_dir,
-                         config, workflows, templates, global_statistics: dict) -> None:
+                         config, workflows, templates, global_statistics: dict,
+                         global_confidences: dict) -> None:
     """
     Process sheet...
     :param image_metadata:
@@ -153,6 +154,7 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
             csv_table[cell_result['row']][cell_result['column'] * 2] = cell_result['text']
             csv_table[cell_result['row']][cell_result['column'] * 2 + 1] = cell_result['confidence']
             confidence_by_workflow[workflow_id].append(cell_result['confidence'])
+            global_confidences[workflow_id].append(cell_result['confidence'])
 
         elif random.random() < 0.02:
             # if not running HTR, generate a random 2% of correction images to check the geometry

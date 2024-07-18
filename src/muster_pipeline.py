@@ -7,10 +7,12 @@ import json
 import os.path
 from collections import defaultdict
 
+import numpy as np
+
 import sheet_division
 import template_handling
 from metadata_handling import Metadata, make_index_key_from_pathname
-from utils import write_sheet_info
+from utils import write_sheet_info, NumpyJsonEncoder, EIGHTHS
 
 HERE = os.path.dirname(os.path.realpath(__file__))
 DEFAULT_CONFIG_FILE = os.path.join(HERE, 'config.json')
@@ -140,6 +142,7 @@ if __name__ == "__main__":
     global_statistics = {'sheets': defaultdict(int),
                          'cells_by_type': defaultdict(int),
                          'corrections_by_type': defaultdict(int)}
+    global_confidences = defaultdict(list)
 
     for input_file in input_files:
         print()
@@ -172,10 +175,16 @@ if __name__ == "__main__":
             sheet_division.process_muster_sheet(input_file, image_metadata,
                                                 output_dir, parts_dir, corrections_dir,
                                                 config, workflows,
-                                                templates, global_statistics)
+                                                templates, global_statistics,
+                                                global_confidences)
             global_statistics['sheets']['attempted'] += 1
+
+    confidence_octiles = {str(workflow_id): np.quantile(confidence_list, EIGHTHS)
+                          for workflow_id, confidence_list
+                          in global_confidences.items()}
+    global_statistics['confidence_scores'] = confidence_octiles
 
     statistics_path = os.path.join(output_dir, 'statistics.json')
     print(f'Writing {statistics_path}')
     with open(statistics_path, 'w') as f:
-        json.dump(global_statistics, f, indent=1, sort_keys=True)
+        json.dump(global_statistics, f, indent=1, sort_keys=True, cls=NumpyJsonEncoder)
