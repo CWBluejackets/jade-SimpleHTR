@@ -10,7 +10,7 @@ from scipy import ndimage, signal
 from skimage.registration import phase_cross_correlation
 
 import line_detection
-from utils import NumpyJsonEncoder, EIGHTHS, RED, GREEN, BLACK, BLUE
+from utils import NumpyJsonEncoder, OCTILES, RED, GREEN, BLACK, BLUE
 
 # point = (x, y)
 # in cv2, y = 0 at the top
@@ -293,7 +293,7 @@ def rotate_correct(image: np.ndarray, config: dict, output_dir: str, output_pref
         cv2.imwrite(debug_image_path, hline_image)
     # find the binned mode of angles and rotate
     angles = [line.angle for line in horizontal_lines]
-    angle_octiles = np.quantile(angles, EIGHTHS)
+    angle_octiles = np.quantile(angles, OCTILES)
     rotation = binned_mode(angles, bins=mode_bins, bin_range=(-deviation, deviation))
     rotation = round(rotation, 3)
     # https://stackoverflow.com/questions/58408054/typeerror-object-of-type-bool-is-not-json-serializable
@@ -478,7 +478,7 @@ def get_registration_width(registration_image: np.ndarray, sheet_info: dict,
     strong_left, strong_right, box_width, edge_log = determine_header_width(strong_columns, max_header_width)
     # IMPORTANT, PENDING
     # TODO use max_header_width, probably to suppress the LH edge
-    octiles = np.quantile(column_counts_black, EIGHTHS)
+    octiles = np.quantile(column_counts_black, OCTILES)
     nonzero = np.asarray(column_counts_black > 0).nonzero()[0]
     rescaling = {'black_octiles': octiles,
                  'strong_edges': [[strong_left, column_counts_black[strong_left]],

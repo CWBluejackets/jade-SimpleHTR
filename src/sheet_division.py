@@ -10,7 +10,7 @@ import numpy as np
 
 import geometry
 from application import TrainedModel
-from utils import NumpyJsonEncoder, EIGHTHS, RED, BLUE, safe_imread, write_sheet_info
+from utils import NumpyJsonEncoder, OCTILES, RED, BLUE, safe_imread, write_sheet_info
 from cellulation import generate_cells
 
 
@@ -124,7 +124,7 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
         row_image = registered_image[top: bottom, x_left: x_right]
         row_info = {'top': top,
                     'bottom': bottom,
-                    'octiles': np.quantile(row_image, EIGHTHS),
+                    'octiles': np.quantile(row_image, OCTILES),
                     'mean': row_image.mean()}
         row_data[row_key] = row_info
     sheet_info['rows'] = row_data
@@ -183,10 +183,10 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
                 writer.writerow([row_no] + csv_table[row_no])
         confidence_data = dict()
         for workflow_id, confidences in confidence_by_workflow.items():
-            confidence_data[str(workflow_id)] = {'octiles': np.quantile(confidences, EIGHTHS),
+            confidence_data[str(workflow_id)] = {'octiles': np.quantile(confidences, OCTILES),
                                                  'count': len(confidences)}
         all_confidences = sum(confidence_by_workflow.values(), start=[])
-        confidence_data['all'] = {'octiles': np.quantile(all_confidences, EIGHTHS),
+        confidence_data['all'] = {'octiles': np.quantile(all_confidences, OCTILES),
                                   'count': len(all_confidences)}
         sheet_info['confidences'] = confidence_data
 

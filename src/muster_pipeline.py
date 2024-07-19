@@ -12,7 +12,7 @@ import numpy as np
 import sheet_division
 import template_handling
 from metadata_handling import Metadata, make_index_key_from_pathname
-from utils import write_sheet_info, NumpyJsonEncoder, EIGHTHS
+from utils import write_sheet_info, NumpyJsonEncoder, OCTILES
 
 HERE = os.path.dirname(os.path.realpath(__file__))
 DEFAULT_CONFIG_FILE = os.path.join(HERE, 'config.json')
@@ -179,7 +179,7 @@ if __name__ == "__main__":
                                                 global_confidences)
             global_statistics['sheets']['attempted'] += 1
 
-    confidence_octiles = {str(workflow_id): np.quantile(confidence_list, EIGHTHS)
+    confidence_octiles = {str(workflow_id): np.quantile(confidence_list, OCTILES)
                           for workflow_id, confidence_list
                           in global_confidences.items()}
     global_statistics['confidence_scores'] = confidence_octiles
