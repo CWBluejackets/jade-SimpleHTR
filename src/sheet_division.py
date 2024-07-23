@@ -28,6 +28,8 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
     :param config: general configuration
     :param workflows: workflow specifications
     :param global_statistics: accumulation to write at end of job
+    :param global_confidences: accumulation of confidence scores by workflow, to summarize
+    at end of job
     :return:
     """
     print(f'Reading image from {input_jpg_file}')
@@ -116,6 +118,7 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
     previous_workflow_id = None
     model = None
     confidence_by_workflow = defaultdict(list)
+    confidence_by_column = defaultdict(list)
 
     cell_list = generate_cells(template, workflows, row_y_values)
 
@@ -156,6 +159,7 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
             csv_table[cell_result['row']][cell_result['column'] * 2] = cell_result['text']
             csv_table[cell_result['row']][cell_result['column'] * 2 + 1] = cell_result['confidence']
             confidence_by_workflow[workflow_id].append(cell_result['confidence'])
+            confidence_by_column[column].append(cell_result['confidence'])
             global_confidences[workflow_id].append(cell_result['confidence'])
 
         elif random.random() < 0.02:
@@ -183,14 +187,20 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
             writer.writerow(csv_header)
             for row_no in range(max(csv_table.keys())):
                 writer.writerow([row_no] + csv_table[row_no])
-        confidence_data = dict()
+        workflow_confidence_summary = dict()
+        column_confidence_summary = dict()
         for workflow_id, confidences in confidence_by_workflow.items():
-            confidence_data[str(workflow_id)] = {'octiles': np.quantile(confidences, OCTILES),
-                                                 'count': len(confidences)}
+            workflow_confidence_summary[str(workflow_id)] = {'octiles': np.quantile(confidences, OCTILES),
+                                                             'count': len(confidences)}
+        for column_no, confidences in confidence_by_column.items():
+            column_confidence_summary[f'{column_no:02d}'] = {'octiles': np.quantile(confidences, OCTILES),
+                                                             'count': len(confidences)}
         all_confidences = sum(confidence_by_workflow.values(), start=[])
-        confidence_data['all'] = {'octiles': np.quantile(all_confidences, OCTILES),
-                                  'count': len(all_confidences)}
-        sheet_info['confidences'] = confidence_data
+        sheet_confidence_summary = {'octiles': np.quantile(all_confidences, OCTILES),
+                                    'count': len(all_confidences)}
+        sheet_info['confidence'] = {'workflows': workflow_confidence_summary,
+                                    'columns': column_confidence_summary,
+                                    'overall': sheet_confidence_summary}
 
     global_statistics['sheets']['processed'] += 1
     write_sheet_info(output_dir, output_prefix, sheet_info)
