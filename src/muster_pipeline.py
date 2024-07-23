@@ -184,7 +184,7 @@ if __name__ == "__main__":
                           in global_confidences.items()}
     global_statistics['confidence_scores'] = confidence_octiles
 
-    statistics_path = os.path.join(output_dir, 'statistics.json')
+    statistics_path = os.path.join(output_dir, 'summary.json')
     print(f'Writing {statistics_path}')
     with open(statistics_path, 'w') as f:
         json.dump(global_statistics, f, indent=1, sort_keys=True, cls=NumpyJsonEncoder)
