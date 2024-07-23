@@ -66,7 +66,7 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
     template = templates[form_type]
     # now trying the top of the form
     template_image = template['image_top']
-    template_form_width = template['form_width']
+    template_form_width = template['form']['width']
     print(f'Input size {image_raw.shape}; template size {template_image.shape}')
     sheet_info.update({'template_form_width': template_form_width,
                        'shape': {'raw_input': image_raw.shape}})
@@ -83,8 +83,10 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
     hline_y_min = template['hline_detection']['y_min']
     hline_y_max = template['hline_detection']['y_max']
     y_ref_line = template['y_ref_line']
+    form_left = template['form']['left']
+    form_right = template['form']['right']
     row_y_values, horizontal_means = geometry.find_row_boundaries(registered_image, config, hline_y_min,
-                                                                  hline_y_max, y_ref_line)
+                                                                  hline_y_max, y_ref_line, form_left, form_right)
     sheet_info['row_detection'] = {'y_values': row_y_values,
                                    'diffs': row_y_values[1:] - row_y_values[:-1]}
     x_left = min(template['output_column_x_values'])

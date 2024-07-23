@@ -36,6 +36,7 @@
   "row_detection": {
     "smoothing_window": 5,
     "min_distance": 50,
-    "max_distance": 100
+    "max_distance": 100,
+    "column_adjustment": 3
   }
 }

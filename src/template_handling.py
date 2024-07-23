@@ -83,7 +83,6 @@ def add_template_info(specification: dict, template_directory, workflows, debug_
     image_top = safe_imread(template_top_path, cv2.IMREAD_GRAYSCALE)
     # find the black column boundaries in the template
     column_lines, x_ref_line, form_width = get_column_separators(image, y_ref_line)
-    specification['form_width'] = form_width
     columns_needed = len(specification['columns'])
     if columns_needed != len(column_lines) - 1:
         raise ValueError(f'Mismatch! specified columns = {columns_needed}; boundaries found = {len(column_lines)}')
@@ -102,18 +101,18 @@ def add_template_info(specification: dict, template_directory, workflows, debug_
         column['end'] = column_lines[index + 1]
     # Merge adjacent columns of the same workflow (e.g., height feet + height inches
     # and determine the start and end x-values (this code relies on the adjacency of parts
-    # of the same workflow)
+    # of the same workflow but so did the manual annotation in Zooniverse phase 1)
     workflow_starts = defaultdict(set)
     workflow_ends = defaultdict(set)
     column_x_values = set()
     output_column_x_values = set()
     for column in specification['columns']:
+        column_x_values.add(column['start'])
+        column_x_values.add(column['end'])
         if column['process']:
             workflow = column['workflow']
             workflow_starts[workflow].add(column['start'])
             workflow_ends[workflow].add(column['end'])
-            column_x_values.add(column['start'])
-            column_x_values.add(column['end'])
     output_columns = []
     for workflow in workflow_starts.keys():
         start = min(workflow_starts[workflow])
@@ -126,6 +125,11 @@ def add_template_info(specification: dict, template_directory, workflows, debug_
     specification['output_columns'] = output_columns
     specification['column_x_values'] = column_x_values
     specification['output_column_x_values'] = output_column_x_values
+    specification['form'] = {'width': form_width,
+                             'left': min(column_x_values),
+                             'right': max(column_x_values),
+                             'left_process': min(output_column_x_values),
+                             'right_process': max(output_column_x_values)}
     # save the debug info WITHOUT the big image arrays
     if debug_template_path:
         print(f'Writing {debug_template_path}')

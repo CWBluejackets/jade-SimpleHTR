@@ -771,7 +771,7 @@ def rescale_horizontally(image: np.ndarray, scale: float) -> np.ndarray:
 
 
 def find_row_boundaries(image: np.ndarray, config: dict, y_min: int, y_max: int,
-                        y_ref_line: int) -> Tuple[np.ndarray, np.ndarray]:
+                        y_ref_line: int, left_line: int, right_line: int) -> Tuple[np.ndarray, np.ndarray]:
     """
     Use the slightly smoothed mean pixel value of the middle half of the image to find
     row boundaries (which are brighter than the content).
@@ -782,9 +782,11 @@ def find_row_boundaries(image: np.ndarray, config: dict, y_min: int, y_max: int,
     :param y_ref_line: top of top row according to the template
     :return: row cutoffs
     """
-    left_cut = image.shape[1] // 4
-    middle_half = image[:, left_cut: -left_cut]
-    horizontal_means = np.mean(middle_half, axis=1)
+    column_adjustment = config['row_detection']['column_adjustment']
+    left_cut = left_line + column_adjustment
+    right_cut = right_line + column_adjustment
+    subimage = image[:, left_cut: right_cut]
+    horizontal_means = np.mean(subimage, axis=1)
     window_size = config['row_detection']['smoothing_window']
     window = np.ones(window_size) / window_size
     horizontal_means = np.convolve(horizontal_means, window, 'same')
