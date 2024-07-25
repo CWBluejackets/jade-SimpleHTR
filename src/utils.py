@@ -27,6 +27,8 @@ class NumpyJsonEncoder(json.JSONEncoder):
             return obj.tolist()
         elif isinstance(obj, set):
             return list(obj)
+        elif isinstance(obj, np.bool_):
+            return bool(obj)
         else:
             return super(NumpyJsonEncoder, self).default(obj)
 
