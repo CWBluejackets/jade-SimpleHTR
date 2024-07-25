@@ -179,7 +179,7 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
         with open(csv_file, 'w', newline='') as f:
             writer = csv.writer(f)
             writer.writerow(csv_header)
-            for row_no in range(max(csv_table.keys())):
+            for row_no in range(max(csv_table.keys()) + 1):
                 writer.writerow([row_no] + csv_table[row_no])
         confidence_data = dict()
         for workflow_id, confidences in confidence_by_workflow.items():
