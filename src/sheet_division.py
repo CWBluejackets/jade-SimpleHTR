@@ -79,8 +79,8 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
                                                           sheet_info)
     csv_header = ['row']
     for column in template['output_columns']:
-        csv_header.extend([str(column['workflow']), 'conf'])
-    csv_table = defaultdict(lambda: [str()] * len(template['output_columns'] * 2))
+        csv_header.extend([str(column['workflow']), 'conf', 'refer'])
+    csv_table = defaultdict(lambda: [str()] * len(template['output_columns'] * 3))
 
     hline_y_min = template['hline_detection']['y_min']
     hline_y_max = template['hline_detection']['y_max']
@@ -156,14 +156,15 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
             save_processed_cell(config, filename_base, cell_result, parts_dir, cell_image)
 
         if config['htr']:
-            csv_table[cell_result['row']][cell_result['column'] * 2] = cell_result['text']
-            csv_table[cell_result['row']][cell_result['column'] * 2 + 1] = cell_result['confidence']
+            csv_table[cell_result['row']][cell_result['column'] * 3] = cell_result['text']
+            csv_table[cell_result['row']][cell_result['column'] * 3 + 1] = cell_result['confidence']
+            csv_table[cell_result['row']][cell_result['column'] * 3 + 2] = cell_result['refer']
             confidence_by_workflow[workflow_id].append(cell_result['confidence'])
             confidence_by_column[column].append(cell_result['confidence'])
             global_confidences[workflow_id].append(cell_result['confidence'])
 
-        elif random.random() < 0.02:
-            # if not running HTR, generate a random 2% of correction images to check the geometry
+        elif random.random() < 0.01:
+            # if not running HTR, generate a random 1% of correction images to check the geometry
             add_training_boundaries(cell_result)
             workflow_name = workflows[cell_spec['workflow']]['description']
             cell_result['text'] = ' '.join(['Testing'] * random.randint(1, 4))
@@ -172,7 +173,7 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
                                      cell_result, registered_image, workflow_name)
             global_statistics['corrections_by_type'][str(workflow_id)] += 1
 
-        if config['htr'] and (cell_result['confidence'] < cell_result['confidence_threshold']):
+        if config['htr'] and cell_result['refer']:
             add_training_boundaries(cell_result)
             workflow_name = workflows[cell_spec['workflow']]['description']
             save_cell_for_correction(corrections_dir, filename_base, cell_spec,
@@ -257,7 +258,7 @@ def save_processed_cell(config: dict, filename_base: str, cell_result: dict,
     return
 
 
-def process_cell(image: np.ndarray, cell, model, config: dict):
+def process_cell(image: np.ndarray, cell: dict, model, config: dict):
     """
     Extract the cell from the image and send the small image through the model.
     :param image: registered image of the whole sheet
@@ -271,13 +272,12 @@ def process_cell(image: np.ndarray, cell, model, config: dict):
     left, right = cell['htr']['left'], cell['htr']['right']
     inner_cell_image = image[inner_top:inner_bottom, inner_left:inner_right]
     cell_image = image[top: bottom, left: right]
-    cell_output = dict()
+    cell_output = cell.copy()
     threshold = cell['confidence_threshold']
     if config['htr']:
         text, confidence = model.apply(cell_image)
         cell_output.update({'text': text, 'confidence': confidence})
-        print(f'Cell shape {cell_image.shape} confidence {confidence:.3f} / {threshold:.3f} text "{text}"')
-    cell_output.update(cell)
+        cell_output['refer'] = (confidence < threshold)
     cell_output['median_full'] = np.median(cell_image)
     cell_output['median_inner'] = np.median(inner_cell_image)
     return cell_output, cell_image
