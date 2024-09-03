@@ -43,22 +43,24 @@ def load_manifest(manifest_path) -> dict:
     return manifest0
 
 
-def create_batches(prefix: str, manifest0: dict) -> dict:
+def create_batches(infix: str, manifest0: dict) -> dict:
     """
-    :param prefix: batch name prefix
+    :param infix: batch name prefix
     :param manifest0: manifest dict
     :return: batches dict batch_name -> list of tuples (filename, metadata)
     """
     sequence = 0
-    vessel_batches = defaultdict(list)
+    vessel_year_batches = defaultdict(list)
     for filename, metadata in manifest0.items():
-        vessel_batches[metadata['vessel']].append((filename, metadata))
+        vessel = metadata['vessel']
+        year = metadata['#muster_year'] or 0
+        vessel_year_batches[vessel, year].append((filename, metadata))
     results = defaultdict(list)
-    print(f'Number of vessels: {len(vessel_batches)}')
-    for vessel, big_batch in vessel_batches.items():
+    print(f'Number of vessel-year combinations: {len(vessel_year_batches)}')
+    for (vessel, year), big_batch in vessel_year_batches.items():
         for i in range(0, len(big_batch), MAX_BATCH_SIZE):
             batch0 = big_batch[i: i + MAX_BATCH_SIZE]
-            batch_name0 = f'{prefix}_{vessel}_{sequence:05d}'
+            batch_name0 = f'{vessel} {year:04d} {infix}_{sequence:05d}'
             sequence += 1
             results[batch_name0] = batch0
     return results
@@ -88,11 +90,11 @@ if __name__ == "__main__":
                          metavar='PATH/manifest.json',
                          help='path to JSON manifest file in image directory')
 
-    oparser.add_argument('-s', dest='subject_set_prefix',
+    oparser.add_argument('-s', dest='subject_set_infix',
                          type=str,
                          required=True,
                          metavar='NAME',
-                         help='prefix for subject set name')
+                         help='infix for subject set name')
 
     oparser.add_argument('-n', dest='dry_run',
                          default=False,
@@ -124,7 +126,7 @@ if __name__ == "__main__":
     cwb_project = Project.find(PROJECT_ID)
     print('Connection and project OK')
 
-    named_batches = create_batches(options.subject_set_prefix, manifest)
+    named_batches = create_batches(options.subject_set_infix, manifest)
     print(f'Number of batches: {len(named_batches)}')
     subjects_done = 0
 

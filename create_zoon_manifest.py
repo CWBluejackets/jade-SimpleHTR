@@ -20,14 +20,13 @@ MANIFEST_HEADER = ['image', 'NARA URL', 'volume', 'vessel', 'sheet', 'column',
 # vessel name
 # sheet number
 # workflow name (e.g., "Eyes Hair Complexion")
-# muster datae
+# muster date
 # HIDDEN METADATA
 # row number
 # column number
 # workflow number
 # coordinates of the HTR box (for extracting the image to use as new training data)
 # HTR output
-# muster date
 # muster year
 
 
