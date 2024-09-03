@@ -8,7 +8,8 @@ import argparse
 MANIFEST_HEADER = ['image', 'NARA URL', 'volume', 'vessel', 'sheet', 'column',
                    '#row_no', '#column_no', '#workflow_id',
                    '#training_top', '#training_bottom', '#training_left', '#training_right',
-                   '#htr_text', '#conf', '#conf_threshold'
+                   '#htr_text', '#conf', '#conf_threshold',
+                   'muster_date', '#muster_year'
                    ]
 
 
@@ -19,12 +20,25 @@ MANIFEST_HEADER = ['image', 'NARA URL', 'volume', 'vessel', 'sheet', 'column',
 # vessel name
 # sheet number
 # workflow name (e.g., "Eyes Hair Complexion")
+# muster datae
 # HIDDEN METADATA
 # row number
 # column number
 # workflow number
 # coordinates of the HTR box (for extracting the image to use as new training data)
 # HTR output
+# muster date
+# muster year
+
+
+def extract_year(muster_date_str, filename):
+    try:
+        # expecting "31/06/63"
+        year = int(f'18{muster_date_str[-2:]}')
+    except (ValueError, TypeError):
+        year = None
+        print(f'Invalid muster date in {filename}')
+    return year
 
 
 def process_json(json_filename1: str, image_directory1: str, csv_data1: list,
@@ -52,10 +66,12 @@ def process_json(json_filename1: str, image_directory1: str, csv_data1: list,
         training_left = json_data['training_boundaries']['left']
         training_right = json_data['training_boundaries']['right']
         htr_text = json_data['text']
+        muster_date = json_data['input']['muster_date']
+        muster_year = extract_year(muster_date, json_filename1)
         output_line = [image_basename, nara_url, volume, vessel, sheet, workflow_name,
                        row, column, workflow_id,
                        training_top, training_bottom, training_left, training_right,
-                       htr_text, confidence, confidence_threshold]
+                       htr_text, confidence, confidence_threshold, muster_date, muster_year]
         csv_data1.append(output_line)
         json_output0[image_basename] = dict(zip(MANIFEST_HEADER[1:], output_line[1:]))
     return
