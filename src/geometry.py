@@ -10,7 +10,7 @@ from scipy import ndimage, signal
 from skimage.registration import phase_cross_correlation
 
 import line_detection
-from utils import NumpyJsonEncoder, OCTILES, RED, GREEN, BLACK, BLUE
+from utils import NumpyJsonEncoder, DECILES, RED, GREEN, BLACK, BLUE
 
 # point = (x, y)
 # in cv2, y = 0 at the top
@@ -293,7 +293,7 @@ def rotate_correct(image: np.ndarray, config: dict, output_dir: str, output_pref
         cv2.imwrite(debug_image_path, hline_image)
     # find the binned mode of angles and rotate
     angles = [line.angle for line in horizontal_lines]
-    angle_octiles = np.quantile(angles, OCTILES)
+    angle_deciles = np.quantile(angles, DECILES)
     rotation = binned_mode(angles, bins=mode_bins, bin_range=(-deviation, deviation))
     rotation = round(rotation, 3)
     # https://stackoverflow.com/questions/58408054/typeerror-object-of-type-bool-is-not-json-serializable
@@ -309,7 +309,7 @@ def rotate_correct(image: np.ndarray, config: dict, output_dir: str, output_pref
         output = image
     sheet_info['rotation'] = {'degrees': rotation,
                               'applied': apply_rotation,
-                              'octiles': angle_octiles,
+                              'deciles': angle_deciles,
                               'margins': margin_log}
     return output
 
@@ -478,9 +478,9 @@ def get_registration_width(registration_image: np.ndarray, sheet_info: dict,
     strong_left, strong_right, box_width, edge_log = determine_header_width(strong_columns, max_header_width)
     # IMPORTANT, PENDING
     # TODO use max_header_width, probably to suppress the LH edge
-    octiles = np.quantile(column_counts_black, OCTILES)
+    deciles = np.quantile(column_counts_black, DECILES)
     nonzero = np.asarray(column_counts_black > 0).nonzero()[0]
-    rescaling = {'black_octiles': octiles,
+    rescaling = {'black_deciles': deciles,
                  'strong_edges': [[strong_left, column_counts_black[strong_left]],
                                   [strong_right, column_counts_black[strong_right]]],
                  'percentile': percentile,
@@ -492,7 +492,7 @@ def get_registration_width(registration_image: np.ndarray, sheet_info: dict,
                  'box_width_found': box_width,
                  'box_width_max': max_header_width}
     sheet_info['rescaling'] = rescaling
-    return box_width, column_counts_black, (strong_left, strong_right), octiles
+    return box_width, column_counts_black, (strong_left, strong_right), deciles
 
 
 def determine_header_width(strong_columns: np.ndarray, max_header_width: int) -> Tuple[int, int, int, list]:
@@ -541,7 +541,7 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray,
     percentile = config['registration']['percentile']
     max_header_factor = config['registration']['max_header_factor']
     max_header_width = round(template_form_width * max_header_factor)
-    muster_box_width, column_counts, header_edges, registration_octiles = get_registration_width(registration_image,
+    muster_box_width, column_counts, header_edges, registration_deciles = get_registration_width(registration_image,
                                                                                                  sheet_info, percentile,
                                                                                                  adjusted_cutoffs,
                                                                                                  max_header_width)
@@ -570,7 +570,7 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray,
     if config['debug']:
         debug_image_path = os.path.join(output_dir, f'{output_prefix}_1_cutoffs.png')
         debug_image = mark_cutoffs(modified_image, cutoffs, adjusted_cutoffs, registration_image,
-                                   column_counts, header_edges, registration_octiles)
+                                   column_counts, header_edges, registration_deciles)
         print(f'Writing {debug_image_path}')
         cv2.imwrite(debug_image_path, debug_image)
     return fully_adjusted_image
@@ -593,7 +593,7 @@ def superimpose(shifted_image: np.ndarray, form: np.ndarray) -> np.ndarray:
 def mark_cutoffs(image: np.ndarray, outer: tuple, inner: tuple,
                  registration_image: np.ndarray,
                  column_counts: np.ndarray, header_edges: Tuple[int, int],
-                 registration_octiles: np.ndarray) -> np.ndarray:
+                 registration_deciles: np.ndarray) -> np.ndarray:
     """
     Superimpose the form in blue on the image
     :param image: grayscale image
@@ -602,7 +602,7 @@ def mark_cutoffs(image: np.ndarray, outer: tuple, inner: tuple,
     :param registration_image: H & V lines detected
     :param column_counts: darkness of columns within general header zone
     :param header_edges: left and right edges of found header for rescaling
-    :param registration_octiles: octiles of column values for debugging
+    :param registration_deciles: deciles of column values for debugging
     :return: merged RGB image
     """
     left_outer, right_outer, top_outer, bottom_outer = outer
@@ -630,9 +630,9 @@ def mark_cutoffs(image: np.ndarray, outer: tuple, inner: tuple,
     for x, count in enumerate(column_counts):
         y = round(scale_v * count)
         cv2.line(output, (x, 0), (x, y), GREEN, 1)
-    # mark the registration octiles on the left
-    scale_h = (left_outer - 5) / (registration_octiles.shape[0] + 1)
-    for i, y in enumerate(registration_octiles):
+    # mark the registration DECiles on the left
+    scale_h = (left_outer - 5) / (registration_deciles.shape[0] + 1)
+    for i, y in enumerate(registration_deciles):
         x1 = round(scale_h * (i + 1))
         y1 = round(scale_v * y)
         cv2.line(output, (0, y1), (x1, y1), GREEN, 1)

@@ -5,8 +5,7 @@ import cv2
 import numpy as np
 
 # used for quantile output
-OCTILES = [x / 8 for x in range(0, 9)]
-QUARTILES = [x / 8 for x in range(0, 5)]
+DECILES = [x / 10 for x in range(0, 11)]
 
 # the cv2 color scheme is (blue, green, red)
 RED = (0, 0, 255)

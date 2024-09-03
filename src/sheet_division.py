@@ -10,7 +10,7 @@ import numpy as np
 
 import geometry
 from application import TrainedModel
-from utils import NumpyJsonEncoder, OCTILES, RED, BLUE, safe_imread, write_sheet_info
+from utils import NumpyJsonEncoder, DECILES, RED, BLUE, GREEN, safe_imread, write_sheet_info
 from cellulation import generate_cells
 
 
@@ -110,6 +110,7 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
         # add the horizontal means for inspection on the left
         for y, h_mean in enumerate(horizontal_means):
             cv2.line(registration_debug_2, (0, y), (round(h_mean * 3), y), RED, 1)
+        cv2.line(registration_debug_2, (255 * 3, y_top), (255 * 3, y_bottom), GREEN, 3)
         # mark the bottom limit from the template in blue
         cv2.line(registration_debug_2, (255 * 3, hline_y_max), (x_right, hline_y_max), BLUE, 1)
         print(f'Writing {registration_path}')
@@ -129,7 +130,7 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
         row_image = registered_image[top: bottom, x_left: x_right]
         row_info = {'top': top,
                     'bottom': bottom,
-                    'octiles': np.quantile(row_image, OCTILES),
+                    'deciles': np.quantile(row_image, DECILES),
                     'mean': row_image.mean()}
         row_data[row_key] = row_info
     sheet_info['rows'] = row_data
@@ -191,13 +192,13 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
         workflow_confidence_summary = dict()
         column_confidence_summary = dict()
         for workflow_id, confidences in confidence_by_workflow.items():
-            workflow_confidence_summary[str(workflow_id)] = {'octiles': np.quantile(confidences, OCTILES),
+            workflow_confidence_summary[str(workflow_id)] = {'deciles': np.quantile(confidences, DECILES),
                                                              'count': len(confidences)}
         for column_no, confidences in confidence_by_column.items():
-            column_confidence_summary[f'{column_no:02d}'] = {'octiles': np.quantile(confidences, OCTILES),
+            column_confidence_summary[f'{column_no:02d}'] = {'deciles': np.quantile(confidences, DECILES),
                                                              'count': len(confidences)}
         all_confidences = sum(confidence_by_workflow.values(), start=[])
-        sheet_confidence_summary = {'octiles': np.quantile(all_confidences, OCTILES),
+        sheet_confidence_summary = {'deciles': np.quantile(all_confidences, DECILES),
                                     'count': len(all_confidences)}
         sheet_info['confidence'] = {'workflows': workflow_confidence_summary,
                                     'columns': column_confidence_summary,
