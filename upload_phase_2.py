@@ -24,13 +24,15 @@ def create_subject_set(batch_name0, batch0, input_directory0, project) -> Tuple[
     for image_fn, metadata in batch0:
         nbr_added += 1
         image_path = os.path.join(input_directory0, image_fn)
-        print(f'Adding image ({nbr_added}/{nbr_subjects0}) from {image_path}')
+        # https://stackoverflow.com/questions/5419389/how-to-overwrite-the-previous-print-to-stdout
+        print(f'Adding image ({nbr_added}/{nbr_subjects0}) from {image_path}', end='\r')
         subject = Subject()
         subject.links.project = project
         subject.add_location(image_path)
         subject.metadata.update(metadata)
         subject.save()
         subjects.append(subject)
+    print()
     subject_set0.save()
     subject_set0.add(subjects)
     return subject_set0, nbr_subjects0
