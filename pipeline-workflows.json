@@ -6,7 +6,7 @@
       "top": 0.1,
       "bottom": 0.1
     },
-    "confidence": 0.33
+    "confidence": 0.56
   },
   "21969": {
     "description": "Ratings",
@@ -15,7 +15,7 @@
       "top": 0.1,
       "bottom": 0.1
     },
-    "confidence": 0.25
+    "confidence": 0.30
   },
   "21986": {
     "description": "Where Born",
@@ -33,7 +33,7 @@
       "top": 0.15,
       "bottom": 0.1
     },
-    "confidence": 0.30
+    "confidence": 0.61
   },
   "22014": {
     "description": "Age",
@@ -50,7 +50,7 @@
       "top": 0.15,
       "bottom": 0.1
     },
-    "confidence": 0.25
+    "confidence": 0.40
   },
   "22016": {
     "description": "Date of Enlistment",
@@ -70,7 +70,7 @@
       "left": 15,
       "right": 10
     },
-    "confidence": 0.50
+    "confidence": 0.74
   },
   "22038": {
     "description": "Term of Enlistment",
