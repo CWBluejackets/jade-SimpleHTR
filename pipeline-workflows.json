@@ -21,7 +21,7 @@
     "description": "Where Born",
     "numeric": false,
     "extra": {
-      "top": 0.1,
+      "top": 0.15,
       "bottom": 0.1
     },
     "confidence": 0.60
@@ -30,7 +30,7 @@
     "description": "Occupation",
     "numeric": false,
     "extra": {
-      "top": 0.1,
+      "top": 0.15,
       "bottom": 0.1
     },
     "confidence": 0.30
@@ -39,7 +39,7 @@
     "description": "Age",
     "numeric": true,
     "extra": {
-      "bottom": 0.15
+      "bottom": 0.1
     },
     "confidence": 0.40
   },
@@ -47,7 +47,7 @@
     "description": "Where Enlisted",
     "numeric": false,
     "extra": {
-      "top": 0.1,
+      "top": 0.15,
       "bottom": 0.1
     },
     "confidence": 0.25
@@ -56,7 +56,8 @@
     "description": "Date of Enlistment",
     "numeric": false,
     "extra": {
-      "top": 0.1
+      "top": 0.1,
+      "bottom": 0.1
     },
     "confidence": 0.45
   },
@@ -66,7 +67,7 @@
     "extra": {
       "top": 0.1,
       "bottom": 0.1,
-      "left": 10,
+      "left": 15,
       "right": 10
     },
     "confidence": 0.50
@@ -78,7 +79,6 @@
       "left": 5,
       "right": 5,
       "top": 0.1,
-      "bottom": 0.1
     },
     "confidence": 0.20
   },
@@ -102,9 +102,9 @@
     "description": "Height",
     "numeric": true,
     "extra": {
-      "left": 5,
+      "left": 10,
       "right": 15,
-      "top": 0.1,
+      "top": 0.15,
       "bottom": 0.1
     },
     "confidence": 0.15
