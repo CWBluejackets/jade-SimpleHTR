@@ -24,7 +24,7 @@
       "top": 0.15,
       "bottom": 0.1
     },
-    "confidence": 0.60
+    "confidence": 0.30
   },
   "21987": {
     "description": "Occupation",
@@ -41,7 +41,7 @@
     "extra": {
       "bottom": 0.1
     },
-    "confidence": 0.40
+    "confidence": 0.60
   },
   "22015": {
     "description": "Where Enlisted",
@@ -59,7 +59,7 @@
       "top": 0.1,
       "bottom": 0.1
     },
-    "confidence": 0.45
+    "confidence": 0.31
   },
   "22031": {
     "description": "Ship's Number",
@@ -78,9 +78,9 @@
     "extra": {
       "left": 5,
       "right": 5,
-      "top": 0.1,
+      "top": 0.1
     },
-    "confidence": 0.20
+    "confidence": 0.35
   },
   "22039": {
     "description": "Remarks",
@@ -96,7 +96,7 @@
       "top": 0.1,
       "bottom": 0.1
     },
-    "confidence": 0.25
+    "confidence": 0.3
   },
   "22045": {
     "description": "Height",
@@ -107,6 +107,6 @@
       "top": 0.15,
       "bottom": 0.1
     },
-    "confidence": 0.15
+    "confidence": 0.56
   }
 }
