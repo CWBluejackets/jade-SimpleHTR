@@ -283,7 +283,7 @@ def process_cell(image: np.ndarray, cell: dict, model, config: dict):
         cell_output['refer'] = (confidence < threshold)
     cell_output['median_full'] = np.median(cell_image)
     cell_output['median_inner'] = np.median(inner_cell_image)
-    cell_output['blankness'] = blank_detection.measure_blankness(cell_image)
+    cell_output['blankness'] = blank_detection.measure_blankness(cell_image, config)
     return cell_output, cell_image
 
 

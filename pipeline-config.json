@@ -38,5 +38,9 @@
     "min_distance": 50,
     "max_distance": 100,
     "column_adjustment": 3
+  },
+  "blank_detection": {
+    "min_blankness": 100,
+    "smoothing_window": 3
   }
 }
