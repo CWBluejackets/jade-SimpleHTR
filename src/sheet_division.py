@@ -80,8 +80,8 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
                                                           sheet_info)
     csv_header = ['row']
     for column in template['output_columns']:
-        csv_header.extend([str(column['workflow']), 'conf', 'refer'])
-    csv_table = defaultdict(lambda: [str()] * len(template['output_columns'] * 3))
+        csv_header.extend([str(column['workflow']), 'conf', 'refer', 'blank'])
+    csv_table = defaultdict(lambda: [str()] * len(template['output_columns'] * 4))
 
     hline_y_min = template['hline_detection']['y_min']
     hline_y_max = template['hline_detection']['y_max']
@@ -161,6 +161,7 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
             csv_table[cell_result['row']][cell_result['column'] * 3] = cell_result['text']
             csv_table[cell_result['row']][cell_result['column'] * 3 + 1] = cell_result['confidence']
             csv_table[cell_result['row']][cell_result['column'] * 3 + 2] = cell_result['refer']
+            csv_table[cell_result['row']][cell_result['column'] * 3 + 3] = cell_result['blankness']
             confidence_by_workflow[workflow_id].append(cell_result['confidence'])
             confidence_by_column[column].append(cell_result['confidence'])
             global_confidences[workflow_id].append(cell_result['confidence'])
