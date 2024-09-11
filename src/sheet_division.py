@@ -8,10 +8,11 @@ from collections import defaultdict
 import cv2
 import numpy as np
 
+import blank_detection
 import geometry
 from application import TrainedModel
-from utils import NumpyJsonEncoder, DECILES, RED, BLUE, GREEN, safe_imread, write_sheet_info
 from cell_division import generate_cells
+from utils import NumpyJsonEncoder, DECILES, RED, BLUE, GREEN, safe_imread, write_sheet_info
 
 
 def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts_dir, corrections_dir,
@@ -281,6 +282,7 @@ def process_cell(image: np.ndarray, cell: dict, model, config: dict):
         cell_output['refer'] = (confidence < threshold)
     cell_output['median_full'] = np.median(cell_image)
     cell_output['median_inner'] = np.median(inner_cell_image)
+    cell_output['blankness'] = blank_detection.measure_blankness(cell_image)
     return cell_output, cell_image
 
 
