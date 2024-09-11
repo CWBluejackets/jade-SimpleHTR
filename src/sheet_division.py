@@ -11,7 +11,7 @@ import numpy as np
 import geometry
 from application import TrainedModel
 from utils import NumpyJsonEncoder, DECILES, RED, BLUE, GREEN, safe_imread, write_sheet_info
-from cellulation import generate_cells
+from cell_division import generate_cells
 
 
 def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts_dir, corrections_dir,
