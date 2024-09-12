@@ -40,7 +40,7 @@
     "column_adjustment": 3
   },
   "blank_detection": {
-    "min_blankness": 100,
-    "smoothing_window": 3
+    "threshold": 165,
+    "smoothing_window": 5
   }
 }

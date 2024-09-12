@@ -279,13 +279,36 @@ def process_cell(image: np.ndarray, cell: dict, model, config: dict):
     cell_image = image[top: bottom, left: right]
     cell_output = cell.copy()
     threshold = cell['confidence_threshold']
-    if config['htr']:
-        text, confidence = model.apply(cell_image)
-        cell_output.update({'text': text, 'confidence': confidence})
-        cell_output['refer'] = (confidence < threshold)
     cell_output['median_full'] = np.median(cell_image)
     cell_output['median_inner'] = np.median(inner_cell_image)
-    cell_output['blankness'] = blank_detection.measure_blankness(cell_image, config)
+    blankness = blank_detection.measure_blankness(cell_image, config)
+    cell_output['blankness'] = blankness
+    if config['htr']:
+        htr_text, confidence = model.apply(cell_image)
+        text = htr_text
+        dubious = (confidence < threshold)
+        if dubious:
+            if blankness >= config['blank_detection']['threshold']:
+                blank = True
+                refer = False
+                status = 'blank'
+                text = ''
+            else:
+                blank = False
+                refer = True
+                status = 'refer'
+        else:
+            blank = False
+            refer = False
+            status = 'keep'
+
+        cell_output.update({'text': text,
+                            'text_htr': htr_text,
+                            'confidence': confidence,
+                            'blank': blank,
+                            'dubious': dubious,
+                            'refer': refer,
+                            'status': status})
     return cell_output, cell_image
 
 
