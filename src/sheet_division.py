@@ -158,10 +158,12 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
             save_processed_cell(config, filename_base, cell_result, parts_dir, cell_image)
 
         if config['htr']:
-            csv_table[cell_result['row']][cell_result['column'] * 3] = cell_result['text']
-            csv_table[cell_result['row']][cell_result['column'] * 3 + 1] = cell_result['confidence']
-            csv_table[cell_result['row']][cell_result['column'] * 3 + 2] = cell_result['refer']
-            csv_table[cell_result['row']][cell_result['column'] * 3 + 3] = cell_result['blankness']
+            row_no = cell_result['row']
+            column_no = cell_result['column']
+            csv_table[row_no][column_no * 4] = cell_result['text']
+            csv_table[row_no][column_no * 4 + 1] = cell_result['confidence']
+            csv_table[row_no][column_no * 4 + 2] = cell_result['refer']
+            csv_table[row_no][column_no * 4 + 3] = cell_result['blankness']
             confidence_by_workflow[workflow_id].append(cell_result['confidence'])
             confidence_by_column[column].append(cell_result['confidence'])
             global_confidences[workflow_id].append(cell_result['confidence'])
