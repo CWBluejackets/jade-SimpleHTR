@@ -14,3 +14,4 @@ scipy
 scikit-image==0.19
 # scikit-image downgrade required for the numpy version
 panoptes-client
+requests

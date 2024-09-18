@@ -12,7 +12,7 @@ PROJECT_ID = 18285
 MAX_BATCH_SIZE = 1000
 
 
-def create_subject_set(batch_name0, batch0, input_directory0, project) -> Tuple[SubjectSet, int]:
+def create_subject_set(batch_name0, batch0, input_directory0, project) -> Tuple[SubjectSet, int, dict]:
     subject_set0 = SubjectSet()
     subject_set0.links.project = project
     subject_set0.display_name = batch_name0
@@ -20,6 +20,7 @@ def create_subject_set(batch_name0, batch0, input_directory0, project) -> Tuple[
     subjects = []
     nbr_subjects0 = len(batch0)
     nbr_added = 0
+    updated_metadata_by_id = {}
     # note: a batch is now a list of tuples (filename, metadata)
     for image_fn, metadata in batch0:
         nbr_added += 1
@@ -31,12 +32,17 @@ def create_subject_set(batch_name0, batch0, input_directory0, project) -> Tuple[
         subject.add_location(image_path)
         subject.metadata.update(metadata)
         subject.save()
-        # TODO get subject.id, add to manifest, rewrite
+        subject_id = subject.id
         subjects.append(subject)
+        updated_metadata = metadata.copy()
+        # get subject ID and save for later
+        updated_metadata['image_path'] = image_path
+        updated_metadata['subject_id'] = subject_id
+        updated_metadata_by_id[subject_id] = updated_metadata
     print()
     subject_set0.save()
     subject_set0.add(subjects)
-    return subject_set0, nbr_subjects0
+    return subject_set0, nbr_subjects0, updated_metadata_by_id
 
 
 def load_manifest(manifest_path) -> dict:
@@ -44,6 +50,12 @@ def load_manifest(manifest_path) -> dict:
     with open(manifest_path, 'r') as f:
         manifest0 = json.load(f)
     return manifest0
+
+
+def make_updated_path(manifest_path: str) -> str:
+    stripped = os.path.splitext(manifest_path)[0]
+    updated_path = f'{stripped}_updated.json'
+    return updated_path
 
 
 def create_batches(infix: str, manifest0: dict) -> dict:
@@ -133,8 +145,12 @@ if __name__ == "__main__":
     print(f'Number of batches: {len(named_batches)}')
     subjects_done = 0
 
+    updated_manifest = dict()
+
     for batch_name, batch in named_batches.items():
-        subject_set, nbr_created = create_subject_set(batch_name, batch, input_directory, cwb_project)
+        subject_set, nbr_created, updated_metadata_batch = create_subject_set(batch_name, batch,
+                                                                              input_directory, cwb_project)
+        updated_manifest.update(updated_metadata_batch)
         subjects_done += nbr_created
         print(f'Subjects processed: {subjects_done} / {nbr_subjects}')
         if not options.dry_run:
@@ -149,3 +165,9 @@ if __name__ == "__main__":
         seconds_per_subject = elapsed_time.total_seconds() / subjects_done
         print(f'Elapsed time: {elapsed_time_str} ({seconds_per_subject:.2f} seconds/subject)')
         print()
+
+    output_path = make_updated_path(options.manifest_path)
+    print(f'Writing {output_path}')
+    with open(output_path, 'w') as f:
+        json.dump(updated_manifest, f, indent=1, sort_keys=True)
+
