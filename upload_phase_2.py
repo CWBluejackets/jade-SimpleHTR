@@ -31,6 +31,7 @@ def create_subject_set(batch_name0, batch0, input_directory0, project) -> Tuple[
         subject.add_location(image_path)
         subject.metadata.update(metadata)
         subject.save()
+        # TODO get subject.id, add to manifest, rewrite
         subjects.append(subject)
     print()
     subject_set0.save()
