@@ -37,7 +37,7 @@ def create_subject_set(batch_name0, batch0, input_directory0, project) -> Tuple[
         updated_metadata = metadata.copy()
         # get subject ID and save for later
         updated_metadata['image_path'] = image_path
-        updated_metadata['subject_id'] = subject_id
+        updated_metadata['subject_id'] = int_subject_id(subject_id)
         updated_metadata_by_id[subject_id] = updated_metadata
     print()
     subject_set0.save()
@@ -50,6 +50,15 @@ def load_manifest(manifest_path) -> dict:
     with open(manifest_path, 'r') as f:
         manifest0 = json.load(f)
     return manifest0
+
+
+def int_subject_id(subject_id):
+    try:
+        result = int(subject_id)
+    except ValueError:
+        print(f"Not convertible to int: {subject_id}")
+        result = subject_id
+    return result
 
 
 def make_updated_path(manifest_path: str) -> str:
