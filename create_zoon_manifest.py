@@ -9,7 +9,7 @@ MANIFEST_HEADER = ['image', 'NARA URL', 'volume', 'vessel', 'sheet', 'column',
                    '#row_no', '#column_no', '#workflow_id',
                    '#training_top', '#training_bottom', '#training_left', '#training_right',
                    '#htr_text', '#conf', '#conf_threshold',
-                   'muster_date', '#muster_year'
+                   'muster_date', '#muster_year', '#blankness'
                    ]
 
 
@@ -28,6 +28,7 @@ MANIFEST_HEADER = ['image', 'NARA URL', 'volume', 'vessel', 'sheet', 'column',
 # coordinates of the HTR box (for extracting the image to use as new training data)
 # HTR output
 # muster year
+# blankness
 
 
 def extract_year(muster_date_str, filename):
@@ -60,6 +61,7 @@ def process_json(json_filename1: str, image_directory1: str, csv_data1: list,
         confidence_threshold = json_data['confidence_threshold']
         row = json_data['row']
         column = json_data['column']
+        blankness = json_data['blankness']
         training_top = json_data['training_boundaries']['top']
         training_bottom = json_data['training_boundaries']['bottom']
         training_left = json_data['training_boundaries']['left']
@@ -70,7 +72,8 @@ def process_json(json_filename1: str, image_directory1: str, csv_data1: list,
         output_line = [image_basename, nara_url, volume, vessel, sheet, workflow_name,
                        row, column, workflow_id,
                        training_top, training_bottom, training_left, training_right,
-                       htr_text, confidence, confidence_threshold, muster_date, muster_year]
+                       htr_text, confidence, confidence_threshold, muster_date,
+                       muster_year, blankness]
         csv_data1.append(output_line)
         json_output0[image_basename] = dict(zip(MANIFEST_HEADER[1:], output_line[1:]))
     return
