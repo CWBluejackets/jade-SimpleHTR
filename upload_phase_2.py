@@ -4,7 +4,7 @@ import json
 import os
 from collections import defaultdict
 from typing import Tuple
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from panoptes_client import Panoptes, Project, SubjectSet, Subject
 
@@ -90,6 +90,33 @@ def create_batches(infix: str, manifest0: dict) -> dict:
     return results
 
 
+def upload_batches(batches):
+    subjects_done = 0
+    manifest_with_ids = dict()
+    for batch_name, batch in batches.items():
+        subject_set, nbr_created, updated_metadata_batch = create_subject_set(batch_name, batch,
+                                                                              input_directory, cwb_project)
+        manifest_with_ids.update(updated_metadata_batch)
+        subjects_done += nbr_created
+        print(f'Subjects processed: {subjects_done} / {nbr_subjects}')
+        if not options.dry_run:
+            print(f'Updating Zooniverse project with set {subject_set.display_name}')
+            cwb_project.add_subject_sets([subject_set])
+            cwb_project.save()
+        else:
+            print('Not updating Zooniverse project')
+        elapsed_time = datetime.now() - START_TIME
+        # drop the microseconds
+        elapsed_time_str = str(datetime.now() - START_TIME).split('.')[0]
+        seconds_per_subject = elapsed_time.total_seconds() / subjects_done
+        print(f'Elapsed time: {elapsed_time_str} ({seconds_per_subject:.2f} seconds/subject)')
+        finish_time = timedelta(seconds=(nbr_subjects * elapsed_time.total_seconds() / subjects_done)) + START_TIME
+        finish_str = str(finish_time).split('.')[0]
+        print(f'Estimated finish time: {finish_str}')
+        print()
+    return manifest_with_ids
+
+
 if __name__ == "__main__":
     oparser = argparse.ArgumentParser(description="Generate Zooniverse manifest")
 
@@ -152,28 +179,8 @@ if __name__ == "__main__":
 
     named_batches = create_batches(options.subject_set_infix, manifest)
     print(f'Number of batches: {len(named_batches)}')
-    subjects_done = 0
 
-    updated_manifest = dict()
-
-    for batch_name, batch in named_batches.items():
-        subject_set, nbr_created, updated_metadata_batch = create_subject_set(batch_name, batch,
-                                                                              input_directory, cwb_project)
-        updated_manifest.update(updated_metadata_batch)
-        subjects_done += nbr_created
-        print(f'Subjects processed: {subjects_done} / {nbr_subjects}')
-        if not options.dry_run:
-            print(f'Updating Zooniverse project with set {subject_set.display_name}')
-            cwb_project.add_subject_sets([subject_set])
-            cwb_project.save()
-        else:
-            print('Not updating Zooniverse project')
-        elapsed_time = datetime.now() - START_TIME
-        # drop the microseconds
-        elapsed_time_str = str(datetime.now() - START_TIME).split('.')[0]
-        seconds_per_subject = elapsed_time.total_seconds() / subjects_done
-        print(f'Elapsed time: {elapsed_time_str} ({seconds_per_subject:.2f} seconds/subject)')
-        print()
+    updated_manifest = upload_batches(named_batches)
 
     output_path = make_updated_path(options.manifest_path)
     print(f'Writing {output_path}')
