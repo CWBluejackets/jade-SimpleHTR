@@ -188,11 +188,13 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
     if config['htr']:
         csv_file = os.path.join(output_dir, f'{output_prefix}.csv')
         print(f'SUMMARY: Writing {csv_file}')
+        csv2json = dict()
         with open(csv_file, 'w', newline='') as f:
             writer = csv.writer(f)
             writer.writerow(csv_header)
             for row_no in range(max(csv_table.keys()) + 1):
                 writer.writerow([row_no] + csv_table[row_no])
+                csv2json[row_no] = dict(zip(csv_header[1:], csv_table))
         workflow_confidence_summary = dict()
         column_confidence_summary = dict()
         for workflow_id, confidences in confidence_by_workflow.items():
@@ -209,6 +211,7 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
                                     'overall': sheet_confidence_summary}
 
     global_statistics['sheets']['processed'] += 1
+    sheet_info['output'] = csv2json
     write_sheet_info(output_dir, output_prefix, sheet_info)
     return
 
