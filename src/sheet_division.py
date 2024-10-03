@@ -139,6 +139,7 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
     for cell_spec in cell_list:
         workflow_id = cell_spec['workflow']
         global_statistics['cells_by_type'][str(workflow_id)] += 1
+        global_statistics['cells_by_type'][str(workflow_id)] += 1
         row = cell_spec['row']
         column = cell_spec['column']
         filename_base = f'{output_prefix}_{row:02d}_{column:02d}'
@@ -161,12 +162,15 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
             row_no = cell_result['row']
             column_no = cell_result['column']
             csv_table[row_no][column_no * 4] = cell_result['text']
-            csv_table[row_no][column_no * 4 + 1] = cell_result['status']
+            status = cell_result['status']
+            csv_table[row_no][column_no * 4 + 1] = status
             csv_table[row_no][column_no * 4 + 2] = cell_result['confidence']
             csv_table[row_no][column_no * 4 + 3] = cell_result['blankness']
             confidence_by_workflow[workflow_id].append(cell_result['confidence'])
             confidence_by_column[column].append(cell_result['confidence'])
             global_confidences[workflow_id].append(cell_result['confidence'])
+            global_statistics['status'][status] += 1
+            global_statistics['workflow_status'][str(workflow_id)][status] += 1
 
         elif random.random() < 0.01:
             # if not running HTR, generate a random 1% of correction images to check the geometry
