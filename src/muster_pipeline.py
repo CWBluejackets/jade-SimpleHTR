@@ -139,11 +139,11 @@ if __name__ == "__main__":
     else:
         raise ValueError(f'Input location {input_location} is not a valid file or directory!')
 
-    global_statistics = {'sheets': Counter,
-                         'cells_by_type': Counter,
-                         'corrections_by_type': Counter,
-                         'status': Counter,
-                         'workflow_status': defaultdict(Counter),}
+    global_statistics = {'sheets': Counter(),
+                         'cells_by_type': Counter(),
+                         'corrections_by_type': Counter(),
+                         'status': Counter(),
+                         'workflow_status': defaultdict(Counter)}
     global_confidences = defaultdict(list)
 
     for input_file in input_files:
