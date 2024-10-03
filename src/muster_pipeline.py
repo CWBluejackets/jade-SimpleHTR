@@ -141,6 +141,7 @@ if __name__ == "__main__":
 
     global_statistics = {'sheets': Counter(),
                          'cells_by_type': Counter(),
+                         'cells_total': Counter(),
                          'corrections_by_type': Counter(),
                          'status': Counter(),
                          'workflow_status': defaultdict(Counter)}

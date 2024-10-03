@@ -139,7 +139,7 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
     for cell_spec in cell_list:
         workflow_id = cell_spec['workflow']
         global_statistics['cells_by_type'][str(workflow_id)] += 1
-        global_statistics['cells_by_type'][str(workflow_id)] += 1
+        global_statistics['cells_total'] += 1
         row = cell_spec['row']
         column = cell_spec['column']
         filename_base = f'{output_prefix}_{row:02d}_{column:02d}'
