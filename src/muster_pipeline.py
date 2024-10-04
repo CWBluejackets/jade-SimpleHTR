@@ -142,7 +142,7 @@ if __name__ == "__main__":
     global_statistics = {'sheet_count': Counter(),
                          'sheets': defaultdict(list),
                          'cells_by_type': Counter(),
-                         'cells_total': Counter(),
+                         'cells_total': 0,
                          'corrections_by_type': Counter(),
                          'status': Counter(),
                          'status_by_sheet': defaultdict(Counter),
