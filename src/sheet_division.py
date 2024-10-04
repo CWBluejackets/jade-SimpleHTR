@@ -3,7 +3,7 @@ import csv
 import json
 import os.path
 import random
-from collections import defaultdict
+from collections import defaultdict, Counter
 
 import cv2
 import numpy as np
@@ -35,6 +35,7 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
     """
     print(f'Reading image from {input_jpg_file}')
     sheet_info = {'input_file': input_jpg_file}
+    sheet_info['status'] = Counter()
     output_prefix = os.path.splitext(os.path.basename(input_jpg_file))[0]
 
     try:
@@ -171,6 +172,8 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
             global_confidences[workflow_id].append(cell_result['confidence'])
             global_statistics['status'][status] += 1
             global_statistics['workflow_status'][str(workflow_id)][status] += 1
+            global_statistics['processed_sheet_status'][output_prefix][status] += 1
+            sheet_info['status'][status] += 1
 
         elif random.random() < 0.01:
             # if not running HTR, generate a random 1% of correction images to check the geometry

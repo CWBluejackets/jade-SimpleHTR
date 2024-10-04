@@ -144,6 +144,7 @@ if __name__ == "__main__":
                          'cells_total': Counter(),
                          'corrections_by_type': Counter(),
                          'status': Counter(),
+                         'processed_sheet_status': defaultdict(Counter),
                          'workflow_status': defaultdict(Counter)}
     global_confidences = defaultdict(list)
 
