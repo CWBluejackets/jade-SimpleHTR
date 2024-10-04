@@ -139,13 +139,14 @@ if __name__ == "__main__":
     else:
         raise ValueError(f'Input location {input_location} is not a valid file or directory!')
 
-    global_statistics = {'sheets': Counter(),
+    global_statistics = {'sheet_count': Counter(),
+                         'sheets': defaultdict(list),
                          'cells_by_type': Counter(),
                          'cells_total': Counter(),
                          'corrections_by_type': Counter(),
                          'status': Counter(),
-                         'processed_sheet_status': defaultdict(Counter),
-                         'workflow_status': defaultdict(Counter)}
+                         'status_by_sheet': defaultdict(Counter),
+                         'status_by_workflow': defaultdict(Counter)}
     global_confidences = defaultdict(list)
 
     for input_file in input_files:
@@ -156,24 +157,27 @@ if __name__ == "__main__":
         output_prefix = os.path.splitext(os.path.basename(input_file))[0]
         sheet_info = {'input_file': input_file,
                       'index_key': index_key}
-        global_statistics['sheets']['files found'] += 1
+        global_statistics['sheet_count']['files found'] += 1
         if image_metadata is None:
             print(f'SUMMARY: skipping {input_file} no metadata for {index_key}')
             error = 'no metadata'
             sheet_info['error'] = error
-            global_statistics['sheets'][error] += 1
+            global_statistics['sheet_count'][error] += 1
+            global_statistics['sheets'][error].append(output_prefix)
             write_sheet_info(output_dir, output_prefix, sheet_info)
         elif image_metadata['bad_alignment']:
             print(f'SUMMARY: Skipping {input_file} bad alignment')
             error = 'bad alignment'
             sheet_info['error'] = error
-            global_statistics['sheets'][error] += 1
+            global_statistics['sheet_count'][error] += 1
+            global_statistics['sheets'][error].append(output_prefix)
             write_sheet_info(output_dir, output_prefix, sheet_info)
         elif image_metadata['non_standard']:
             error = 'non-standard'
             print(f'SUMMARY: Skipping {input_file}  non-standard')
             sheet_info['error'] = error
-            global_statistics['sheets'][error] += 1
+            global_statistics['sheet_count'][error] += 1
+            global_statistics['sheets'][error].append(output_prefix)
             write_sheet_info(output_dir, output_prefix, sheet_info)
         else:
             sheet_division.process_muster_sheet(input_file, image_metadata,
@@ -181,7 +185,8 @@ if __name__ == "__main__":
                                                 config, workflows,
                                                 templates, global_statistics,
                                                 global_confidences)
-            global_statistics['sheets']['attempted'] += 1
+            global_statistics['sheet_count']['attempted'] += 1
+            global_statistics['sheets']['attempted'].append(output_prefix)
 
     confidence_deciles = {str(workflow_id): np.quantile(confidence_list, DECILES)
                           for workflow_id, confidence_list

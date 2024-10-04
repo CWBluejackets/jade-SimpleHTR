@@ -42,17 +42,21 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
         form_type = image_metadata['type']
         sheet_info['form_type'] = form_type
         print(f'SUMMARY: Form type is {form_type}')
-        global_statistics['sheets'][f'type {form_type}'] += 1
+        global_statistics['sheet_count'][f'type {form_type}'] += 1
+        global_statistics['sheets'][f'type {form_type}'].append(output_prefix)
+
     except KeyError:
         print(f'SUMMARY: Missing form type!')
         sheet_info['form_type'] = '_MISSING_'
-        global_statistics['sheets']['type _MISSING_'] += 1
+        global_statistics['sheet_count']['type _MISSING_'] += 1
+        global_statistics['sheets']['type _MISSING_'].append(output_prefix)
         write_sheet_info(output_dir, output_prefix, sheet_info)
         return
     if form_type not in templates:
         print(f'SUMMARY: Form type {form_type} is not supported')
         sheet_info['error'] = 'Form type is not supported'
-        global_statistics['sheets']['type not supported'] += 1
+        global_statistics['sheet_count']['type not supported'] += 1
+        global_statistics['sheets']['type not supported'].append(output_prefix)
         write_sheet_info(output_dir, output_prefix, sheet_info)
         return
 
@@ -63,7 +67,8 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
         print(f'SUMMARY: File {input_jpg_file} not found')
         error = 'file not found'
         sheet_info['error'] = error
-        global_statistics['sheets'][error] += 1
+        global_statistics['sheet_count'][error] += 1
+        global_statistics['sheets'][error].append(output_prefix)
         write_sheet_info(output_dir, output_prefix, sheet_info)
         return
 
@@ -171,8 +176,8 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
             confidence_by_column[column].append(cell_result['confidence'])
             global_confidences[workflow_id].append(cell_result['confidence'])
             global_statistics['status'][status] += 1
-            global_statistics['workflow_status'][str(workflow_id)][status] += 1
-            global_statistics['processed_sheet_status'][output_prefix][status] += 1
+            global_statistics['status_by_workflow'][str(workflow_id)][status] += 1
+            global_statistics['status_by_sheet'][output_prefix][status] += 1
             sheet_info['status'][status] += 1
 
         elif random.random() < 0.01:
@@ -217,7 +222,8 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
                                     'columns': column_confidence_summary,
                                     'overall': sheet_confidence_summary}
 
-    global_statistics['sheets']['processed'] += 1
+    global_statistics['sheet_count']['processed'] += 1
+    global_statistics['sheets']['processed'].append(output_prefix)
     sheet_info['output'] = csv2json
     write_sheet_info(output_dir, output_prefix, sheet_info)
     return
