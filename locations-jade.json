@@ -1,0 +1,10 @@
+{
+  "input_directory": "/jmain02/home/J2AD003/txk64/axf12-txk64/bluejackets/pipeline/input",
+  "output_directory": "/jmain02/home/J2AD003/txk64/axf12-txk64/bluejackets/pipeline/output",
+  "corrections_directory": "/jmain02/home/J2AD003/txk64/axf12-txk64/bluejackets/pipeline/corrections",
+  "img_file_exception": true,
+  "metadata_file": "/jmain02/home/J2AD003/txk64/axf12-txk64/bluejackets/pipeline/Master_Sheet_Entry_Log.csv",
+  "inventory_file": "/jmain02/home/J2AD003/txk64/axf12-txk64/bluejackets/pipeline/Muster_Roll_Inventory.csv",
+  "models_directory": "/jmain02/home/J2AD003/txk64/axf12-txk64/bluejackets/models",
+  "model_mapping": "pipeline-models.json"
+}
