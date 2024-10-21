@@ -23,5 +23,8 @@ pip install $TF_BINARY_URL
 pip install -r requirements.txt 
 # version incompatibilities with three packages so...
 pip install numpy matplotlib opencv-python
-# and hope for the best
+pip install scipy
+pip install scikit-image==0.19
+pip install lmdb==1.0.0
+pip install path==15.0.0
 ```
