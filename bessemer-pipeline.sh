@@ -15,7 +15,7 @@
 
 # load the modules for the program we want to run
 module load Anaconda3/2019.07
-module load cuda/10.1
+# module load cuda/10.1
 echo "modules loaded"
 
 HTR_DIR="${HOME}/bluejackets/jade-SimpleHTR"
