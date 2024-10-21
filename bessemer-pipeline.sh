@@ -7,7 +7,6 @@
 #SBATCH --time=24:00:00
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:1
-#SBATCH --partition=small
 # time limit on big is 24h <http://docs.jade.ac.uk/en/latest/jade/scheduler/>
 
 #SBATCH --job-name=CWB_pipeline
@@ -18,7 +17,7 @@
 # http://docs.jade.ac.uk/en/latest/jade/scheduler/index.html
 
 # load the modules for the program we want to run
-module load python/anaconda3
+module load Anaconda3/2019.07
 module load cuda/10.1
 echo "modules loaded"
 
@@ -58,7 +57,9 @@ echo "environment activated"
 echo
 cd "${HTR_DIR}/src" || exit 99
 
-COMMAND="python3 muster_pipeline.py ${OPTIONS}"
+# https://docs.hpc.shef.ac.uk/en/latest/bessemer/software/apps/python.html
+
+COMMAND="srun python3 muster_pipeline.py ${OPTIONS}"
 echo "${COMMAND}"
 echo
 ${COMMAND}
@@ -69,7 +70,7 @@ echo
 
 cd "${HTR_DIR}" || exit 98
 MF_OPTIONS="-l ${LOCATIONS_FILE}"
-COMMAND="python3 create_zoon_manifest.py ${MF_OPTIONS}"
+COMMAND="srun python3 create_zoon_manifest.py ${MF_OPTIONS}"
 echo "${COMMAND}"
 echo
 ${COMMAND}
