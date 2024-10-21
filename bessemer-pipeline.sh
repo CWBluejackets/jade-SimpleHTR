@@ -5,7 +5,6 @@
 # set memory, nodes, GPUs, time limit
 #SBATCH --mem=16000
 #SBATCH --time=24:00:00
-#SBATCH --nodes=1
 #SBATCH --gres=gpu:1
 # time limit on big is 24h <http://docs.jade.ac.uk/en/latest/jade/scheduler/>
 
