@@ -28,3 +28,10 @@ pip install scikit-image==0.19
 pip install lmdb==1.0.0
 pip install path==15.0.0
 ```
+
+## locations
+
+- training data: `/fastdata/li1af/bluejackets/training_data/<workflow_id>`
+  - ID from original workflows
+- models: `/home/li1af/bluejackets/models/<slurm_id>`
+  - ID from slurm job number when training
