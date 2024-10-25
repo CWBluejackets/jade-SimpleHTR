@@ -67,29 +67,6 @@ def make_updated_path(manifest_path: str) -> str:
     return updated_path
 
 
-def create_batches(infix: str, manifest0: dict) -> dict:
-    """
-    :param infix: batch name prefix
-    :param manifest0: manifest dict
-    :return: batches dict batch_name -> list of tuples (filename, metadata)
-    """
-    sequence = 0
-    vessel_year_batches = defaultdict(list)
-    for filename, metadata in manifest0.items():
-        vessel = metadata['vessel']
-        year = metadata['#muster_year'] or 0
-        vessel_year_batches[vessel, year].append((filename, metadata))
-    results = defaultdict(list)
-    print(f'Number of vessel-year combinations: {len(vessel_year_batches)}')
-    for (vessel, year), big_batch in vessel_year_batches.items():
-        for i in range(0, len(big_batch), MAX_BATCH_SIZE):
-            batch0 = big_batch[i: i + MAX_BATCH_SIZE]
-            batch_name0 = f'{vessel} {year:04d} {infix}_{sequence:05d}'
-            sequence += 1
-            results[batch_name0] = batch0
-    return results
-
-
 def upload_batches(batches):
     subjects_done = 0
     manifest_with_ids = dict()
@@ -135,22 +112,9 @@ if __name__ == "__main__":
                          metavar='PATH/zooniverse.json',
                          help='path to JSON Zooniverse credentials file')
 
-    oparser.add_argument('-m', dest='manifest_path',
-                         type=str,
-                         required=True,
-                         metavar='PATH/manifest.json',
-                         help='path to JSON manifest file in image directory')
-
-    oparser.add_argument('-s', dest='subject_set_infix',
-                         type=str,
-                         required=True,
-                         metavar='NAME',
-                         help='infix for subject set name')
-
-    oparser.add_argument('-n', dest='dry_run',
-                         default=False,
-                         action='store_true',
-                         help='do not update Zooniverse')
+    oparser.add_argument('batch_files', metavar='BATCH_01234.json',
+                         nargs='+',
+                         help='batch files')
 
     options = oparser.parse_args()
 
@@ -168,17 +132,16 @@ if __name__ == "__main__":
     if not (options.user_id and options.password):
         raise ValueError('Zooniverse userid and password are required')
 
-    manifest = load_manifest(options.manifest_path)
-    input_directory = os.path.dirname(options.manifest_path)
-    nbr_subjects = len(manifest)
-    print(f'Number of subjects: {nbr_subjects}')
+    print(f'Number of batchs: {len(options.batch_files)}')
 
     Panoptes.connect(username=options.user_id, password=options.password)
     cwb_project = Project.find(PROJECT_ID)
     print('Connection and project OK')
 
-    named_batches = create_batches(options.subject_set_infix, manifest)
-    print(f'Number of batches: {len(named_batches)}')
+    for input_file in options.batch_files:
+        pass
+
+
 
     updated_manifest = upload_batches(named_batches)
 
