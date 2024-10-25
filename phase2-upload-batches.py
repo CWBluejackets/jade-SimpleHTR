@@ -139,7 +139,12 @@ if __name__ == "__main__":
     print('Connection and project OK')
 
     for input_file in options.batch_files:
-        pass
+        with open(input_file, 'r') as f:
+            batch_manifest = json.load(f)
+        batch_name = batch_manifest['batch_name']
+        contents = batch_manifest['contents']
+        updated_manifest = upload_batch(cwb_project, batch_name, contents)
+        with open()
 
 
 
