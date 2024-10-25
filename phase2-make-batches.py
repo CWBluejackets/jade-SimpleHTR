@@ -67,13 +67,14 @@ def make_updated_path(manifest_path: str) -> str:
     return updated_path
 
 
-def create_batches(infix: str, manifest0: dict) -> dict:
+def create_batches(infix: str, manifest0: dict) -> Tuple[dict, dict]:
     """
     :param infix: batch name prefix
     :param manifest0: manifest dict
     :return: batches dict batch_name -> list of tuples (filename, metadata)
     """
     sequence = 0
+    sequence_ids = {}
     vessel_year_batches = defaultdict(list)
     for filename, metadata in manifest0.items():
         vessel = metadata['vessel']
@@ -83,57 +84,31 @@ def create_batches(infix: str, manifest0: dict) -> dict:
     print(f'Number of vessel-year combinations: {len(vessel_year_batches)}')
     for (vessel, year), big_batch in vessel_year_batches.items():
         for i in range(0, len(big_batch), MAX_BATCH_SIZE):
+            sequence_id = f'{sequence:05d}'
             batch0 = big_batch[i: i + MAX_BATCH_SIZE]
-            batch_name0 = f'{vessel} {year:04d} {infix}_{sequence:05d}'
+            batch_name0 = f'{vessel} {year:04d} {infix}_{sequence_id}'
             sequence += 1
             results[batch_name0] = batch0
-    return results
+            sequence_ids[sequence_id] = batch_name0
+    return results, sequence_ids
 
 
-def upload_batches(batches):
-    subjects_done = 0
-    manifest_with_ids = dict()
-    for batch_name, batch in batches.items():
-        subject_set, nbr_created, updated_metadata_batch = create_subject_set(batch_name, batch,
-                                                                              input_directory, cwb_project)
-        manifest_with_ids.update(updated_metadata_batch)
-        subjects_done += nbr_created
-        print(f'Subjects processed: {subjects_done} / {nbr_subjects}')
-        if not options.dry_run:
-            print(f'Updating Zooniverse project with set {subject_set.display_name}')
-            cwb_project.add_subject_sets([subject_set])
-            cwb_project.save()
-        else:
-            print('Not updating Zooniverse project')
-        elapsed_time = datetime.now() - START_TIME
-        # drop the microseconds
-        elapsed_time_str = str(datetime.now() - START_TIME).split('.')[0]
-        seconds_per_subject = elapsed_time.total_seconds() / subjects_done
-        print(f'Elapsed time: {elapsed_time_str} ({seconds_per_subject:.2f} seconds/subject)')
-        finish_time = timedelta(seconds=(nbr_subjects * elapsed_time.total_seconds() / subjects_done)) + START_TIME
-        finish_str = str(finish_time).split('.')[0]
-        print(f'Estimated finish time: {finish_str}')
-        print()
-    return manifest_with_ids
+def make_batch_filename(manifest_path: str, seq_id: str) -> str:
+    base = os.path.basename(manifest_path)
+    return f'{base}_BATCH_{seq_id}.json'
+
+
+def write_batch_manifest(filename: str, batch_name0: str, batch0:dict) -> None:
+    data = {'set_name': batch_name0,
+            'contents': batch0}
+    print(f'Writing: {filename}')
+    with open(filename, 'w') as f:
+        json.dump(data, f)
+    return
 
 
 if __name__ == "__main__":
     oparser = argparse.ArgumentParser(description="Generate Zooniverse manifest")
-
-    oparser.add_argument('-u', dest='user_id',
-                         type=str,
-                         metavar='USERID',
-                         help='Zooniverse userid')
-
-    oparser.add_argument('-p', dest='password',
-                         type=str,
-                         metavar='PASSWORD',
-                         help='Zooniverse password')
-
-    oparser.add_argument('-c', dest='auth_file',
-                         type=str,
-                         metavar='PATH/zooniverse.json',
-                         help='path to JSON Zooniverse credentials file')
 
     oparser.add_argument('-m', dest='manifest_path',
                          type=str,
@@ -150,40 +125,24 @@ if __name__ == "__main__":
     oparser.add_argument('-n', dest='dry_run',
                          default=False,
                          action='store_true',
-                         help='do not update Zooniverse')
+                         help='do not generate output files')
 
     options = oparser.parse_args()
 
     START_TIME = datetime.now()
-
-    # Load authorization file if specified but do NOT overwrite CLI options
-    if options.auth_file:
-        print(f'Loading {options.auth_file}')
-        with open(options.auth_file, 'r') as f:
-            auth = json.load(f)
-    options.user_id = options.user_id or auth['user_id']
-    options.password = options.password or auth['password']
-
-    # It won't work without these
-    if not (options.user_id and options.password):
-        raise ValueError('Zooniverse userid and password are required')
 
     manifest = load_manifest(options.manifest_path)
     input_directory = os.path.dirname(options.manifest_path)
     nbr_subjects = len(manifest)
     print(f'Number of subjects: {nbr_subjects}')
 
-    Panoptes.connect(username=options.user_id, password=options.password)
-    cwb_project = Project.find(PROJECT_ID)
-    print('Connection and project OK')
-
-    named_batches = create_batches(options.subject_set_infix, manifest)
+    named_batches, sequence_ids = create_batches(options.subject_set_infix, manifest)
     print(f'Number of batches: {len(named_batches)}')
 
-    updated_manifest = upload_batches(named_batches)
-
-    output_path = make_updated_path(options.manifest_path)
-    print(f'Writing {output_path}')
-    with open(output_path, 'w') as f:
-        json.dump(updated_manifest, f, indent=1, sort_keys=True)
+    if options.dry_run:
+        print('Not generating batch manifests')
+    else:
+        for sequence_id, batch_name in sequence_ids.items():
+            batch_filename = make_batch_filename(options.manifest_path, sequence_id)
+            write_batch_manifest(batch_filename, batch_name, named_batches[batch_name])
 
