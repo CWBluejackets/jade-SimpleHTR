@@ -94,16 +94,16 @@ def create_batches(infix: str, manifest0: dict) -> Tuple[dict, dict]:
 
 
 def make_batch_filename(manifest_path: str, seq_id: str) -> str:
-    base = os.path.basename(manifest_path)
+    base = os.path.splitext(manifest_path)[0]
     return f'{base}_BATCH_{seq_id}.json'
 
 
 def write_batch_manifest(filename: str, batch_name0: str, batch0:dict) -> None:
-    data = {'set_name': batch_name0,
+    data = {'batch_name': batch_name0,
             'contents': batch0}
-    print(f'Writing: {filename}')
+    print(f'Writing: {filename} <- {batch_name0}')
     with open(filename, 'w') as f:
-        json.dump(data, f)
+        json.dump(data, f, indent=1, sort_keys=True)
     return
 
 
