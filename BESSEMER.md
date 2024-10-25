@@ -3,6 +3,7 @@
 ## conda environment
 
 ```shell
+srun --pty bash -i 
 module load Anaconda3/2019.07
 conda create -n simplehtr1 python=3.8
 conda activate simplehtr1
@@ -27,6 +28,7 @@ pip install scipy
 pip install scikit-image==0.19
 pip install lmdb==1.0.0
 pip install path==15.0.0
+pip install levenshtein editdistance pandas
 ```
 
 ## locations
