@@ -94,6 +94,19 @@ def upload_batches(batches):
     return manifest_with_ids
 
 
+def upload_batch(connection, directory, batch_name0, file_list):
+    subject_set0, nbr_subjects0, updated_metadata_by_id = create_subject_set(batch_name0, file_list,
+                                                                             directory, connection)
+    print(f'updating with set {subject_set0.display_name}')
+    cwb_project.add_subject_sets([subject_set0])
+    cwb_project.save()
+    updated_manifest0 = {'contents': updated_metadata_by_id,
+                        'batch_name': batch_name0}
+    return updated_manifest0
+
+
+
+
 if __name__ == "__main__":
     oparser = argparse.ArgumentParser(description="Generate Zooniverse manifest")
 
@@ -132,26 +145,30 @@ if __name__ == "__main__":
     if not (options.user_id and options.password):
         raise ValueError('Zooniverse userid and password are required')
 
-    print(f'Number of batchs: {len(options.batch_files)}')
+    nbr_batches = len(options.batch_files)
+    print(f'Number of batches: {nbr_batches}')
 
     Panoptes.connect(username=options.user_id, password=options.password)
     cwb_project = Project.find(PROJECT_ID)
     print('Connection and project OK')
 
-    for input_file in options.batch_files:
+    for i, input_file in enumerate(options.batch_files):
+        print(f'Reading {input_file}')
         with open(input_file, 'r') as f:
             batch_manifest = json.load(f)
+        manifest_dir = os.path.dirname(input_file)
+        output_file = make_updated_path(input_file)
         batch_name = batch_manifest['batch_name']
         contents = batch_manifest['contents']
-        updated_manifest = upload_batch(cwb_project, batch_name, contents)
-        with open()
-
-
-
-    updated_manifest = upload_batches(named_batches)
-
-    output_path = make_updated_path(options.manifest_path)
-    print(f'Writing {output_path}')
-    with open(output_path, 'w') as f:
-        json.dump(updated_manifest, f, indent=1, sort_keys=True)
+        updated_manifest = upload_batch(cwb_project, manifest_dir, batch_name, contents)
+        print(f'Writing {output_file}')
+        with open(output_file, 'w') as f:
+            json.dump(updated_manifest, f, indent=1, sort_keys=True)
+        elapsed_time = datetime.now() - START_TIME
+        elapsed_time_str = str(datetime.now() - START_TIME).split('.')[0]
+        seconds_per_batch = elapsed_time.total_seconds() / (i + 1)
+        print(f'Elapsed time: {elapsed_time_str} ({seconds_per_batch:.2f} seconds/batch)')
+        finish_time = timedelta(seconds=(nbr_batches * elapsed_time.total_seconds() / (i + 1))) + START_TIME
+        finish_str = str(finish_time).split('.')[0]
+        print(f'Estimated finish time: {finish_str}')
 
