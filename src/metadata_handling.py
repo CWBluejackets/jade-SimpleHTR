@@ -117,7 +117,7 @@ class Metadata:
             if muster_date_specified:
                 muster_date_running = muster_date_specified
             bad_alignment = yes_boolean(row['Alignment issue?'])
-            non_standard = yes_boolean(row['Non-standard?'])
+            non_standard = yes_boolean(row['Non Type 2/3'])
             type_name = row['Muster Type']
             raw_vessel = row['Ship name']
             vessel = normalize_vessel(raw_vessel)
