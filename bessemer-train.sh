@@ -3,7 +3,7 @@
 #SBATCH --job-name=CWB_pipeline
 #SBATCH --nodes=1
 #SBATCH --mem=16G
-#SBATCH --time=48:00:00
+#SBATCH --time=96:00:00
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=a.funk@sheffield.ac.uk
 
