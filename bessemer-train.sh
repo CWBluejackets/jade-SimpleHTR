@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=CWB_pipeline
+#SBATCH --job-name=CWB_train
 #SBATCH --nodes=1
 #SBATCH --mem=16G
 #SBATCH --time=96:00:00
