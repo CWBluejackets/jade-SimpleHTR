@@ -2,23 +2,25 @@
 import argparse
 import json
 import os
+import traceback
 from collections import defaultdict
 from typing import Tuple
 from datetime import datetime, timedelta
 
 from panoptes_client import Panoptes, Project, SubjectSet, Subject
+from panoptes_client.panoptes import PanoptesAPIException
 
 PROJECT_ID = 18285
 MAX_BATCH_SIZE = 1000
 
 
 def create_subject_set(batch_name0, batch0, input_directory0, project) -> Tuple[SubjectSet, int, dict]:
-    subject_set0 = SubjectSet()
-    subject_set0.links.project = project
-    subject_set0.display_name = batch_name0
+    subject_set = SubjectSet()
+    subject_set.links.project = project
+    subject_set.display_name = batch_name0
     print(f'Creating subject set: {batch_name0}')
     subjects = []
-    nbr_subjects0 = len(batch0)
+    nbr_subjects = len(batch0)
     nbr_added = 0
     updated_metadata_by_id = {}
     # note: a batch is now a list of tuples (filename, metadata)
@@ -26,7 +28,7 @@ def create_subject_set(batch_name0, batch0, input_directory0, project) -> Tuple[
         nbr_added += 1
         image_path = os.path.join(input_directory0, image_fn)
         # https://stackoverflow.com/questions/5419389/how-to-overwrite-the-previous-print-to-stdout
-        print(f'Adding image ({nbr_added}/{nbr_subjects0}) from {image_path}', end='\r')
+        print(f'Adding image ({nbr_added}/{nbr_subjects}) from {image_path}', end='\r')
         subject = Subject()
         subject.links.project = project
         subject.add_location(image_path)
@@ -40,16 +42,9 @@ def create_subject_set(batch_name0, batch0, input_directory0, project) -> Tuple[
         updated_metadata['subject_id'] = int_subject_id(subject_id)
         updated_metadata_by_id[subject_id] = updated_metadata
     print()
-    subject_set0.save()
-    subject_set0.add(subjects)
-    return subject_set0, nbr_subjects0, updated_metadata_by_id
-
-
-def load_manifest(manifest_path) -> dict:
-    print(f'Loading manifest from {manifest_path}')
-    with open(manifest_path, 'r') as f:
-        manifest0 = json.load(f)
-    return manifest0
+    subject_set.save()
+    subject_set.add(subjects)
+    return subject_set, nbr_subjects, updated_metadata_by_id
 
 
 def int_subject_id(subject_id):
@@ -67,33 +62,6 @@ def make_updated_path(manifest_path: str) -> str:
     return updated_path
 
 
-def upload_batches(batches):
-    subjects_done = 0
-    manifest_with_ids = dict()
-    for batch_name, batch in batches.items():
-        subject_set, nbr_created, updated_metadata_batch = create_subject_set(batch_name, batch,
-                                                                              input_directory, cwb_project)
-        manifest_with_ids.update(updated_metadata_batch)
-        subjects_done += nbr_created
-        print(f'Subjects processed: {subjects_done} / {nbr_subjects}')
-        if not options.dry_run:
-            print(f'Updating Zooniverse project with set {subject_set.display_name}')
-            cwb_project.add_subject_sets([subject_set])
-            cwb_project.save()
-        else:
-            print('Not updating Zooniverse project')
-        elapsed_time = datetime.now() - START_TIME
-        # drop the microseconds
-        elapsed_time_str = str(datetime.now() - START_TIME).split('.')[0]
-        seconds_per_subject = elapsed_time.total_seconds() / subjects_done
-        print(f'Elapsed time: {elapsed_time_str} ({seconds_per_subject:.2f} seconds/subject)')
-        finish_time = timedelta(seconds=(nbr_subjects * elapsed_time.total_seconds() / subjects_done)) + START_TIME
-        finish_str = str(finish_time).split('.')[0]
-        print(f'Estimated finish time: {finish_str}')
-        print()
-    return manifest_with_ids
-
-
 def upload_batch(connection, directory, batch_name0, file_list):
     subject_set0, nbr_subjects0, updated_metadata_by_id = create_subject_set(batch_name0, file_list,
                                                                              directory, connection)
@@ -101,10 +69,8 @@ def upload_batch(connection, directory, batch_name0, file_list):
     cwb_project.add_subject_sets([subject_set0])
     cwb_project.save()
     updated_manifest0 = {'contents': updated_metadata_by_id,
-                        'batch_name': batch_name0}
+                         'batch_name': batch_name0}
     return updated_manifest0
-
-
 
 
 if __name__ == "__main__":
@@ -160,10 +126,15 @@ if __name__ == "__main__":
         output_file = make_updated_path(input_file)
         batch_name = batch_manifest['batch_name']
         contents = batch_manifest['contents']
-        updated_manifest = upload_batch(cwb_project, manifest_dir, batch_name, contents)
-        print(f'Writing {output_file}')
-        with open(output_file, 'w') as f:
-            json.dump(updated_manifest, f, indent=1, sort_keys=True)
+        try:
+            updated_manifest = upload_batch(cwb_project, manifest_dir, batch_name, contents)
+            print(f'Writing {output_file}')
+            with open(output_file, 'w') as f:
+                json.dump(updated_manifest, f, indent=1, sort_keys=True)
+        except PanoptesAPIException as e:
+            print(f'Failed during upload of batch {batch_name} from {input_file}')
+            print(traceback.format_exc())
+
         elapsed_time = datetime.now() - START_TIME
         elapsed_time_str = str(datetime.now() - START_TIME).split('.')[0]
         seconds_per_batch = elapsed_time.total_seconds() / (i + 1)
@@ -171,4 +142,3 @@ if __name__ == "__main__":
         finish_time = timedelta(seconds=(nbr_batches * elapsed_time.total_seconds() / (i + 1))) + START_TIME
         finish_str = str(finish_time).split('.')[0]
         print(f'Estimated finish time: {finish_str}')
-
