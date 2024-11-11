@@ -64,12 +64,11 @@ if __name__ == "__main__":
     with open(options.config_file, 'r') as f:
         config = json.load(f)
     config['verbose'] = options.verbose
+    config['debug'] = options.debug
     if options.registration_only:
         config['registration_only'] = True
-        config['debug'] = True
     else:
         config['registration_only'] = False
-        config['debug'] = options.debug
     config['htr'] = not config['registration_only']
 
     # workflow specifications
@@ -103,10 +102,7 @@ if __name__ == "__main__":
 
     for key, specification in templates.items():
         print(f'Processing template {key}')
-        if config['debug']:
-            debug_template_path = os.path.join(locations['output_directory'], f'template_{key}.json')
-        else:
-            debug_template_path = None
+        debug_template_path = os.path.join(locations['output_directory'], f'template_{key}.json')
         template_handling.add_template_info(specification, templates_directory, workflows, debug_template_path)
 
     print()
