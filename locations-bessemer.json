@@ -6,5 +6,5 @@
   "metadata_file": "/home/li1af/bluejackets/pipeline/Master_Sheet_Entry_Log.csv",
   "inventory_file": "/home/li1af/bluejackets/pipeline/Muster_Roll_Inventory.csv",
   "models_directory": "/home/li1af/bluejackets/models",
-  "model_mapping": "pipeline-models.json"
+  "model_mapping": "pipeline-models-bessemer.json"
 }

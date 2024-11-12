@@ -83,7 +83,7 @@ if __name__ == "__main__":
     model_control_file = os.path.join(os.path.dirname(options.locations_file),
                                       locations['model_mapping'])
     models_directory = locations['models_directory']
-    print(f'Loading {model_control_file}')
+    print(f'Loading model control file: {model_control_file}')
     with open(model_control_file, 'r') as f:
         model_mapping = json.load(f)
     for workflow_str, subdirectory in model_mapping.items():
