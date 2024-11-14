@@ -11,7 +11,12 @@ NON_LETTER = re.compile(r'[^a-z]+')
 # Vessels misspelled in the Master Sheet Entry Log pulldown menu:
 VESSEL_CORRECTIONS = {'adriondack': 'adirondack',
                       'agamenticus': 'agamanticus',
-                      'cincinatti': 'cincinnati'
+                      'cincinatti': 'cincinnati',
+                      'henryjames': 'henryjanes',
+                      'hollycock': 'hollyhock',
+                      'howquait': 'howquah',
+                      'lackwanna': 'lackawanna',
+                      'farallones': 'farrallones'
                       }
 
 # columns:
