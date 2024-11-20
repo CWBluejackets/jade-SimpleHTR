@@ -1,16 +1,26 @@
 #!/usr/bin/env python3
 import argparse
 import csv
-from datetime import datetime
 import json
-import logging
 import os
 from collections import defaultdict, Counter
+from datetime import datetime
 
-import pandas as pd
+
+class CustomJsonEncoder(json.JSONEncoder):
+    # https://stackoverflow.com/questions/27050108/convert-numpy-type-to-python
+    # custom encoder to get numpy types through
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return datetime.strftime(obj, '%Y-%m-%d %H:%M:%S')
+        else:
+            return super(CustomJsonEncoder, self).default(obj)
 
 
 def process_zoon_row(csv_row):
+    """
+    Turn the eccentric CSV with embedded JSON strings into one big JSON.
+    """
     output = {}
     for k, v in csv_row.items():
         if k in ['metadata', 'subject_data']:
@@ -26,6 +36,9 @@ def process_zoon_row(csv_row):
 
 
 def process_zoon_annotations(annotation_list_json):
+    """
+    Turn the annotation format right-side-out.
+    """
     annotation_list = json.loads(annotation_list_json)
     output = {}
     for annotation1 in annotation_list:
@@ -40,10 +53,13 @@ def reconcile_annotations(classifications1):
     for classification1 in classifications1:
         for k, v in classification1['annotations'].items():
             task_values[k].append(v)
-    if vote(task_values['T0']) == 'Yes':
-        result = True, ''
+    t0vote = vote(task_values['T0'])
+    if t0vote == 'Yes':
+        result = True, False, None, task_values
+    elif t0vote is None:
+        result = True, True, None, task_values
     else:
-        result = False, vote(task_values['T1'])
+        result = False, False, vote(task_values['T1']), task_values
     return result
 
 
@@ -60,9 +76,12 @@ def vote(things):
 
 
 def extra_filename(fn):
+    """
+    Stick '_debug' in the filename.
+    """
     dir = os.path.dirname(fn)
     base, suffix = os.path.splitext(os.path.basename(fn))
-    return os.path.join(dir, f'{base}_debug.{suffix}')
+    return os.path.join(dir, f'{base}_debug{suffix}')
 
 
 oparser = argparse.ArgumentParser(description="analyse the annotations processed from the exports",
@@ -85,27 +104,38 @@ options = oparser.parse_args()
 debug_file = extra_filename(options.output_file)
 
 input_data = []
-
+print(f'Reading {options.input_file}')
 with open(options.input_file) as f:
     reader = csv.DictReader(f)
     for row in reader:
         input_data.append(process_zoon_row(row))
 
+print(f'Classifications: {len(input_data)}')
+
 data_by_subject = defaultdict(list)
 for item in input_data:
-    data_by_subject[item['subject_id']].append(item)
+    data_by_subject[item['subject_ids']].append(item)
 
 full_output = {}
 corrections = {}
+print(f'Subjects: {len(data_by_subject)}')
 
 for subject, classifications in data_by_subject.items():
-    was_correct, correction = reconcile_annotations(classifications)
-    full_output[subject] = [was_correct, correction, classifications]
-    if not was_correct:
+    was_correct, error, correction, task_summary = reconcile_annotations(classifications)
+    full_output[subject] = {'was_correct': was_correct,
+                            'error': error,
+                            'correction': correction,
+                            'summary': task_summary,
+                            'classifications': classifications}
+    if not (was_correct or error):
         corrections[subject] = correction
 
-with open(options.output_file, 'w') as f:
-    json.dump(corrections, f, indent=1)
+print(f'Subjects for correction: {len(corrections)}')
 
+print(f'Writing {options.output_file}')
+with open(options.output_file, 'w') as f:
+    json.dump(corrections, f, indent=1, cls=CustomJsonEncoder)
+
+print(f'Writing {debug_file}')
 with open(debug_file, 'w') as f:
-    json.dump(full_output, f, indent=1)
+    json.dump(full_output, f, indent=1, cls=CustomJsonEncoder)
