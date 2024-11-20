@@ -31,7 +31,7 @@ pip install path==15.0.0
 pip install levenshtein editdistance pandas
 ```
 
-## locations
+## locations and running
 
 - training data: `/fastdata/li1af/bluejackets/training_data/<workflow_id>`
   - ID from Zooniverse phase 1 workflow
@@ -48,7 +48,7 @@ pip install levenshtein editdistance pandas
   - `${HOME}/bluejackets/pipeline/corrections/image/` contains
     - `*.jpg` image files for Zooniverse phase 2
     - `manifest.json` compiled from the individual metadata files
-- preparation for phase 2
+- uploading for phase 2
   - input: the `corrections/image/` directory above
   - `phase-2-make-batches.py` splits the `manifest.json` file into separate batches (by vessel-year and 1000s of items; each will become one subject set on Zooniverse)
   - `phase-2-upload-batches.py` takes each manifest batch file, uploads the subjects to Zooniverse, and saves a modified manifest with the subject ID 
