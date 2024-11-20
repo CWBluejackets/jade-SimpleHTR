@@ -34,6 +34,22 @@ pip install levenshtein editdistance pandas
 ## locations
 
 - training data: `/fastdata/li1af/bluejackets/training_data/<workflow_id>`
-  - ID from original workflows
+  - ID from Zooniverse phase 1 workflow
 - models: `/home/li1af/bluejackets/models/<slurm_id>`
   - ID from slurm job number when training
+  - these are set in `pipeline-models-bessemer.json`
+- pipeline
+  - input: image files from `${HOME}/bluejackets/pipeline/input/` 
+  - `${HOME}/bluejackets/pipeline/output/` contains 
+    - the registration files `*.png`
+    - the HTR and blank detection output `*.csv`
+    - the debugging information `*.json`
+  - `${HOME}/bluejackets/pipeline/corrections/json/` contains `*.json` individual metadata files
+  - `${HOME}/bluejackets/pipeline/corrections/image/` contains
+    - `*.jpg` image files for Zooniverse phase 2
+    - `manifest.json` compiled from the individual metadata files
+- preparation for phase 2
+  - input: the `corrections/image/` directory above
+  - `phase-2-make-batches.py` splits the `manifest.json` file into separate batches (by vessel-year and 1000s of items; each will become one subject set on Zooniverse)
+  - `phase-2-upload-batches.py` takes each manifest batch file, uploads the subjects to Zooniverse, and saves a modified manifest with the subject ID 
+  - This does not add the new subject sets to the phase 2 workflow; Damian usually does that. 
