@@ -134,6 +134,8 @@ if __name__ == "__main__":
         except PanoptesAPIException as e:
             print(f'Failed during upload of batch {batch_name} from {input_file}')
             print(traceback.format_exc())
+            print(f'Quitting!')
+            break
 
         elapsed_time = datetime.now() - START_TIME
         elapsed_time_str = str(datetime.now() - START_TIME).split('.')[0]
