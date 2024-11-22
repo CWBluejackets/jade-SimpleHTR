@@ -125,6 +125,7 @@ corrections = {}
 print(f'Subjects: {len(data_by_subject)}')
 
 for subject, classifications in data_by_subject.items():
+    # TODO filter out stuff like [unclear]
     was_correct, error, correction, task_summary = reconcile_annotations(classifications)
     full_output[subject] = {'was_correct': was_correct,
                             'error': error,
