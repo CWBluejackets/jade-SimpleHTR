@@ -49,6 +49,9 @@ def process_zoon_annotations(annotation_list_json):
 
 
 def reconcile_annotations(classifications1):
+    """
+    @return was_correct, error, voted_value, list of classifications
+    """
     task_values = defaultdict(list)
     for classification1 in classifications1:
         for k, v in classification1['annotations'].items():
@@ -56,10 +59,11 @@ def reconcile_annotations(classifications1):
     t0vote = vote(task_values['T0'])
     if t0vote == 'Yes':
         result = True, False, None, task_values
-    elif t0vote is None:
-        result = True, True, None, task_values
-    else:
+    elif t0vote == 'No':
         result = False, False, vote(task_values['T1']), task_values
+    else:
+        # could be box alignment or other errors
+        result = False, True, None, task_values
     return result
 
 
