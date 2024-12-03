@@ -31,6 +31,25 @@ pip install path==15.0.0
 pip install levenshtein editdistance pandas
 ```
 
+### try this (start with python 3.9)
+```shell
+srun --pty bash -i 
+module load Anaconda3/2019.07
+conda create -n simplehtr1 python=3.9
+conda activate simplehtr1
+cd bluejackets/jade-SimpleHTR/
+pip install -r requirements.txt
+# error with tensorflow
+export TF_BINARY_URL=https://files.pythonhosted.org/packages/18/19/50a32e3017b6ba2e51a1c9d717e2f1e0e4edde5b5fdcf030ec5a19eb6ba2/tensorflow-2.14.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+pip install $TF_BINARY_URL
+pip install -r requirements.txt 
+# version incompatibilities with three packages so...
+pip install numpy matplotlib opencv-python scipy levenshtein editdistance pandas
+pip install scikit-image==0.19
+pip install lmdb==1.0.0
+pip install path==15.0.0
+```
+
 ## locations and running
 
 - training data: `/fastdata/li1af/bluejackets/training_data/<workflow_id>`
