@@ -1,7 +1,7 @@
 editdistance==0.5.2
 lmdb==1.0.0
 matplotlib==3.3
-numpy==1.19.5
+# numpy==1.19.5
 # numpy downgrade required for the tensorflow version
 opencv-python==4.8.0.76
 path==15.0.0
