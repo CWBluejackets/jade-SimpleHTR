@@ -38,3 +38,6 @@ python3 create_training_data.py \
         -c config-bessemer.json #\
 #        -f filters.json
 # filtering done in adjudicate now
+
+# world-readable
+chmod -R a+rX "${training_directory}"
