@@ -5,7 +5,7 @@
 #SBATCH --mem=16G
 #SBATCH --time=96:00:00
 #SBATCH --mail-type=ALL
-#SBATCH --mail-user=a.funk@sheffield.ac.uk
+#SBATCH --mail-user=m.harvey@sheffield.ac.uk
 
 # load the modules for the program we want to run
 export SLURM_EXPORT_ENV=ALL
