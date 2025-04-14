@@ -108,10 +108,14 @@ options = oparser.parse_args()
 debug_file = extra_filename(options.output_file)
 
 input_data = []
+rowCounter = 0
 print(f'Reading {options.input_file}')
 with open(options.input_file) as f:
     reader = csv.DictReader(f)
     for row in reader:
+        rowCounter += 1
+        if rowCounter%10000 == 0:
+                print(f'At row: {rowCounter}')
         input_data.append(process_zoon_row(row))
 
 print(f'Classifications: {len(input_data)}')

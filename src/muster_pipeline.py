@@ -9,7 +9,7 @@ from collections import defaultdict, Counter
 
 import numpy as np
 
-import sheet_division
+import sheet_division_with_pp as sheet_division
 import template_handling
 from metadata_handling import Metadata, make_index_key_from_pathname
 from utils import write_sheet_info, NumpyJsonEncoder, DECILES
