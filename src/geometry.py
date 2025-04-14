@@ -486,7 +486,7 @@ def get_registration_width(registration_image: np.ndarray, sheet_info: dict,
                  'column_counts_black': colunn_counts_black,
                  'low_percentile': low_percentile,
                  'percentile': percentile,
-                 'low_threshold': low_threshold
+                 'low_threshold': low_threshold,
                  'peak_threshold': threshold,
                  'peaks': strong_columns,
                  'edge_log': edge_log,
