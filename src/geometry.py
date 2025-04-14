@@ -449,6 +449,7 @@ def get_lined_image_for_registration(image: np.ndarray, config: dict, cutoffs: t
 
 
 def get_registration_width(registration_image: np.ndarray, sheet_info: dict,
+                           low_percentile: float,
                            percentile: float, cutoffs: Tuple[int, int, int, int],
                            max_header_width: int) -> Tuple[int, np.ndarray, Tuple[int, int], np.ndarray]:
     """
@@ -467,6 +468,7 @@ def get_registration_width(registration_image: np.ndarray, sheet_info: dict,
     column_counts_black = registration_image.shape[0] - column_counts_white
     # for threshold calculation, only use the area within the box
     column_counts_usable = column_counts_black[cutoffs[0]:cutoffs[1]]
+    low_threshold = np.percentile(column_counts_usable, low_percentile)
     threshold = np.percentile(column_counts_usable, percentile)
     print(f'Column threshold {threshold}, min {column_counts_black.min()}, max {column_counts_black.max()}')
     # https://stackoverflow.com/questions/76786670/what-is-the-difference-between-threshold-and-prominence-in-scipy-find-peaks
@@ -474,16 +476,18 @@ def get_registration_width(registration_image: np.ndarray, sheet_info: dict,
     # np.where equivalent returns a singleton tuple here
     # https://numpy.org/doc/stable/reference/generated/numpy.nonzero.html#numpy.nonzero
     # https://numpy.org/doc/stable/reference/generated/numpy.where.html
-    strong_left, strong_right, box_width, edge_log = determine_header_width(strong_columns, max_header_width)
-    # IMPORTANT, PENDING
-    # TODO use max_header_width, probably to suppress the LH edge
+    strong_left, strong_right, box_width, edge_log = determine_header_values(strong_columns, column_counts_black, 
+                                                                             low_threshold, max_header_width)
     deciles = np.quantile(column_counts_black, DECILES)
     nonzero = np.asarray(column_counts_black > 0).nonzero()[0]
     rescaling = {'black_deciles': deciles,
                  'strong_edges': [[strong_left, column_counts_black[strong_left]],
                                   [strong_right, column_counts_black[strong_right]]],
+                 'column_counts_black': colunn_counts_black,
+                 'low_percentile': low_percentile,
                  'percentile': percentile,
-                 'threshold': threshold,
+                 'low_threshold': low_threshold
+                 'peak_threshold': threshold,
                  'peaks': strong_columns,
                  'edge_log': edge_log,
                  'nonzero_range': [[nonzero[0], column_counts_black[nonzero[0]]],
@@ -494,19 +498,41 @@ def get_registration_width(registration_image: np.ndarray, sheet_info: dict,
     return box_width, column_counts_black, (strong_left, strong_right), deciles
 
 
-def determine_header_width(strong_columns: np.ndarray, max_header_width: int) -> Tuple[int, int, int, list]:
-    print('Strong columns:', strong_columns)
-    left_index = 0
-    strong_left, strong_right = strong_columns[left_index], strong_columns[-1]
+def determine_header_values(strong_columns: np.ndarray, column_counts_black: np.ndarray,
+                            low_threshold: float,
+                            max_header_width: int) -> Tuple[int, int, int, list]:
+    columns_smooth = rolling_average(column_counts_black, 5)
+    log = dict()
+    # find leftmost peak that does NOT have near-zero values to the right
+    for left_index in range(0, 4):
+        x0 = strong_columns[left_index]
+        strong_left = x0
+        x1 = strong_columns[left_index + 1]
+        peak_gap = x1 - x0
+        x0a = round(x0 + 0.2 * peak_gap)
+        x1a = round(x1 - 0.2 * peak_gap)
+        middle = columns_smooth[x0a: x1a]
+        if middle.max() > low_threshold:
+            break
+    log['left'] = {'index': x0,
+                   'column': strong_left,
+                   'value': column_counts_black[strong_left]}
+    # find rightmost peak that does NOT have near-zero values to the left
+    for right_index in range(-1, -5, -1):
+        x0 = strong_columns[right_index]
+        strong_right = x1
+        x1 = strong_columns[right_index - 1]
+        peak_gap = x0 - x1
+        x0a = round(x0 - 0.2 * peak_gap)
+        x1a = round(x1 + 0.2 * peak_gap)
+        middle = columns_smooth[x1a : x0a]
+        if middle.max() > low_threshold:
+            break
+    log['right'] = {'index': x0,
+                    'column': strong_right,
+                    'value': column_counts_black[strong_right]}
     box_width = strong_right - strong_left
-    print(f'Using: {strong_left}, {strong_right} -> {box_width} [{max_header_width}]')
-    log = [(strong_left, strong_right, box_width, max_header_width)]
-    while box_width > max_header_width:
-        left_index += 1
-        strong_left = strong_columns[left_index]
-        box_width = strong_right - strong_left
-        log.append((strong_left, strong_right, box_width, max_header_width))
-        print(f'Using: {strong_left}, {strong_right} -> {box_width} [{max_header_width}]')
+    print(f'Using: {strong_left}, {strong_right} -> {box_width}')
     return strong_left, strong_right, box_width, log
 
 
@@ -538,10 +564,13 @@ def adjust_muster_to_template(image: np.ndarray, template: np.ndarray,
     # Detect H & V lines for the dark boxes at the top of the form
     registration_image = get_lined_image_for_registration(modified_image, config, adjusted_cutoffs)
     percentile = config['registration']['percentile']
+    low_percentile = config['registration']['low_percentile']
     max_header_factor = config['registration']['max_header_factor']
     max_header_width = round(template_form_width * max_header_factor)
     muster_box_width, column_counts, header_edges, registration_deciles = get_registration_width(registration_image,
-                                                                                                 sheet_info, percentile,
+                                                                                                 sheet_info, 
+                                                                                                 low_percentile, 
+                                                                                                 percentile,
                                                                                                  adjusted_cutoffs,
                                                                                                  max_header_width)
     rescale_factor = template_form_width / muster_box_width
