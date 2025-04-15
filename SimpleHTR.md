@@ -1,5 +1,7 @@
 # Handwritten Text Recognition with TensorFlow
 
+(This is the `README.md` copied from `githubharald/SimpleHTR`.)
+
 * **Update 2021/2: recognize text on line level (multiple words)**
 * **Update 2021/1: more robust model, faster dataloader, word beam search decoder also available for Windows**
 * **Update 2020: code is compatible with TF2**

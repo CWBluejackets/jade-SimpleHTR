@@ -11,7 +11,12 @@ NON_LETTER = re.compile(r'[^a-z]+')
 # Vessels misspelled in the Master Sheet Entry Log pulldown menu:
 VESSEL_CORRECTIONS = {'adriondack': 'adirondack',
                       'agamenticus': 'agamanticus',
-                      'cincinatti': 'cincinnati'
+                      'cincinatti': 'cincinnati',
+                      'henryjames': 'henryjanes',
+                      'hollycock': 'hollyhock',
+                      'howquait': 'howquah',
+                      'lackwanna': 'lackawanna',
+                      'farallones': 'farrallones'
                       }
 
 # columns:
@@ -117,7 +122,11 @@ class Metadata:
             if muster_date_specified:
                 muster_date_running = muster_date_specified
             bad_alignment = yes_boolean(row['Alignment issue?'])
-            non_standard = yes_boolean(row['Non-standard?'])
+            # was 'Non-standard?'
+            try:
+                non_standard = yes_boolean(row['Non Type 2/3'])
+            except KeyError:
+                non_standard = yes_boolean(row['Non-standard?'])
             type_name = row['Muster Type']
             raw_vessel = row['Ship name']
             vessel = normalize_vessel(raw_vessel)

@@ -1,0 +1,10 @@
+{
+  "input_directory": "/home/li1mah/bluejackets/pipeline/input",
+  "output_directory": "/home/li1mah/bluejackets/pipeline/output",
+  "corrections_directory": "/home/li1mah/bluejackets/pipeline/corrections",
+  "img_file_exception": true,
+  "metadata_file": "/home/li1mah/bluejackets/pipeline/Master_Sheet_Entry_Log.csv",
+  "inventory_file": "/home/li1mah/bluejackets/pipeline/Muster_Roll_Inventory.csv",
+  "models_directory": "/home/li1mah/bluejackets/models",
+  "model_mapping": "pipeline-models-bessemer.json"
+}

@@ -14,7 +14,7 @@
     "fallback_side_test": 100,
     "smoothing_window": 10,
     "black_limit": 0.75,
-    "min_width": 4080
+    "min_width": 3700
   },
   "registration": {
     "horizontal": {
@@ -23,10 +23,11 @@
     "vertical": {
       "deviation": 3.0
     },
+    "low_percentile": 10.0,
     "percentile": 90.0,
     "max_header_factor": 1.01,
     "cutoff_adjustments": {
-      "left": 90,
+      "left": 80,
       "right": 100,
       "top": 145,
       "top_band": 550,

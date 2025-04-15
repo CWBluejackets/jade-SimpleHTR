@@ -100,28 +100,29 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
                                    'diffs': row_y_values[1:] - row_y_values[:-1]}
     x_left = min(template['output_column_x_values'])
     x_right = max(template['output_column_x_values'])
-    if config['debug']:
-        registration_path = os.path.join(output_dir,
-                                         f'{output_prefix}_2_registration.png')
-        # superimpose the header template in blue and save it for inspection
-        registration_debug_2 = geometry.superimpose(registered_image, template_image)
-        # superimpose the lines detected and the whiteness plot
-        y_top = min(row_y_values)
-        y_bottom = max(row_y_values)
-        # mark the horizontal lines in red
-        for y_value in row_y_values:
-            cv2.line(registration_debug_2, (x_left, y_value), (x_right, y_value), RED, 2)
-        # mark the extended columns in red
-        for x_value in template['output_column_x_values']:
-            cv2.line(registration_debug_2, (x_value, y_top), (x_value, y_bottom), RED, 2)
-        # add the horizontal means for inspection on the left
-        for y, h_mean in enumerate(horizontal_means):
-            cv2.line(registration_debug_2, (0, y), (round(h_mean * 3), y), RED, 1)
-        cv2.line(registration_debug_2, (255 * 3, y_top), (255 * 3, y_bottom), GREEN, 3)
-        # mark the bottom limit from the template in blue
-        cv2.line(registration_debug_2, (255 * 3, hline_y_max), (x_right, hline_y_max), BLUE, 1)
-        print(f'Writing {registration_path}')
-        cv2.imwrite(registration_path, registration_debug_2)
+
+    # save the registration files
+    registration_path = os.path.join(output_dir,
+                                     f'{output_prefix}_2_registration.png')
+    # superimpose the header template in blue and save it for inspection
+    registration_debug_2 = geometry.superimpose(registered_image, template_image)
+    # superimpose the lines detected and the whiteness plot
+    y_top = min(row_y_values)
+    y_bottom = max(row_y_values)
+    # mark the horizontal lines in red
+    for y_value in row_y_values:
+        cv2.line(registration_debug_2, (x_left, y_value), (x_right, y_value), RED, 2)
+    # mark the extended columns in red
+    for x_value in template['output_column_x_values']:
+        cv2.line(registration_debug_2, (x_value, y_top), (x_value, y_bottom), RED, 2)
+    # add the horizontal means for inspection on the left
+    for y, h_mean in enumerate(horizontal_means):
+        cv2.line(registration_debug_2, (0, y), (round(h_mean * 3), y), RED, 1)
+    cv2.line(registration_debug_2, (255 * 3, y_top), (255 * 3, y_bottom), GREEN, 3)
+    # mark the bottom limit from the template in blue
+    cv2.line(registration_debug_2, (255 * 3, hline_y_max), (x_right, hline_y_max), BLUE, 1)
+    print(f'Writing {registration_path}')
+    cv2.imwrite(registration_path, registration_debug_2)
 
     previous_workflow_id = None
     model = None
@@ -206,7 +207,7 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
             writer.writerow(csv_header)
             for row_no in range(max(csv_table.keys()) + 1):
                 writer.writerow([row_no] + csv_table[row_no])
-                csv2json[row_no] = dict(zip(csv_header[1:], csv_table))
+                csv2json[row_no] = dict(zip(csv_header[1:], csv_table[row_no]))
         workflow_confidence_summary = dict()
         column_confidence_summary = dict()
         for workflow_id, confidences in confidence_by_workflow.items():
@@ -221,10 +222,10 @@ def process_muster_sheet(input_jpg_file, image_metadata: dict, output_dir, parts
         sheet_info['confidence'] = {'workflows': workflow_confidence_summary,
                                     'columns': column_confidence_summary,
                                     'overall': sheet_confidence_summary}
+        sheet_info['output'] = csv2json
 
     global_statistics['sheet_count']['processed'] += 1
     global_statistics['sheets']['processed'].append(output_prefix)
-    sheet_info['output'] = csv2json
     write_sheet_info(output_dir, output_prefix, sheet_info)
     return
 
