@@ -1,0 +1,10 @@
+{
+  "input_directory": "/users/cs1jafu/bluejackets/pipeline/input",
+  "output_directory": "/users/cs1jafu/bluejackets/pipeline/output",
+  "corrections_directory": "/users/cs1jafu/bluejackets/pipeline/corrections",
+  "img_file_exception": true,
+  "metadata_file": "/users/cs1jafu/bluejackets/pipeline/Master_Sheet_Entry_Log.csv",
+  "inventory_file": "/users/cs1jafu/bluejackets/pipeline/Muster_Roll_Inventory.csv",
+  "models_directory": "/users/cs1jafu/bluejackets/models",
+  "model_mapping": "pipeline-models-bessemer.json"
+}
