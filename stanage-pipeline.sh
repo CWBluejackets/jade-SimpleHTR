@@ -14,7 +14,7 @@
 
 # load the modules for the program we want to run
 export SLURM_EXPORT_ENV=ALL
-module load Anaconda3/2019.07
+module load Anaconda3/2025.06-1
 # module load cuda/10.1
 echo "modules loaded"
 
