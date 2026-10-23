@@ -5,6 +5,19 @@
 ```shell
 srun --pty bash -i 
 module load Anaconda3/2025.06-1
+conda init # ONLY NEEDED THE FIRST TIME
+conda create -n simplehtr1 python=3.9
+conda activate simplehtr1
+cd bluejackets/jade-SimpleHTR/
+pip install -r requirements.txt
+```
+
+
+
+
+```shell
+srun --pty bash -i 
+module load Anaconda3/2025.06-1
 conda init
 conda create -n simplehtr1 python=3.9
 conda activate simplehtr1
