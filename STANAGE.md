@@ -12,37 +12,7 @@ cd bluejackets/jade-SimpleHTR/
 pip install -r requirements.txt
 ```
 
-
-
-
-```shell
-srun --pty bash -i 
-module load Anaconda3/2025.06-1
-conda init
-conda create -n simplehtr1 python=3.9
-conda activate simplehtr1
-cd bluejackets/jade-SimpleHTR/
-
-# not sure if following was necessary
-pip install numpy matplotlib opencv-python
-pip install scipy
-pip install lmdb==1.0.0
-pip install path==15.0.0
-pip install scikit-image
-
-pip install -r requirements.txt
-```
-
-### results
-
-```shell
-$ conda list |egrep 'tf|tensor'
-tensorboard                     2.14.1           pypi_0           pypi
-tensorboard-data-server         0.7.2            pypi_0           pypi
-tensorflow                      2.14.0           pypi_0           pypi
-tensorflow-estimator            2.14.0           pypi_0           pypi
-tensorflow-io-gcs-filesystem    0.37.1           pypi_0           pypi
-```
+Note: `requirements.txt` required some modification to include the torch package and a numpy version compatible with the out-of-date tensorflow.
 
 ## locations and running
 
