@@ -101,11 +101,11 @@ class Metadata:
         self.metadata = dict()
         self.inventory = dict()
         self.vessel_mismatches = set()
-        with open(inventory_file, "r") as f:
+        with open(inventory_file, "r", encoding="utf-8-sig") as f:
             print(f'Loading inventory from {inventory_file}')
             reader = csv.DictReader(f, restval='')
             self.process_inventory(reader)
-        with open(metadata_file, "r") as f:
+        with open(metadata_file, "r", encoding="utf-8-sig") as f:
             print(f'Loading metadata from {metadata_file}')
             reader = csv.DictReader(f, restval='')
             self.process_metadata(reader)
