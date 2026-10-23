@@ -15,3 +15,5 @@ scipy
 scikit-image==0.19
 panoptes-client
 requests
+torch
+scikit-learn
