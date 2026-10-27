@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import os
+
 import pandas as pd
 import numpy as np
 import torch
@@ -166,7 +168,10 @@ def correct_text(model, noisy_texts, dataset):
         return corrected_texts
         
 def load_model_from_files(input_dir_in):
-    input_dir = "/home/li1mah/bluejackets/pp_models/"+input_dir_in
+    # Ideally this should be set in the locations JSON file -- maybe that could be
+    # merged into the config dict.
+    input_dir = os.path.join(os.environ['HOME'], 'bluejackets', 'pp_models', input_dir_in)
+    # input_dir = "/home/li1mah/bluejackets/pp_models/" + input_dir_in
     with open(input_dir+"_vocab.pkl", "rb") as f:
         vocab = pickle.load(f)
     full_dataset = TextCorrectionDataset([], [], max_len=50, vocab=vocab)  # Empty lists if only inferring
