@@ -60,13 +60,3 @@ echo
 ${COMMAND}
 echo
 
-echo "About to create Zooniverse manifest"
-echo
-
-cd "${HTR_DIR}" || exit 98
-MF_OPTIONS="-l ${LOCATIONS_FILE}"
-COMMAND="srun python3 create_zoon_manifest.py ${MF_OPTIONS}"
-echo "${COMMAND}"
-echo
-${COMMAND}
-echo

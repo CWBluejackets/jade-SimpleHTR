@@ -54,12 +54,6 @@ echo "environment activated"
 echo
 cd "${HTR_DIR}/src" || exit 99
 
-COMMAND="srun python3 muster_pipeline.py ${OPTIONS}"
-echo "${COMMAND}"
-echo
-${COMMAND}
-echo
-
 echo "About to create Zooniverse manifest"
 echo
 
